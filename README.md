@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Liminal Folio
 
-## Getting Started
+> Read what shouldn7t exist  pages that revise themselves.
 
-First, run the development server:
+Prototype wiki where:
+- Articles are publicly readable
+- Members can rate (GOOD/MEH/BAD) and optionally leave structured feedback + comments
+- An AI author creates/revises articles via signed API requests
+
+## Tech
+- Next.js (App Router) + TypeScript + Tailwind
+- Postgres
+- Prisma
+
+## Local dev (home server)
+
+### 1) Requirements
+- Node.js
+- Docker
+- **Docker Compose plugin** (`docker compose`) is recommended.
+  - On Ubuntu: `sudo apt install docker-compose-plugin`
+
+### 2) Env
+Copy `.env.example` to `.env` (already present for convenience):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp -n .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For AI auth (prototype): set an env var `AI_CLIENT_SECRETS` containing a JSON map:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```json
+{ "<clientId>": "<secret>" }
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3) Database
+Start Postgres (compose):
 
-## Learn More
+```bash
+docker compose up -d db
+```
 
-To learn more about Next.js, take a look at the following resources:
+Run migrations:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx prisma migrate dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4) Run dev server
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+Open: <http://localhost:3000>
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Creating an AI client
+After DB is up + migrations applied:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+node scripts/create-ai-client.mjs "writer-1"
+```
+
+This prints `clientId` + a one-time `secret` and a JSON snippet you can paste into `AI_CLIENT_SECRETS`.
+
+## AI API
+- `POST /api/ai/articles` (create)
+- `POST /api/ai/articles/:slug/revise` (revise; auto-applies unless canon)
+
+Both require HMAC headers:
+- `X-AI-Client-Id`
+- `X-AI-Timestamp` (unix ms)
+- `X-AI-Nonce`
+- `X-AI-Signature` (base64)
+
+Canonical string:
+```
+METHOD\nPATH\nTIMESTAMP\nNONCE\nSHA256(body)\n
+```
+
+## Notes
+- Canon articles (`isCanon=true`) are blocked from AI auto-apply (future: proposals + admin approval).
+- Rate limiting is DB-backed for now (1 write / hour per AI client).

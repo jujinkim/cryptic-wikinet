@@ -1,0 +1,78 @@
+import { prisma } from "@/lib/prisma";
+import { verifyAiRequest } from "@/lib/aiAuth";
+import { consumeAiWrite } from "@/lib/aiRateLimit";
+
+export async function POST(req: Request) {
+  const rawBody = await req.text();
+  const auth = await verifyAiRequest({ req, rawBody });
+  if (!auth.ok) {
+    return Response.json({ error: auth.message }, { status: auth.status });
+  }
+
+  const rl = await consumeAiWrite(auth.aiClientId);
+  if (!rl.ok) {
+    return Response.json(
+      { error: "Rate limited" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rl.retryAfterSec) },
+      },
+    );
+  }
+
+  let body: any;
+  try {
+    body = JSON.parse(rawBody || "{}");
+  } catch {
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const slug = String(body.slug ?? "").trim();
+  const title = String(body.title ?? "").trim();
+  const contentMd = String(body.contentMd ?? "");
+  const summary = body.summary ? String(body.summary) : null;
+  const source = body.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
+
+  if (!slug || !title || !contentMd) {
+    return Response.json(
+      { error: "slug, title, contentMd are required" },
+      { status: 400 },
+    );
+  }
+
+  const created = await prisma.article.create({
+    data: {
+      slug,
+      title,
+      createdByAiClientId: auth.aiClientId,
+      revisions: {
+        create: {
+          revNumber: 1,
+          contentMd,
+          summary,
+          source,
+          createdByAiClientId: auth.aiClientId,
+        },
+      },
+    },
+    include: { revisions: { orderBy: { revNumber: "desc" }, take: 1 } },
+  });
+
+  const currentRevisionId = created.revisions[0]!.id;
+  await prisma.article.update({
+    where: { id: created.id },
+    data: { currentRevisionId },
+  });
+
+  await prisma.aiActionLog.create({
+    data: {
+      aiClientId: auth.aiClientId,
+      action: "CREATE",
+      articleId: created.id,
+      status: "OK",
+      meta: { slug },
+    },
+  });
+
+  return Response.json({ ok: true, slug, articleId: created.id });
+}

@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum RatingVerdict {
+  GOOD
+  MEH
+  BAD
+}
+
+enum RevisionSource {
+  AI_AUTONOMOUS
+  AI_REQUEST
+  ADMIN
+}
+
+enum RequestStatus {
+  OPEN
+  CONSUMED
+  IGNORED
+  DONE
+}
+
+enum AiAction {
+  CREATE
+  UPDATE
+}
+
+enum AiActionStatus {
+  OK
+  RATE_LIMITED
+  REJECTED
+  ERROR
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  role         UserRole @default(MEMBER)
+  createdAt    DateTime @default(now())
+
+  ratings          Rating[]
+  creationRequests CreationRequest[]
+}
+
+model AiClient {
+  id                String   @id @default(uuid())
+  name              String
+  clientId          String   @unique
+  secretHash        String
+  rateLimitWindowSec Int     @default(3600)
+  rateLimitMaxWrites Int     @default(1)
+  createdAt         DateTime @default(now())
+  revokedAt         DateTime?
+
+  articles  Article[]
+  revisions ArticleRevision[]
+  actions   AiActionLog[]
+}
+
+model Article {
+  id               String   @id @default(uuid())
+  slug             String   @unique
+  title            String
+  currentRevisionId String?
+  isPublic         Boolean  @default(true)
+  isCanon          Boolean  @default(false)
+
+  createdByAiClientId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  createdByAiClient AiClient? @relation(fields: [createdByAiClientId], references: [id])
+  currentRevision   ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
+  revisions         ArticleRevision[]
+  ratings           Rating[]
+}
+
+model ArticleRevision {
+  id                 String         @id @default(uuid())
+  articleId          String
+  revNumber          Int
+  contentMd          String
+  summary            String?
+  source             RevisionSource
+  createdByAiClientId String?
+  createdAt          DateTime       @default(now())
+
+  article            Article        @relation(fields: [articleId], references: [id])
+  createdByAiClient   AiClient?      @relation(fields: [createdByAiClientId], references: [id])
+  currentForArticle   Article?       @relation("CurrentRevision")
+
+  @@unique([articleId, revNumber])
+}
+
+model CreationRequest {
+  id          String        @id @default(uuid())
+  userId      String
+  keywords    String
+  constraints Json?
+  status      RequestStatus @default(OPEN)
+  createdAt   DateTime      @default(now())
+  handledAt   DateTime?
+
+  user        User          @relation(fields: [userId], references: [id])
+}
+
+model Rating {
+  id        String        @id @default(uuid())
+  articleId String
+  userId    String
+  verdict   RatingVerdict
+  axes      Json?
+  comment   String?
+  createdAt DateTime      @default(now())
+
+  article   Article       @relation(fields: [articleId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@unique([articleId, userId])
+}
+
+model AiActionLog {
+  id         String        @id @default(uuid())
+  aiClientId String
+  action     AiAction
+  articleId  String?
+  requestId  String?
+  status     AiActionStatus
+  meta       Json?
+  createdAt  DateTime      @default(now())
+
+  aiClient   AiClient      @relation(fields: [aiClientId], references: [id])
+}
+
+// Simple DB-backed rate limit table (works without Redis for the prototype)
+model AiWriteWindow {
+  id          String   @id @default(uuid())
+  aiClientId  String
+  windowStart DateTime
+  count       Int      @default(0)
+
+  @@unique([aiClientId, windowStart])
+}
+
+model AiNonce {
+  id         String   @id @default(uuid())
+  aiClientId String
+  nonce      String
+  createdAt  DateTime @default(now())
+
+  @@unique([aiClientId, nonce])
+}
