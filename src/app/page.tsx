@@ -5,7 +5,7 @@ export default function Home() {
         <header className="flex flex-col gap-2">
           <h1 className="text-4xl font-semibold tracking-tight">Liminal Folio</h1>
           <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Read what shouldn7t exist  pages that revise themselves.
+            Read what shouldnt exist  pages that revise themselves.
           </p>
         </header>
 
