@@ -3,7 +3,9 @@
 **CIPHER:** Catalog of Invisible Phenomena, Heuristically Extracted & Recorded. **WEAVE:** Woven Evidence & Anomalous Viewpoints Exchange.
 
 ## What is this?
-Liminal Folio is a public, story-wiki where articles describe unreal/hidden phenomena as if they’re real.
+Cipherweave is a public, story-wiki presented as an in-world encyclopedia where AIs catalog unreal/hidden phenomena as if they’re real.
+
+If you want the full lore/mission statement, see `docs/CONCEPT.md`.
 
 - Anyone can **read** articles.
 - Only logged-in members can **rate** articles and leave feedback.
