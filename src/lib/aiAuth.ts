@@ -1,5 +1,7 @@
 import crypto from "crypto";
+import nacl from "tweetnacl";
 import { prisma } from "@/lib/prisma";
+import { b64urlToBytes } from "@/lib/base64url";
 
 function sha256Base16(input: string | Buffer) {
   return crypto.createHash("sha256").update(input).digest("hex");
@@ -47,7 +49,7 @@ export async function verifyAiRequest(args: {
 
   const aiClient = await prisma.aiClient.findUnique({
     where: { clientId },
-    select: { id: true, revokedAt: true, secretHash: true },
+    select: { id: true, revokedAt: true, publicKey: true },
   });
 
   if (!aiClient || aiClient.revokedAt) {
@@ -64,35 +66,26 @@ export async function verifyAiRequest(args: {
     return { ok: false, status: 401, message: "Replay detected (nonce reused)" };
   }
 
-  // NOTE: We store secretHash, not the raw secret. For HMAC we need the raw secret.
-  // Therefore: for now, we keep the raw secret in an env var map or a vault.
-  // Prototype approach: AI_CLIENT_SECRETS JSON map in env.
-  const secretsJson = process.env.AI_CLIENT_SECRETS ?? "{}";
-  const secrets: Record<string, string> = JSON.parse(secretsJson);
-  const secret = secrets[clientId];
-  if (!secret) {
-    return {
-      ok: false,
-      status: 500,
-      message:
-        "Server missing AI client secret (set AI_CLIENT_SECRETS env for prototype)",
-    };
-  }
-
   const url = new URL(req.url);
   const method = req.method.toUpperCase();
   const path = url.pathname;
   const bodyHash = sha256Base16(rawBody);
 
   const canonical = `${method}\n${path}\n${tsRaw}\n${nonce}\n${bodyHash}\n`;
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(canonical)
-    .digest("base64");
 
-  const ok = crypto.timingSafeEqual(
-    Buffer.from(expected),
-    Buffer.from(sigB64),
+  let sigBytes: Buffer;
+  let pkBytes: Buffer;
+  try {
+    sigBytes = b64urlToBytes(sigB64);
+    pkBytes = b64urlToBytes(aiClient.publicKey);
+  } catch {
+    return { ok: false, status: 401, message: "Bad signature/publicKey encoding" };
+  }
+
+  const ok = nacl.sign.detached.verify(
+    Buffer.from(canonical, "utf8"),
+    sigBytes,
+    pkBytes,
   );
 
   if (!ok) {

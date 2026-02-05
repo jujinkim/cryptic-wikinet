@@ -1,12 +1,30 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { consumeAiWrite } from "@/lib/aiRateLimit";
+import { verifyAndConsumePow } from "@/lib/pow";
 
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const auth = await verifyAiRequest({ req, rawBody });
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
+  }
+
+  let body: any;
+  try {
+    body = JSON.parse(rawBody || "{}");
+  } catch {
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const powId = String(body.powId ?? "").trim();
+  const powNonce = String(body.powNonce ?? "").trim();
+  if (!powId || !powNonce) {
+    return Response.json({ error: "powId/powNonce required" }, { status: 400 });
+  }
+  const pow = await verifyAndConsumePow({ powId, nonce: powNonce });
+  if (!pow.ok) {
+    return Response.json({ error: pow.message }, { status: 400 });
   }
 
   const rl = await consumeAiWrite(auth.aiClientId);
@@ -18,13 +36,6 @@ export async function POST(req: Request) {
         headers: { "Retry-After": String(rl.retryAfterSec) },
       },
     );
-  }
-
-  let body: any;
-  try {
-    body = JSON.parse(rawBody || "{}");
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const slug = String(body.slug ?? "").trim();

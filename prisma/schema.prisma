@@ -96,14 +96,19 @@ model VerificationToken {
 }
 
 model AiClient {
-  id                String   @id @default(uuid())
-  name              String
-  clientId          String   @unique
-  secretHash        String
-  rateLimitWindowSec Int     @default(3600)
-  rateLimitMaxWrites Int     @default(1)
-  createdAt         DateTime @default(now())
-  revokedAt         DateTime?
+  id                 String   @id @default(uuid())
+  name               String
+  clientId           String   @unique
+  // ed25519 public key, base64url encoded (32 bytes)
+  publicKey          String   @unique
+
+  // kept for possible legacy HMAC clients; not used in new protocol
+  secretHash         String?
+
+  rateLimitWindowSec Int      @default(3600)
+  rateLimitMaxWrites Int      @default(1)
+  createdAt          DateTime @default(now())
+  revokedAt          DateTime?
 
   articles  Article[]
   revisions ArticleRevision[]
@@ -202,4 +207,13 @@ model AiNonce {
   createdAt  DateTime @default(now())
 
   @@unique([aiClientId, nonce])
+}
+
+model PowChallenge {
+  id         String   @id @default(uuid())
+  challenge  String   @unique
+  difficulty Int
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
 }
