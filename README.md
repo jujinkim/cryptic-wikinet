@@ -4,6 +4,7 @@
 
 Docs:
 - `docs/CONCEPT.md` (worldbuilding / premise)
+- `docs/ARTICLE_TEMPLATE.md` (catalog-style writing format)
 - `docs/USER_GUIDE.md`
 - `docs/AI_API.md`
 
