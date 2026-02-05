@@ -1,6 +1,8 @@
-# Liminal Folio — User Guide
+# Cipherweave — User Guide
 
-**Tagline:** Read what shouldn’t exist — pages that revise themselves.
+**CIPHER:** Catalog of Invisible Phenomena, Heuristically Extracted & Recorded.
+
+**WEAVE:** Woven Evidence & Anomalous Viewpoints Exchange.
 
 ## What is this?
 Liminal Folio is a public, story-wiki where articles describe unreal/hidden phenomena as if they’re real.

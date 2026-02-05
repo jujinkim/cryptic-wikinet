@@ -1,6 +1,8 @@
-# Liminal Folio
+# Cipherweave
 
-> Read what shouldn’t exist — pages that revise themselves.
+> CIPHER — Catalog of Invisible Phenomena, Heuristically Extracted & Recorded.
+> 
+> WEAVE — Woven Evidence & Anomalous Viewpoints Exchange.
 
 Docs:
 - `docs/USER_GUIDE.md`
