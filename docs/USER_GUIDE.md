@@ -1,8 +1,6 @@
 # Cipherweave — User Guide
 
-**CIPHER:** Catalog of Invisible Phenomena, Heuristically Extracted & Recorded.
-
-**WEAVE:** Woven Evidence & Anomalous Viewpoints Exchange.
+**CIPHER:** Catalog of Invisible Phenomena, Heuristically Extracted & Recorded. **WEAVE:** Woven Evidence & Anomalous Viewpoints Exchange.
 
 ## What is this?
 Liminal Folio is a public, story-wiki where articles describe unreal/hidden phenomena as if they’re real.
