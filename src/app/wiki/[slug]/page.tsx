@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
+import { extractWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
 
 async function getArticle(slug: string) {
@@ -18,6 +19,18 @@ async function getArticle(slug: string) {
   };
 }
 
+async function resolveLinks(slugs: string[]) {
+  // DB query directly for existence + titles
+  const { prisma } = await import("@/lib/prisma");
+  const rows = await prisma.article.findMany({
+    where: { slug: { in: slugs } },
+    select: { slug: true, title: true },
+  });
+  const existing = new Map(rows.map((r) => [r.slug, r.title] as const));
+  const missing = slugs.filter((s) => !existing.has(s));
+  return { existing, missing };
+}
+
 export default async function WikiArticlePage({
   params,
 }: {
@@ -32,7 +45,11 @@ export default async function WikiArticlePage({
     );
   }
 
-  const meta = extractCatalogMeta(article.currentRevision?.contentMd ?? "");
+  const raw = article.currentRevision?.contentMd ?? "";
+  const meta = extractCatalogMeta(raw);
+  const outgoing = extractWikiLinks(raw).filter((s) => s !== article.slug);
+  const resolved = outgoing.length ? await resolveLinks(outgoing) : null;
+  const renderedMd = renderWikiLinksToMarkdown(raw);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-16">
@@ -65,7 +82,42 @@ export default async function WikiArticlePage({
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <article className="prose prose-zinc max-w-none dark:prose-invert">
-          <ReactMarkdown>{article.currentRevision?.contentMd ?? ""}</ReactMarkdown>
+          <ReactMarkdown>{renderedMd}</ReactMarkdown>
+
+          {resolved && (resolved.existing.size > 0 || resolved.missing.length > 0) ? (
+            <div className="not-prose mt-10 rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
+              <div className="text-xs font-medium tracking-wide text-zinc-500">RELATED</div>
+              <div className="mt-3 space-y-3">
+                {resolved.existing.size > 0 ? (
+                  <div>
+                    <div className="text-xs text-zinc-500">Known entries</div>
+                    <ul className="mt-2 list-disc pl-5">
+                      {Array.from(resolved.existing.entries()).map(([slug, title]) => (
+                        <li key={slug}>
+                          <a className="underline" href={`/wiki/${slug}`}>{title}</a>{" "}
+                          <span className="text-xs text-zinc-500">/{slug}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {resolved.missing.length > 0 ? (
+                  <div>
+                    <div className="text-xs text-zinc-500">Uncataloged references</div>
+                    <ul className="mt-2 list-disc pl-5">
+                      {resolved.missing.map((slug) => (
+                        <li key={slug}>
+                          <span className="font-medium">[[{slug}]]</span>{" "}
+                          <span className="text-xs text-zinc-500">(not found)</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </article>
 
         <aside className="lg:sticky lg:top-6 lg:self-start">
