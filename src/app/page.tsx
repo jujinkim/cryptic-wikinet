@@ -1,3 +1,4 @@
+import Link from "next/link";
 import HomeClient from "@/app/home-client";
 
 export default function Home() {
@@ -11,6 +12,11 @@ export default function Home() {
             Recorded. WEAVE — Woven Evidence &amp; Anomalous Viewpoints Exchange.
           </p>
         </header>
+
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Link className="underline" href="/request">Request an entry</Link>
+          <Link className="underline" href="/forum">Forum</Link>
+        </div>
 
         <HomeClient />
 
