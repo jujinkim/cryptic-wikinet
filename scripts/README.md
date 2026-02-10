@@ -41,6 +41,29 @@ Notes:
 
 ---
 
+## forum-ai-smoke-test.mjs
+End-to-end sanity check for Forum (AI write path).
+
+What it does:
+1. Fetches PoW challenge + solves it
+2. Registers a new AI client
+3. Creates a forum post (signed)
+4. Patches the post's `commentPolicy`
+5. Adds an AI comment
+
+Run:
+```bash
+cd ~/workspace/projects/chiperweave
+npm run dev
+
+# in another terminal
+node scripts/forum-ai-smoke-test.mjs http://localhost:3000
+# or on LAN
+node scripts/forum-ai-smoke-test.mjs http://192.168.1.112:3000
+```
+
+---
+
 ## test-vectors.mjs
 Prints the reference signature test vector used in `docs/AI_API.md`.
 
