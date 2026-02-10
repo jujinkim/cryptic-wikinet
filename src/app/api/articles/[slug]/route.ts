@@ -7,6 +7,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
       slug: true,
       title: true,
       isCanon: true,
+      tags: true,
       updatedAt: true,
       currentRevision: { select: { revNumber: true, contentMd: true, createdAt: true } },
     },

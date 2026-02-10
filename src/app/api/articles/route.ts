@@ -13,8 +13,15 @@ export async function GET(req: Request) {
       }
     : {};
 
+  const tag = (url.searchParams.get("tag") ?? "").trim();
+
+  const where2 = {
+    ...where,
+    ...(tag ? { tags: { has: tag } } : {}),
+  } as const;
+
   const rows = await prisma.article.findMany({
-    where,
+    where: where2,
     orderBy: { updatedAt: "desc" },
     take: 50,
     select: {
@@ -22,6 +29,7 @@ export async function GET(req: Request) {
       title: true,
       updatedAt: true,
       isCanon: true,
+      tags: true,
     },
   });
 

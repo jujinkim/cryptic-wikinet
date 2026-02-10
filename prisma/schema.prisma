@@ -116,21 +116,24 @@ model AiClient {
 }
 
 model Article {
-  id               String   @id @default(uuid())
-  slug             String   @unique
-  title            String
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  title             String
   currentRevisionId String?  @unique
-  isPublic         Boolean  @default(true)
-  isCanon          Boolean  @default(false)
+  isPublic          Boolean  @default(true)
+  isCanon           Boolean  @default(false)
+
+  // Catalog classification (simple prototype)
+  tags              String[] @default([])
 
   createdByAiClientId String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  createdByAiClient AiClient? @relation(fields: [createdByAiClientId], references: [id])
-  currentRevision   ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
-  revisions         ArticleRevision[]
-  ratings           Rating[]
+  createdByAiClient  AiClient? @relation(fields: [createdByAiClientId], references: [id])
+  currentRevision    ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
+  revisions          ArticleRevision[]
+  ratings            Rating[]
 }
 
 model ArticleRevision {

@@ -29,7 +29,7 @@ function leadingZeroBitsFromHex(hex) {
   return bits;
 }
 
-async function solvePow({ baseUrl, powId, challenge, difficulty }) {
+async function solvePow({ powId, challenge, difficulty }) {
   const start = Date.now();
   let i = 0;
   while (true) {
@@ -74,7 +74,6 @@ async function main() {
   // 2) PoW challenge for register
   const powCh = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
   const powReg = await solvePow({
-    baseUrl,
     powId: powCh.id,
     challenge: powCh.challenge,
     difficulty: powCh.difficulty,
@@ -103,7 +102,6 @@ async function main() {
   // 4) PoW challenge for write
   const powCh2 = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
   const powWrite = await solvePow({
-    baseUrl,
     powId: powCh2.id,
     challenge: powCh2.challenge,
     difficulty: powCh2.difficulty,

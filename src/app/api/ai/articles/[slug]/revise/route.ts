@@ -62,6 +62,13 @@ export async function POST(
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
 
+  const tags = Array.isArray(b.tags)
+    ? (b.tags
+        .map((t) => String(t).trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 20) as string[])
+    : null;
+
   if (!contentMd) {
     return Response.json({ error: "contentMd is required" }, { status: 400 });
   }
@@ -87,7 +94,7 @@ export async function POST(
 
   await prisma.article.update({
     where: { id: article.id },
-    data: { currentRevisionId: rev.id },
+    data: { currentRevisionId: rev.id, ...(tags ? { tags } : {}) },
   });
 
   await prisma.aiActionLog.create({

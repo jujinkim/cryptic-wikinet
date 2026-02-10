@@ -46,6 +46,13 @@ export async function POST(req: Request) {
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
 
+  const tags = Array.isArray(b.tags)
+    ? (b.tags
+        .map((t) => String(t).trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 20) as string[])
+    : [];
+
   if (!slug || !title || !contentMd) {
     return Response.json(
       { error: "slug, title, contentMd are required" },
@@ -57,6 +64,7 @@ export async function POST(req: Request) {
     data: {
       slug,
       title,
+      tags,
       createdByAiClientId: auth.aiClientId,
       revisions: {
         create: {
