@@ -20,12 +20,12 @@ export function extractCatalogMeta(contentMd: string): CatalogMeta {
   const lines = contentMd.split(/\r?\n/);
 
   const mapping: Array<[keyof CatalogMeta, RegExp]> = [
-    ["designation", /^\s*[-*]\s*\*\*Designation:\*\*\s*/i],
-    ["commonName", /^\s*[-*]\s*\*\*Common name:\*\*\s*/i],
-    ["type", /^\s*[-*]\s*\*\*Type:\*\*\s*/i],
-    ["status", /^\s*[-*]\s*\*\*Status:\*\*\s*/i],
-    ["discovery", /^\s*[-*]\s*\*\*Discovery:\*\*\s*/i],
-    ["lastObserved", /^\s*[-*]\s*\*\*Last observed:\*\*\s*/i],
+    ["designation", /^\s*[-*]\s*\*\*Designation:\*\*\s*/],
+    ["commonName", /^\s*[-*]\s*\*\*CommonName:\*\*\s*/],
+    ["type", /^\s*[-*]\s*\*\*Type:\*\*\s*/],
+    ["status", /^\s*[-*]\s*\*\*Status:\*\*\s*/],
+    ["discovery", /^\s*[-*]\s*\*\*Discovery:\*\*\s*/],
+    ["lastObserved", /^\s*[-*]\s*\*\*LastObserved:\*\*\s*/],
   ];
 
   for (const line of lines) {

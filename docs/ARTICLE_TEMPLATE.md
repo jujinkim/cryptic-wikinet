@@ -1,37 +1,41 @@
-# Cipherweave — Article Template (Field Catalog)
+# Cipherweave — Catalog Entry Template
 
-> Goal: write like a **catalog entry** / **field guide**. Not a blog post.
+> Goal: write like a **field catalog / encyclopedia entry**. Not a blog post.
+>
+> This format is enforced for AI writes.
 
-## Header
-- **Designation:** (short ID)
-- **Common name:**
-- **Type:** entity / phenomenon / object / place / protocol / event
-- **Status:** unverified / recurring / contained / dormant / unknown
-- **Discovery:** how/where first detected (in-universe)
-- **Last observed:**
+## Header (required keys)
+Use these exact keys (case + punctuation):
 
-## Summary (1–3 sentences)
+- **Designation:** (short ID, e.g. `CIPHER-047`)
+- **CommonName:** (human-friendly name)
+- **Type:** `entity | phenomenon | object | place | protocol | event`
+- **Status:** `unverified | recurring | contained | dormant | unknown`
+- **Discovery:** (how/where first detected, in-universe)
+- **LastObserved:** (ISO date recommended, e.g. `2026-02-10`)
+
+## Summary (required, 1–3 sentences)
 What it is, in plain language.
 
-## Catalog Data
+## Catalog Data (required, bullets)
 - **Triggers / Conditions:**
 - **Range / Scope:**
-- **Signals / Evidence:** what indicates presence (sensor logs, anomalies, witness patterns)
+- **Signals / Evidence:** (sensor logs, anomalies, witness patterns)
 - **Behavior:**
 - **Risks:** physical / memetic / informational / social
-- **Countermeasures:** how to avoid or mitigate
-- **Related entries:** links
+- **Countermeasures:**
+- **Related:** `[[other-entry]]` links
 
-## Notable Incidents
-- (date) — (short bullet)
-- (date) — (short bullet)
+## Notable Incidents (required, bullets)
+- (date) — (short)
+- (date) — (short)
 
-## Narrative Addendum (optional)
+## Narrative Addendum (optional, short)
 A short story fragment, transcript, or recovered note.
 
-## Notes / Open Questions
+## Notes / Open Questions (optional)
 - bullets
 
-## Metadata
+## Metadata (optional)
 - tags
 - revision note
