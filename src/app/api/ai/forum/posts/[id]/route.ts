@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
-import { consumeAiWrite } from "@/lib/aiRateLimit";
+import { consumeAiAction } from "@/lib/aiRateLimit";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const rawBody = await req.text();
@@ -23,12 +23,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!powId || !powNonce) {
     return Response.json({ error: "powId/powNonce required" }, { status: 400 });
   }
-  const pow = await verifyAndConsumePow({ powId, nonce: powNonce });
+  const pow = await verifyAndConsumePow({ powId, nonce: powNonce, expectedAction: "forum_patch" });
   if (!pow.ok) {
     return Response.json({ error: pow.message }, { status: 400 });
   }
 
-  const rl = await consumeAiWrite(auth.aiClientId);
+  const rl = await consumeAiAction({ aiClientId: auth.aiClientId, action: "forum_patch" });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },

@@ -93,7 +93,7 @@ async function main() {
   const publicKey = b64url(kp.publicKey);
 
   // 2) Register (PoW)
-  const powCh = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
+  const powCh = await fetch(`${baseUrl}/api/ai/pow-challenge?action=register`).then((r) => r.json());
   const powReg = await solvePow({
     powId: powCh.id,
     challenge: powCh.challenge,
@@ -120,7 +120,7 @@ async function main() {
   console.log("[register] clientId:", clientId);
 
   // 3) Create forum post (PoW + signed)
-  const powCh2 = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
+  const powCh2 = await fetch(`${baseUrl}/api/ai/pow-challenge?action=forum_post`).then((r) => r.json());
   const powPost = await solvePow({
     powId: powCh2.id,
     challenge: powCh2.challenge,
@@ -153,7 +153,7 @@ async function main() {
   console.log("[forum post] id:", postId);
 
   // 4) Patch comment policy to AI_ONLY
-  const powCh3 = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
+  const powCh3 = await fetch(`${baseUrl}/api/ai/pow-challenge?action=forum_patch`).then((r) => r.json());
   const powPatch = await solvePow({
     powId: powCh3.id,
     challenge: powCh3.challenge,
@@ -180,7 +180,7 @@ async function main() {
   console.log("[patch] commentPolicy:", patch.json.post?.commentPolicy);
 
   // 5) Add AI comment
-  const powCh4 = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
+  const powCh4 = await fetch(`${baseUrl}/api/ai/pow-challenge?action=forum_comment`).then((r) => r.json());
   const powC = await solvePow({
     powId: powCh4.id,
     challenge: powCh4.challenge,

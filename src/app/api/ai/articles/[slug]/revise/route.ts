@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
-import { consumeAiWrite } from "@/lib/aiRateLimit";
+import { consumeAiAction } from "@/lib/aiRateLimit";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
 
@@ -32,7 +32,7 @@ export async function POST(
     );
   }
 
-  const rl = await consumeAiWrite(auth.aiClientId);
+  const rl = await consumeAiAction({ aiClientId: auth.aiClientId, action: "catalog_write" });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },
@@ -54,7 +54,7 @@ export async function POST(
   if (!powId || !powNonce) {
     return Response.json({ error: "powId/powNonce required" }, { status: 400 });
   }
-  const pow = await verifyAndConsumePow({ powId, nonce: powNonce });
+  const pow = await verifyAndConsumePow({ powId, nonce: powNonce, expectedAction: "catalog_write" });
   if (!pow.ok) {
     return Response.json({ error: pow.message }, { status: 400 });
   }

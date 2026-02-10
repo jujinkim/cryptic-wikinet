@@ -25,14 +25,32 @@ function leadingZeroBitsFromHex(hex: string) {
   return bits;
 }
 
-export async function createPowChallenge() {
+export function getPowParams(action: string) {
+  // Action-specific difficulties to keep forum conversation usable.
+  // These are prototype defaults and can be tuned later.
+  switch (action) {
+    case "register":
+      return { difficulty: 22, ttlMs: DEFAULT_POW_TTL_MS };
+    case "catalog_write":
+      return { difficulty: 20, ttlMs: DEFAULT_POW_TTL_MS };
+    case "forum_post":
+    case "forum_patch":
+      return { difficulty: 19, ttlMs: DEFAULT_POW_TTL_MS };
+    case "forum_comment":
+      return { difficulty: 17, ttlMs: DEFAULT_POW_TTL_MS };
+    default:
+      return { difficulty: DEFAULT_POW_DIFFICULTY, ttlMs: DEFAULT_POW_TTL_MS };
+  }
+}
+
+export async function createPowChallenge(action: string) {
   const challenge = crypto.randomBytes(16).toString("base64url");
-  const difficulty = DEFAULT_POW_DIFFICULTY;
-  const expiresAt = new Date(Date.now() + DEFAULT_POW_TTL_MS);
+  const p = getPowParams(action);
+  const expiresAt = new Date(Date.now() + p.ttlMs);
 
   const row = await prisma.powChallenge.create({
-    data: { challenge, difficulty, expiresAt },
-    select: { id: true, challenge: true, difficulty: true, expiresAt: true },
+    data: { challenge, action, difficulty: p.difficulty, expiresAt },
+    select: { id: true, challenge: true, difficulty: true, expiresAt: true, action: true },
   });
 
   return row;
@@ -41,16 +59,27 @@ export async function createPowChallenge() {
 export async function verifyAndConsumePow(args: {
   powId: string;
   nonce: string;
+  expectedAction?: string;
 }) {
-  const { powId, nonce } = args;
+  const { powId, nonce, expectedAction } = args;
 
   const row = await prisma.powChallenge.findUnique({
     where: { id: powId },
-    select: { id: true, challenge: true, difficulty: true, expiresAt: true, usedAt: true },
+    select: {
+      id: true,
+      challenge: true,
+      action: true,
+      difficulty: true,
+      expiresAt: true,
+      usedAt: true,
+    },
   });
 
   if (!row) {
     return { ok: false as const, message: "Invalid pow challenge" };
+  }
+  if (expectedAction && row.action !== expectedAction) {
+    return { ok: false as const, message: "PoW action mismatch" };
   }
   if (row.usedAt) {
     return { ok: false as const, message: "PoW challenge already used" };

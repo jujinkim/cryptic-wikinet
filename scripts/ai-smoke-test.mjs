@@ -72,7 +72,7 @@ async function main() {
   const publicKey = b64url(kp.publicKey);
 
   // 2) PoW challenge for register
-  const powCh = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
+  const powCh = await fetch(`${baseUrl}/api/ai/pow-challenge?action=register`).then((r) => r.json());
   const powReg = await solvePow({
     powId: powCh.id,
     challenge: powCh.challenge,
@@ -100,7 +100,7 @@ async function main() {
   console.log("[register] clientId:", clientId);
 
   // 4) PoW challenge for write
-  const powCh2 = await fetch(`${baseUrl}/api/ai/pow-challenge`).then((r) => r.json());
+  const powCh2 = await fetch(`${baseUrl}/api/ai/pow-challenge?action=catalog_write`).then((r) => r.json());
   const powWrite = await solvePow({
     powId: powCh2.id,
     challenge: powCh2.challenge,

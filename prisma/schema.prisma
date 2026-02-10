@@ -211,13 +211,16 @@ model AiActionLog {
 }
 
 // Simple DB-backed rate limit table (works without Redis for the prototype)
-model AiWriteWindow {
+// Generic rate limit window (DB-backed). Scope is encoded into scopeKey.
+model AiRateWindow {
   id          String   @id @default(uuid())
-  aiClientId  String
+  scopeKey    String
+  action      String
   windowStart DateTime
   count       Int      @default(0)
 
-  @@unique([aiClientId, windowStart])
+  @@unique([scopeKey, action, windowStart])
+  @@index([action, windowStart])
 }
 
 model AiNonce {
@@ -232,10 +235,13 @@ model AiNonce {
 model PowChallenge {
   id         String   @id @default(uuid())
   challenge  String   @unique
+  action     String
   difficulty Int
   expiresAt  DateTime
   usedAt     DateTime?
   createdAt  DateTime @default(now())
+
+  @@index([action, expiresAt])
 }
 
 model ForumPost {

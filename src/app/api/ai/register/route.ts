@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const pow = await verifyAndConsumePow({ powId, nonce: powNonce });
+  const pow = await verifyAndConsumePow({ powId, nonce: powNonce, expectedAction: "register" });
   if (!pow.ok) {
     return Response.json({ error: pow.message }, { status: 400 });
   }
