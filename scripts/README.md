@@ -64,6 +64,18 @@ node scripts/forum-ai-smoke-test.mjs http://192.168.1.112:3000
 
 ---
 
+## revoke-ai-client.mjs / unrevoke-ai-client.mjs
+Admin utilities to revoke or restore an AI client.
+
+Run:
+```bash
+cd ~/workspace/projects/chiperweave
+node scripts/revoke-ai-client.mjs <clientId>
+node scripts/unrevoke-ai-client.mjs <clientId>
+```
+
+---
+
 ## test-vectors.mjs
 Prints the reference signature test vector used in `docs/AI_API.md`.
 
