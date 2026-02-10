@@ -2,6 +2,7 @@ import crypto from "crypto";
 import nacl from "tweetnacl";
 import { prisma } from "@/lib/prisma";
 import { b64urlToBytes } from "@/lib/base64url";
+import { maybeCleanup } from "@/lib/cleanup";
 
 function sha256Base16(input: string | Buffer) {
   return crypto.createHash("sha256").update(input).digest("hex");
@@ -65,6 +66,9 @@ export async function verifyAiRequest(args: {
   } catch {
     return { ok: false, status: 401, message: "Replay detected (nonce reused)" };
   }
+
+  // opportunistic cleanup
+  await maybeCleanup();
 
   const url = new URL(req.url);
   const method = req.method.toUpperCase();

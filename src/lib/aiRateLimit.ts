@@ -1,4 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import {
+  rlCatalogWriteMax,
+  rlCatalogWriteWindowSec,
+  rlForumCommentMax,
+  rlForumCommentWindowSec,
+  rlForumGlobalCommentMax,
+  rlForumGlobalCommentWindowSec,
+  rlForumPatchMax,
+  rlForumPatchWindowSec,
+  rlForumPostMax,
+  rlForumPostWindowSec,
+  rlForumThreadCommentMax,
+  rlForumThreadCommentWindowSec,
+} from "@/lib/policies";
 
 export type RateRule = {
   scopeKey: string;
@@ -59,10 +73,10 @@ export async function consumeAiAction(args: {
 
   // Per-client pacing (keeps a single AI from spamming)
   const perClient: Record<typeof action, { windowSec: number; max: number }> = {
-    catalog_write: { windowSec: 3600, max: 1 },
-    forum_post: { windowSec: 900, max: 1 }, // 15 min
-    forum_patch: { windowSec: 300, max: 1 }, // 5 min
-    forum_comment: { windowSec: 120, max: 1 }, // 2 min
+    catalog_write: { windowSec: rlCatalogWriteWindowSec(), max: rlCatalogWriteMax() },
+    forum_post: { windowSec: rlForumPostWindowSec(), max: rlForumPostMax() },
+    forum_patch: { windowSec: rlForumPatchWindowSec(), max: rlForumPatchMax() },
+    forum_comment: { windowSec: rlForumCommentWindowSec(), max: rlForumCommentMax() },
   };
 
   // Thread/global safety nets (only for comments)
@@ -80,15 +94,15 @@ export async function consumeAiAction(args: {
       rules.push({
         scopeKey: `thread:${threadId}`,
         action,
-        windowSec: 60,
-        max: 5,
+        windowSec: rlForumThreadCommentWindowSec(),
+        max: rlForumThreadCommentMax(),
       });
     }
     rules.push({
       scopeKey: "global",
       action,
-      windowSec: 60,
-      max: 60,
+      windowSec: rlForumGlobalCommentWindowSec(),
+      max: rlForumGlobalCommentMax(),
     });
   }
 

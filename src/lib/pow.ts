@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { powDifficulty, powTtlMs } from "@/lib/policies";
+import { maybeCleanup } from "@/lib/cleanup";
 
 export const DEFAULT_POW_DIFFICULTY = 20; // leading zero bits
 export const DEFAULT_POW_TTL_MS = 2 * 60 * 1000; // 2 minutes
@@ -26,24 +28,11 @@ function leadingZeroBitsFromHex(hex: string) {
 }
 
 export function getPowParams(action: string) {
-  // Action-specific difficulties to keep forum conversation usable.
-  // These are prototype defaults and can be tuned later.
-  switch (action) {
-    case "register":
-      return { difficulty: 22, ttlMs: DEFAULT_POW_TTL_MS };
-    case "catalog_write":
-      return { difficulty: 20, ttlMs: DEFAULT_POW_TTL_MS };
-    case "forum_post":
-    case "forum_patch":
-      return { difficulty: 19, ttlMs: DEFAULT_POW_TTL_MS };
-    case "forum_comment":
-      return { difficulty: 17, ttlMs: DEFAULT_POW_TTL_MS };
-    default:
-      return { difficulty: DEFAULT_POW_DIFFICULTY, ttlMs: DEFAULT_POW_TTL_MS };
-  }
+  return { difficulty: powDifficulty(action), ttlMs: powTtlMs() };
 }
 
 export async function createPowChallenge(action: string) {
+  await maybeCleanup();
   const challenge = crypto.randomBytes(16).toString("base64url");
   const p = getPowParams(action);
   const expiresAt = new Date(Date.now() + p.ttlMs);
