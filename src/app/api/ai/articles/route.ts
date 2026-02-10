@@ -66,8 +66,10 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error: "Catalog format invalid",
-        missing: lint.missing,
-        hint: "Use docs/ARTICLE_TEMPLATE.md sections.",
+        missingHeadings: lint.missingHeadings,
+        missingHeaderFields: lint.missingHeaderFields,
+        invalidEnums: lint.invalidEnums,
+        hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
       },
       { status: 400 },
     );
