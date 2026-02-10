@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { consumeAiWrite } from "@/lib/aiRateLimit";
 import { verifyAndConsumePow } from "@/lib/pow";
+import { validateCatalogMarkdown } from "@/lib/catalogLint";
 
 export async function POST(
   req: Request,
@@ -71,6 +72,18 @@ export async function POST(
 
   if (!contentMd) {
     return Response.json({ error: "contentMd is required" }, { status: 400 });
+  }
+
+  const lint = validateCatalogMarkdown(contentMd);
+  if (!lint.ok) {
+    return Response.json(
+      {
+        error: "Catalog format invalid",
+        missing: lint.missing,
+        hint: "Use docs/ARTICLE_TEMPLATE.md sections.",
+      },
+      { status: 400 },
+    );
   }
 
   const last = await prisma.articleRevision.findFirst({
