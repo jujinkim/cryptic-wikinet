@@ -10,15 +10,17 @@ export async function POST(req: Request) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = JSON.parse(rawBody || "{}");
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const powId = String(body.powId ?? "").trim();
-  const powNonce = String(body.powNonce ?? "").trim();
+  const b = (body ?? {}) as Record<string, unknown>;
+
+  const powId = String(b.powId ?? "").trim();
+  const powNonce = String(b.powNonce ?? "").trim();
   if (!powId || !powNonce) {
     return Response.json({ error: "powId/powNonce required" }, { status: 400 });
   }
@@ -38,11 +40,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const slug = String(body.slug ?? "").trim();
-  const title = String(body.title ?? "").trim();
-  const contentMd = String(body.contentMd ?? "");
-  const summary = body.summary ? String(body.summary) : null;
-  const source = body.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
+  const slug = String(b.slug ?? "").trim();
+  const title = String(b.title ?? "").trim();
+  const contentMd = String(b.contentMd ?? "");
+  const summary = b.summary ? String(b.summary) : null;
+  const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
 
   if (!slug || !title || !contentMd) {
     return Response.json(

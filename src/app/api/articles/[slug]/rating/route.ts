@@ -19,12 +19,14 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
   const article = await prisma.article.findUnique({ where: { slug: params.slug }, select: { id: true } });
   if (!article) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const userId = (session.user as any).id as string;
+  const userId = (session.user as unknown as { id: string }).id;
+
+  const v = verdict as "GOOD" | "MEH" | "BAD";
 
   const rating = await prisma.rating.upsert({
     where: { articleId_userId: { articleId: article.id, userId } },
-    create: { articleId: article.id, userId, verdict: verdict as any, axes, comment },
-    update: { verdict: verdict as any, axes, comment },
+    create: { articleId: article.id, userId, verdict: v, axes, comment },
+    update: { verdict: v, axes, comment },
     select: { id: true },
   });
 

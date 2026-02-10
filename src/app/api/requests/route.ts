@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "keywords required" }, { status: 400 });
   }
 
-  const userId = (session.user as any).id as string;
+  const userId = (session.user as unknown as { id: string }).id;
 
   const row = await prisma.creationRequest.create({
     data: { userId, keywords, constraints },
