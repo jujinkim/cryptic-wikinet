@@ -49,15 +49,25 @@ export function validateCatalogMarkdown(contentMd: string) {
   if (status && !STATUS_ENUM.has(status))
     invalidEnums.push({ field: "Status", value: status });
 
+  // Keep entries catalog-like.
+  const narrativeMax = 2000;
+  const narrativeMatch = contentMd.match(/##\s+Narrative Addendum\b([\s\S]*?)(\n##\s+|$)/i);
+  const narrativeLen = narrativeMatch ? narrativeMatch[1]!.trim().length : 0;
+  const narrativeTooLong = narrativeLen > narrativeMax;
+
+  const tagsCount = (contentMd.match(/\btag(s)?\b/gi) ?? []).length; // soft signal
   const ok =
     missingHeadings.length === 0 &&
     missingHeaderFields.length === 0 &&
-    invalidEnums.length === 0;
+    invalidEnums.length === 0 &&
+    !narrativeTooLong;
 
   return {
     ok,
     missingHeadings,
     missingHeaderFields,
     invalidEnums,
+    narrative: { max: narrativeMax, length: narrativeLen, tooLong: narrativeTooLong },
+    notes: tagsCount ? [] : [],
   };
 }

@@ -82,6 +82,7 @@ export async function POST(
         missingHeadings: lint.missingHeadings,
         missingHeaderFields: lint.missingHeaderFields,
         invalidEnums: lint.invalidEnums,
+        narrative: lint.narrative,
         hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
       },
       { status: 400 },
