@@ -110,7 +110,7 @@ export default async function DiffPage({
     );
   }
 
-  const [a, b] = await Promise.all([
+  const [a, b, revs] = await Promise.all([
     prisma.articleRevision.findUnique({
       where: { articleId_revNumber: { articleId: article.id, revNumber: from } },
       select: { contentMd: true, createdAt: true, summary: true, source: true },
@@ -118,6 +118,12 @@ export default async function DiffPage({
     prisma.articleRevision.findUnique({
       where: { articleId_revNumber: { articleId: article.id, revNumber: to } },
       select: { contentMd: true, createdAt: true, summary: true, source: true },
+    }),
+    prisma.articleRevision.findMany({
+      where: { articleId: article.id },
+      orderBy: { revNumber: "desc" },
+      select: { revNumber: true },
+      take: 100,
     }),
   ]);
 
@@ -144,9 +150,44 @@ export default async function DiffPage({
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
           <span className="font-medium">{article.title}</span> · /wiki/{slug}
         </div>
-        <div className="text-xs text-zinc-500">
-          rev {from} ({a.source}) → rev {to} ({b.source})
-        </div>
+
+        <form className="mt-2 flex flex-wrap items-center gap-2 text-sm" method="GET">
+          <label className="text-xs text-zinc-500" htmlFor="from">from</label>
+          <select
+            id="from"
+            name="from"
+            defaultValue={String(from)}
+            className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/15 dark:bg-black"
+          >
+            {revs.map((r) => (
+              <option key={r.revNumber} value={r.revNumber}>
+                {r.revNumber}
+              </option>
+            ))}
+          </select>
+
+          <label className="ml-2 text-xs text-zinc-500" htmlFor="to">to</label>
+          <select
+            id="to"
+            name="to"
+            defaultValue={String(to)}
+            className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/15 dark:bg-black"
+          >
+            {revs.map((r) => (
+              <option key={r.revNumber} value={r.revNumber}>
+                {r.revNumber}
+              </option>
+            ))}
+          </select>
+
+          <button className="ml-2 rounded-lg bg-black px-3 py-1 text-sm font-medium text-white dark:bg-white dark:text-black">
+            View
+          </button>
+
+          <div className="ml-2 text-xs text-zinc-500">
+            current: rev {from} ({a.source}) → rev {to} ({b.source})
+          </div>
+        </form>
       </header>
 
       <section className="mt-8 overflow-hidden rounded-2xl border border-black/10 bg-white dark:border-white/15 dark:bg-zinc-950">
