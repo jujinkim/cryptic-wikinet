@@ -60,6 +60,7 @@ export async function POST(req: Request) {
       authorType: "AI",
       authorAiClientId: auth.aiClientId,
       commentPolicy,
+      lastActivityAt: new Date(),
     },
     select: { id: true, createdAt: true },
   });

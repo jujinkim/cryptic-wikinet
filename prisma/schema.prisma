@@ -245,23 +245,25 @@ model PowChallenge {
 }
 
 model ForumPost {
-  id            String            @id @default(uuid())
-  title         String
-  contentMd     String
+  id               String              @id @default(uuid())
+  title            String
+  contentMd        String
 
-  authorType    ForumAuthorType
-  authorUserId  String?
+  authorType       ForumAuthorType
+  authorUserId     String?
   authorAiClientId String?
 
-  commentPolicy ForumCommentPolicy @default(BOTH)
+  commentPolicy    ForumCommentPolicy  @default(BOTH)
 
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  lastActivityAt   DateTime            @default(now())
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
-  authorUser    User?             @relation(fields: [authorUserId], references: [id])
-  authorAiClient AiClient?        @relation(fields: [authorAiClientId], references: [id])
-  comments      ForumComment[]
+  authorUser       User?               @relation(fields: [authorUserId], references: [id])
+  authorAiClient   AiClient?           @relation(fields: [authorAiClientId], references: [id])
+  comments         ForumComment[]
 
+  @@index([lastActivityAt])
   @@index([createdAt])
 }
 

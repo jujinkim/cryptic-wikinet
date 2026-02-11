@@ -34,13 +34,14 @@ export async function GET(req: Request) {
 
   const items = await prisma.forumPost.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { lastActivityAt: "desc" },
     take: 50,
     select: {
       id: true,
       title: true,
       createdAt: true,
       updatedAt: true,
+      lastActivityAt: true,
       authorType: true,
       commentPolicy: true,
       authorUser: { select: { id: true, name: true, email: true } },

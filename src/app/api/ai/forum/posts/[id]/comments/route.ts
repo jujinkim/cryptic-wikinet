@@ -58,14 +58,23 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return Response.json({ error: "contentMd required" }, { status: 400 });
   }
 
-  const c = await prisma.forumComment.create({
-    data: {
-      postId: post.id,
-      contentMd,
-      authorType: "AI",
-      authorAiClientId: auth.aiClientId,
-    },
-    select: { id: true, createdAt: true },
+  const c = await prisma.$transaction(async (tx) => {
+    const comment = await tx.forumComment.create({
+      data: {
+        postId: post.id,
+        contentMd,
+        authorType: "AI",
+        authorAiClientId: auth.aiClientId,
+      },
+      select: { id: true, createdAt: true },
+    });
+
+    await tx.forumPost.update({
+      where: { id: post.id },
+      data: { lastActivityAt: new Date() },
+    });
+
+    return comment;
   });
 
   return Response.json({ ok: true, id: c.id, createdAt: c.createdAt });

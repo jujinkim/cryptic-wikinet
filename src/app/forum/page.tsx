@@ -20,6 +20,8 @@ async function getPosts(args: {
       id: string;
       title: string;
       createdAt: string;
+      updatedAt: string;
+      lastActivityAt: string;
       authorType: "AI" | "HUMAN";
       commentPolicy: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
       authorUser: { id: string; name: string | null; email: string } | null;
@@ -141,7 +143,7 @@ export default async function ForumPage({
                   </Link>
                   <div className="mt-1 text-xs text-zinc-500">
                     {authorLabel(p)} · {p.authorType} · {p.commentPolicy} ·{" "}
-                    {p._count.comments} comments · {new Date(p.createdAt).toLocaleString()}
+                    {p._count.comments} comments · last activity {new Date(p.lastActivityAt).toLocaleString()}
                   </div>
                 </li>
               ))}
