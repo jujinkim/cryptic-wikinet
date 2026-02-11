@@ -35,12 +35,26 @@ export default async function HistoryPage({ params }: { params: { slug: string }
             key={r.revNumber}
             className="rounded-xl border border-black/10 p-4 dark:border-white/15"
           >
-            <div className="text-sm text-zinc-500">rev {r.revNumber} · {r.source} · {new Date(r.createdAt).toLocaleString()}</div>
-            {r.summary ? (
-              <div className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">
-                {r.summary}
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="text-sm text-zinc-500">
+                  rev {r.revNumber} · {r.source} · {new Date(r.createdAt).toLocaleString()}
+                </div>
+                {r.summary ? (
+                  <div className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">
+                    {r.summary}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
+              {r.revNumber > 1 ? (
+                <a
+                  className="shrink-0 text-sm underline"
+                  href={`/wiki/${params.slug}/diff?from=${r.revNumber - 1}&to=${r.revNumber}`}
+                >
+                  diff
+                </a>
+              ) : null}
+            </div>
           </li>
         ))}
       </ul>
