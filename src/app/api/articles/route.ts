@@ -14,6 +14,8 @@ export async function GET(req: Request) {
     : {};
 
   const tag = (url.searchParams.get("tag") ?? "").trim();
+  const type = (url.searchParams.get("type") ?? "").trim().toLowerCase();
+  const status = (url.searchParams.get("status") ?? "").trim().toLowerCase();
 
   const where2 = {
     ...where,
@@ -30,8 +32,29 @@ export async function GET(req: Request) {
       updatedAt: true,
       isCanon: true,
       tags: true,
+      currentRevision: { select: { contentMd: true } },
     },
   });
 
-  return Response.json({ items: rows });
+  const { getTypeStatus } = await import("@/lib/catalogHeader");
+
+  const items = rows
+    .map((r) => {
+      const meta = r.currentRevision?.contentMd
+        ? getTypeStatus(r.currentRevision.contentMd)
+        : { type: null, status: null };
+      return {
+        slug: r.slug,
+        title: r.title,
+        updatedAt: r.updatedAt,
+        isCanon: r.isCanon,
+        tags: r.tags,
+        type: meta.type,
+        status: meta.status,
+      };
+    })
+    .filter((r) => (type ? r.type === type : true))
+    .filter((r) => (status ? r.status === status : true));
+
+  return Response.json({ items });
 }

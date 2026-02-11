@@ -12,27 +12,34 @@ type Item = {
   updatedAt: string;
   isCanon: boolean;
   tags?: string[];
+  type?: string | null;
+  status?: string | null;
 };
 
 export default function HomeClient() {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string>("");
+  const [type, setType] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const t = (sp.get("tag") ?? "").trim();
-    setTag(t);
+    setTag((sp.get("tag") ?? "").trim());
+    setType((sp.get("type") ?? "").trim());
+    setStatus((sp.get("status") ?? "").trim());
   }, []);
 
   const url = useMemo(() => {
     const u = new URL("/api/articles", window.location.origin);
     if (query.trim()) u.searchParams.set("query", query.trim());
     if (tag.trim()) u.searchParams.set("tag", tag.trim());
+    if (type.trim()) u.searchParams.set("type", type.trim());
+    if (status.trim()) u.searchParams.set("status", status.trim());
     return u.toString();
-  }, [query, tag]);
+  }, [query, tag, type, status]);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,24 +74,69 @@ export default function HomeClient() {
 
   return (
     <section className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col">
-          <h2 className="text-lg font-medium">Catalog</h2>
-          {tag ? (
-            <div className="mt-1 text-xs text-zinc-500">
-              filtering by tag: <span className="font-medium">{tag}</span>{" "}
-              <Link className="underline" href="/">
-                clear
-              </Link>
-            </div>
-          ) : null}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col">
+            <h2 className="text-lg font-medium">Catalog</h2>
+            {tag || type || status ? (
+              <div className="mt-1 text-xs text-zinc-500">
+                filters:{" "}
+                {tag ? <span className="font-medium">tag:{tag}</span> : null}{" "}
+                {type ? <span className="font-medium">type:{type}</span> : null}{" "}
+                {status ? <span className="font-medium">status:{status}</span> : null}{" "}
+                <Link className="underline" href="/">clear</Link>
+              </div>
+            ) : null}
+          </div>
+
+          <input
+            className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black sm:max-w-xs"
+            placeholder="Search by title or slug"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
-        <input
-          className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black sm:max-w-xs"
-          placeholder="Search by title or slug"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+
+        <div className="flex flex-wrap gap-2">
+          <select
+            className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
+            value={type}
+            onChange={(e) => {
+              const v = e.target.value;
+              setType(v);
+              const sp = new URLSearchParams(window.location.search);
+              if (v) sp.set("type", v); else sp.delete("type");
+              window.history.replaceState({}, "", `/?${sp.toString()}`);
+            }}
+          >
+            <option value="">Type (all)</option>
+            <option value="entity">entity</option>
+            <option value="phenomenon">phenomenon</option>
+            <option value="object">object</option>
+            <option value="place">place</option>
+            <option value="protocol">protocol</option>
+            <option value="event">event</option>
+          </select>
+
+          <select
+            className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
+            value={status}
+            onChange={(e) => {
+              const v = e.target.value;
+              setStatus(v);
+              const sp = new URLSearchParams(window.location.search);
+              if (v) sp.set("status", v); else sp.delete("status");
+              window.history.replaceState({}, "", `/?${sp.toString()}`);
+            }}
+          >
+            <option value="">Status (all)</option>
+            <option value="unverified">unverified</option>
+            <option value="recurring">recurring</option>
+            <option value="contained">contained</option>
+            <option value="dormant">dormant</option>
+            <option value="unknown">unknown</option>
+          </select>
+        </div>
       </div>
 
       <div className="mt-4">
