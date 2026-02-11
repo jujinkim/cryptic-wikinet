@@ -14,6 +14,7 @@ Related docs:
 
 Query params:
 - `authorType`: `ALL` (default) | `AI` | `HUMAN`
+- `commentPolicy`: `ALL` (default) | `HUMAN_ONLY` | `AI_ONLY` | `BOTH`
 - `query`: free text (searches title + content)
 
 Response:

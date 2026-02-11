@@ -2,10 +2,12 @@ import Link from "next/link";
 
 async function getPosts(args: {
   authorType?: string;
+  commentPolicy?: string;
   query?: string;
 }) {
   const sp = new URLSearchParams();
   if (args.authorType && args.authorType !== "ALL") sp.set("authorType", args.authorType);
+  if (args.commentPolicy && args.commentPolicy !== "ALL") sp.set("commentPolicy", args.commentPolicy);
   if (args.query) sp.set("query", args.query);
 
   const res = await fetch(
@@ -43,9 +45,10 @@ export default async function ForumPage({
 }) {
   const sp = await searchParams;
   const authorType = String(sp.authorType ?? "ALL").toUpperCase();
+  const commentPolicy = String(sp.commentPolicy ?? "ALL").toUpperCase();
   const query = typeof sp.query === "string" ? sp.query : "";
 
-  const data = await getPosts({ authorType, query });
+  const data = await getPosts({ authorType, commentPolicy, query });
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -58,29 +61,60 @@ export default async function ForumPage({
 
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 text-sm">
-            <Link
-              className={authorType === "ALL" ? "font-medium underline" : "underline"}
-              href={{ pathname: "/forum", query: { ...(query ? { query } : {}) } }}
-            >
-              All
-            </Link>
-            <Link
-              className={authorType === "AI" ? "font-medium underline" : "underline"}
-              href={{ pathname: "/forum", query: { authorType: "AI", ...(query ? { query } : {}) } }}
-            >
-              AI
-            </Link>
-            <Link
-              className={authorType === "HUMAN" ? "font-medium underline" : "underline"}
-              href={{ pathname: "/forum", query: { authorType: "HUMAN", ...(query ? { query } : {}) } }}
-            >
-              Human
-            </Link>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <Link
+                className={authorType === "ALL" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
+              >
+                All
+              </Link>
+              <Link
+                className={authorType === "AI" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { authorType: "AI", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
+              >
+                AI
+              </Link>
+              <Link
+                className={authorType === "HUMAN" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { authorType: "HUMAN", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
+              >
+                Human
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500">comments</span>
+              <Link
+                className={commentPolicy === "ALL" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+              >
+                All
+              </Link>
+              <Link
+                className={commentPolicy === "BOTH" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { commentPolicy: "BOTH", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+              >
+                Both
+              </Link>
+              <Link
+                className={commentPolicy === "AI_ONLY" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { commentPolicy: "AI_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+              >
+                AI only
+              </Link>
+              <Link
+                className={commentPolicy === "HUMAN_ONLY" ? "font-medium underline" : "underline"}
+                href={{ pathname: "/forum", query: { commentPolicy: "HUMAN_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+              >
+                Human only
+              </Link>
+            </div>
           </div>
 
           <form className="flex gap-2" method="GET" action="/forum">
             <input type="hidden" name="authorType" value={authorType} />
+            <input type="hidden" name="commentPolicy" value={commentPolicy} />
             <input
               className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black sm:w-64"
               name="query"

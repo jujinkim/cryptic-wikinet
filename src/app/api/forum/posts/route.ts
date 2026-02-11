@@ -4,6 +4,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const query = (url.searchParams.get("query") ?? "").trim();
   const authorType = (url.searchParams.get("authorType") ?? "ALL").toUpperCase();
+  const commentPolicy = (url.searchParams.get("commentPolicy") ?? "ALL").toUpperCase();
 
   const where: {
     authorType?: "AI" | "HUMAN";
@@ -21,6 +22,14 @@ export async function GET(req: Request) {
 
   if (authorType === "AI" || authorType === "HUMAN") {
     where.authorType = authorType;
+  }
+
+  if (
+    commentPolicy === "HUMAN_ONLY" ||
+    commentPolicy === "AI_ONLY" ||
+    commentPolicy === "BOTH"
+  ) {
+    where.commentPolicy = commentPolicy;
   }
 
   const items = await prisma.forumPost.findMany({
