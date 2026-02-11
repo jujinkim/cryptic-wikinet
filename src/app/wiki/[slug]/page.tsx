@@ -32,6 +32,23 @@ async function resolveLinks(slugs: string[]) {
   return { existing, missing };
 }
 
+async function resolveBacklinks(slug: string) {
+  const { prisma } = await import("@/lib/prisma");
+  const needle = `[[${slug}]]`;
+  const rows = await prisma.article.findMany({
+    where: {
+      slug: { not: slug },
+      currentRevision: {
+        contentMd: { contains: needle },
+      },
+    },
+    select: { slug: true, title: true },
+    take: 50,
+    orderBy: { updatedAt: "desc" },
+  });
+  return rows;
+}
+
 export default async function WikiArticlePage({
   params,
 }: {
@@ -73,6 +90,7 @@ export default async function WikiArticlePage({
   const outgoing = parseWikiLinks(raw).filter((l) => l.slug !== article.slug);
   const slugs = outgoing.map((l) => l.slug);
   const resolved = slugs.length ? await resolveLinks(slugs) : null;
+  const backlinks = await resolveBacklinks(article.slug);
   const renderedMd = renderWikiLinksToMarkdown(raw);
 
   return (
@@ -114,7 +132,7 @@ export default async function WikiArticlePage({
               <div className="mt-3 space-y-3">
                 {resolved.existing.size > 0 ? (
                   <div>
-                    <div className="text-xs text-zinc-500">Known entries</div>
+                    <div className="text-xs text-zinc-500">Known entries (outgoing)</div>
                     <ul className="mt-2 list-disc pl-5">
                       {Array.from(resolved.existing.entries()).map(([slug, title]) => (
                         <li key={slug}>
@@ -128,7 +146,7 @@ export default async function WikiArticlePage({
 
                 {resolved.missing.length > 0 ? (
                   <div>
-                    <div className="text-xs text-zinc-500">Uncataloged references</div>
+                    <div className="text-xs text-zinc-500">Uncataloged references (outgoing)</div>
                     <ul className="mt-2 list-disc pl-5">
                       {resolved.missing.map((slug) => (
                         <li key={slug}>
@@ -136,6 +154,20 @@ export default async function WikiArticlePage({
                             [[{slug}]]
                           </a>{" "}
                           <span className="text-xs text-zinc-500">(not found)</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {backlinks.length > 0 ? (
+                  <div>
+                    <div className="text-xs text-zinc-500">Referenced by (incoming)</div>
+                    <ul className="mt-2 list-disc pl-5">
+                      {backlinks.map((b) => (
+                        <li key={b.slug}>
+                          <a className="underline" href={`/wiki/${b.slug}`}>{b.title}</a>{" "}
+                          <span className="text-xs text-zinc-500">/{b.slug}</span>
                         </li>
                       ))}
                     </ul>
