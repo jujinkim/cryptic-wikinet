@@ -16,10 +16,12 @@ export async function GET(req: Request) {
   const tag = (url.searchParams.get("tag") ?? "").trim();
   const type = (url.searchParams.get("type") ?? "").trim().toLowerCase();
   const status = (url.searchParams.get("status") ?? "").trim().toLowerCase();
+  const canonOnly = (url.searchParams.get("canon") ?? "").trim() === "1";
 
   const where2 = {
     ...where,
     ...(tag ? { tags: { has: tag } } : {}),
+    ...(canonOnly ? { isCanon: true } : {}),
   } as const;
 
   const rows = await prisma.article.findMany({

@@ -21,6 +21,7 @@ export default function HomeClient() {
   const [tag, setTag] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [canon, setCanon] = useState<boolean>(false);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export default function HomeClient() {
     setTag((sp.get("tag") ?? "").trim());
     setType((sp.get("type") ?? "").trim());
     setStatus((sp.get("status") ?? "").trim());
+    setCanon((sp.get("canon") ?? "").trim() === "1");
   }, []);
 
   const url = useMemo(() => {
@@ -38,8 +40,9 @@ export default function HomeClient() {
     if (tag.trim()) u.searchParams.set("tag", tag.trim());
     if (type.trim()) u.searchParams.set("type", type.trim());
     if (status.trim()) u.searchParams.set("status", status.trim());
+    if (canon) u.searchParams.set("canon", "1");
     return u.toString();
-  }, [query, tag, type, status]);
+  }, [query, tag, type, status, canon]);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,7 +100,22 @@ export default function HomeClient() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black">
+            <input
+              type="checkbox"
+              checked={canon}
+              onChange={(e) => {
+                const v = e.target.checked;
+                setCanon(v);
+                const sp = new URLSearchParams(window.location.search);
+                if (v) sp.set("canon", "1"); else sp.delete("canon");
+                window.history.replaceState({}, "", `/?${sp.toString()}`);
+              }}
+            />
+            canon only
+          </label>
+
           <select
             className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
             value={type}
