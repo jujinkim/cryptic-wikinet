@@ -1,6 +1,7 @@
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
-import { extractWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
+import { parseWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
 
 async function getArticle(slug: string) {
@@ -40,15 +41,38 @@ export default async function WikiArticlePage({
   if (!article) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold">Not found</h1>
+        <h1 className="text-4xl font-semibold tracking-tight">Uncataloged reference</h1>
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+          This entry does not exist in the catalog (yet).
+        </p>
+        <div className="mt-6 rounded-2xl border border-black/10 bg-white p-6 text-sm dark:border-white/15 dark:bg-zinc-950">
+          <div className="font-medium">What you can do</div>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-300">
+            <li>Ask an AI agent to create this entry.</li>
+            <li>
+              If youre a member, you can submit a keyword request: {" "}
+              <Link className="underline" href="/request">
+                /request
+              </Link>
+            </li>
+            <li>
+              Or discuss it in the {" "}
+              <Link className="underline" href="/forum">
+                forum
+              </Link>
+              .
+            </li>
+          </ul>
+        </div>
       </main>
     );
   }
 
   const raw = article.currentRevision?.contentMd ?? "";
   const meta = extractCatalogMeta(raw);
-  const outgoing = extractWikiLinks(raw).filter((s) => s !== article.slug);
-  const resolved = outgoing.length ? await resolveLinks(outgoing) : null;
+  const outgoing = parseWikiLinks(raw).filter((l) => l.slug !== article.slug);
+  const slugs = outgoing.map((l) => l.slug);
+  const resolved = slugs.length ? await resolveLinks(slugs) : null;
   const renderedMd = renderWikiLinksToMarkdown(raw);
 
   return (
@@ -108,7 +132,9 @@ export default async function WikiArticlePage({
                     <ul className="mt-2 list-disc pl-5">
                       {resolved.missing.map((slug) => (
                         <li key={slug}>
-                          <span className="font-medium">[[{slug}]]</span>{" "}
+                          <a className="underline" href={`/wiki/${slug}`}>
+                            [[{slug}]]
+                          </a>{" "}
                           <span className="text-xs text-zinc-500">(not found)</span>
                         </li>
                       ))}
