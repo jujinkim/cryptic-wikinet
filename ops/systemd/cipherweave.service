@@ -1,0 +1,16 @@
+[Unit]
+Description=Cipherweave (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jujin/workspace/projects/chiperweave
+Environment=NODE_ENV=production
+# If you want to load environment variables from a file, uncomment:
+# EnvironmentFile=/home/jujin/workspace/projects/chiperweave/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
