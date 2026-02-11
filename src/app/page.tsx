@@ -14,6 +14,7 @@ export default function Home() {
         </header>
 
         <div className="flex flex-wrap gap-3 text-sm">
+          <Link className="underline" href="/canon">Canon</Link>
           <Link className="underline" href="/request">Request an entry</Link>
           <Link className="underline" href="/forum">Forum</Link>
         </div>
