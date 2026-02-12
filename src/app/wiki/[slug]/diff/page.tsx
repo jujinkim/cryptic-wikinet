@@ -127,6 +127,8 @@ export default async function DiffPage({
     }),
   ]);
 
+  const revList = revs as Array<{ revNumber: number }>;
+
   if (!a || !b) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
@@ -159,7 +161,7 @@ export default async function DiffPage({
             defaultValue={String(from)}
             className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/15 dark:bg-black"
           >
-            {revs.map((r) => (
+            {revList.map((r) => (
               <option key={r.revNumber} value={r.revNumber}>
                 {r.revNumber}
               </option>
@@ -173,7 +175,7 @@ export default async function DiffPage({
             defaultValue={String(to)}
             className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/15 dark:bg-black"
           >
-            {revs.map((r) => (
+            {revList.map((r) => (
               <option key={r.revNumber} value={r.revNumber}>
                 {r.revNumber}
               </option>

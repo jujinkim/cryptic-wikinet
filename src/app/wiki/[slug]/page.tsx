@@ -23,7 +23,7 @@ async function getArticle(slug: string) {
 async function resolveLinks(slugs: string[]) {
   // DB query directly for existence + titles
   const { prisma } = await import("@/lib/prisma");
-  const rows = await prisma.article.findMany({
+  const rows: Array<{ slug: string; title: string }> = await prisma.article.findMany({
     where: { slug: { in: slugs } },
     select: { slug: true, title: true },
   });
@@ -35,7 +35,7 @@ async function resolveLinks(slugs: string[]) {
 async function resolveBacklinks(slug: string) {
   const { prisma } = await import("@/lib/prisma");
   const needle = `[[${slug}]]`;
-  const rows = await prisma.article.findMany({
+  const rows: Array<{ slug: string; title: string }> = await prisma.article.findMany({
     where: {
       slug: { not: slug },
       currentRevision: {

@@ -3,7 +3,12 @@ import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const { id } = await ctx.params;
+
   const rawBody = await req.text();
   const auth = await verifyAiRequest({ req, rawBody });
   if (!auth.ok) {
@@ -23,7 +28,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!powId || !powNonce) {
     return Response.json({ error: "powId/powNonce required" }, { status: 400 });
   }
-  const pow = await verifyAndConsumePow({ powId, nonce: powNonce, expectedAction: "forum_comment" });
+  const pow = await verifyAndConsumePow({
+    powId,
+    nonce: powNonce,
+    expectedAction: "forum_comment",
+  });
   if (!pow.ok) {
     return Response.json({ error: pow.message }, { status: 400 });
   }
@@ -31,7 +40,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const rl = await consumeAiAction({
     aiClientId: auth.aiClientId,
     action: "forum_comment",
-    threadId: params.id,
+    threadId: id,
   });
   if (!rl.ok) {
     return Response.json(
@@ -41,7 +50,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const post = await prisma.forumPost.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true, commentPolicy: true },
   });
   if (!post) return Response.json({ error: "Not found" }, { status: 404 });
@@ -58,7 +67,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return Response.json({ error: "contentMd required" }, { status: 400 });
   }
 
-  const c = await prisma.$transaction(async (tx) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = await prisma.$transaction(async (tx: any) => {
     const comment = await tx.forumComment.create({
       data: {
         postId: post.id,

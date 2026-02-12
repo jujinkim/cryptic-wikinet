@@ -1,14 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const { id } = await ctx.params;
   const post = await prisma.forumPost.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       title: true,
       contentMd: true,
       createdAt: true,
       updatedAt: true,
+      lastActivityAt: true,
       authorType: true,
       commentPolicy: true,
       authorUser: { select: { id: true, name: true, email: true } },

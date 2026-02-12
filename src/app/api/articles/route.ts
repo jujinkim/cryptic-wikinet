@@ -24,7 +24,14 @@ export async function GET(req: Request) {
     ...(canonOnly ? { isCanon: true } : {}),
   } as const;
 
-  const rows = await prisma.article.findMany({
+  const rows: Array<{
+    slug: string;
+    title: string;
+    updatedAt: Date;
+    isCanon: boolean;
+    tags: string[];
+    currentRevision: { contentMd: string } | null;
+  }> = await prisma.article.findMany({
     where: where2,
     orderBy: { updatedAt: "desc" },
     take: 50,

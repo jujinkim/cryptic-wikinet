@@ -1,15 +1,22 @@
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_req: Request, { params }: { params: { slug: string } }) {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ slug: string }> },
+) {
+  const { slug } = await ctx.params;
+
   const article = await prisma.article.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     select: {
       slug: true,
       title: true,
       isCanon: true,
       tags: true,
       updatedAt: true,
-      currentRevision: { select: { revNumber: true, contentMd: true, createdAt: true } },
+      currentRevision: {
+        select: { revNumber: true, contentMd: true, createdAt: true },
+      },
     },
   });
 

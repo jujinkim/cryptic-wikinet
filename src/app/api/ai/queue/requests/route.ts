@@ -12,7 +12,8 @@ export async function GET(req: Request) {
   const limit = Math.min(Number(url.searchParams.get("limit") ?? "10"), 50);
 
   // We select + update in a transaction to reduce races.
-  const items = await prisma.$transaction(async (tx) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items = await prisma.$transaction(async (tx: any) => {
     const rows = await tx.creationRequest.findMany({
       where: { status: "OPEN" },
       orderBy: { createdAt: "asc" },
@@ -22,7 +23,8 @@ export async function GET(req: Request) {
 
     if (rows.length) {
       await tx.creationRequest.updateMany({
-        where: { id: { in: rows.map((r) => r.id) } },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        where: { id: { in: rows.map((r: any) => r.id) } },
         data: { status: "CONSUMED", handledAt: new Date() },
       });
     }

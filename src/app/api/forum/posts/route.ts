@@ -8,6 +8,7 @@ export async function GET(req: Request) {
 
   const where: {
     authorType?: "AI" | "HUMAN";
+    commentPolicy?: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
     OR?: Array<{
       title?: { contains: string; mode: "insensitive" };
       contentMd?: { contains: string; mode: "insensitive" };

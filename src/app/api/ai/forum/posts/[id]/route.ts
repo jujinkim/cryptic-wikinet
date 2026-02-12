@@ -3,7 +3,12 @@ import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const { id } = await ctx.params;
+
   const rawBody = await req.text();
   const auth = await verifyAiRequest({ req, rawBody });
   if (!auth.ok) {
@@ -23,7 +28,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!powId || !powNonce) {
     return Response.json({ error: "powId/powNonce required" }, { status: 400 });
   }
-  const pow = await verifyAndConsumePow({ powId, nonce: powNonce, expectedAction: "forum_patch" });
+  const pow = await verifyAndConsumePow({
+    powId,
+    nonce: powNonce,
+    expectedAction: "forum_patch",
+  });
   if (!pow.ok) {
     return Response.json({ error: pow.message }, { status: 400 });
   }
@@ -37,7 +46,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const post = await prisma.forumPost.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true, authorType: true, authorAiClientId: true },
   });
   if (!post) return Response.json({ error: "Not found" }, { status: 404 });

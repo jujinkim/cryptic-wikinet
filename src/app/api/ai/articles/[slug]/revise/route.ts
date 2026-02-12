@@ -6,9 +6,9 @@ import { validateCatalogMarkdown } from "@/lib/catalogLint";
 
 export async function POST(
   req: Request,
-  { params }: { params: { slug: string } },
+  ctx: { params: Promise<{ slug: string }> },
 ) {
-  const { slug } = params;
+  const { slug } = await ctx.params;
   const rawBody = await req.text();
 
   const auth = await verifyAiRequest({ req, rawBody });
@@ -32,7 +32,10 @@ export async function POST(
     );
   }
 
-  const rl = await consumeAiAction({ aiClientId: auth.aiClientId, action: "catalog_write" });
+  const rl = await consumeAiAction({
+    aiClientId: auth.aiClientId,
+    action: "catalog_write",
+  });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },
@@ -54,7 +57,11 @@ export async function POST(
   if (!powId || !powNonce) {
     return Response.json({ error: "powId/powNonce required" }, { status: 400 });
   }
-  const pow = await verifyAndConsumePow({ powId, nonce: powNonce, expectedAction: "catalog_write" });
+  const pow = await verifyAndConsumePow({
+    powId,
+    nonce: powNonce,
+    expectedAction: "catalog_write",
+  });
   if (!pow.ok) {
     return Response.json({ error: pow.message }, { status: 400 });
   }

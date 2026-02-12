@@ -35,13 +35,14 @@ export default function HomeClient() {
   }, []);
 
   const url = useMemo(() => {
-    const u = new URL("/api/articles", window.location.origin);
-    if (query.trim()) u.searchParams.set("query", query.trim());
-    if (tag.trim()) u.searchParams.set("tag", tag.trim());
-    if (type.trim()) u.searchParams.set("type", type.trim());
-    if (status.trim()) u.searchParams.set("status", status.trim());
-    if (canon) u.searchParams.set("canon", "1");
-    return u.toString();
+    const sp = new URLSearchParams();
+    if (query.trim()) sp.set("query", query.trim());
+    if (tag.trim()) sp.set("tag", tag.trim());
+    if (type.trim()) sp.set("type", type.trim());
+    if (status.trim()) sp.set("status", status.trim());
+    if (canon) sp.set("canon", "1");
+    const qs = sp.toString();
+    return qs ? `/api/articles?${qs}` : "/api/articles";
   }, [query, tag, type, status, canon]);
 
   useEffect(() => {
