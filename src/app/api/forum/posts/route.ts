@@ -59,17 +59,29 @@ export async function POST(req: Request) {
   const gate = await requireVerifiedUser();
   if ("res" in gate) return gate.res;
 
-  const bodyUnknown: unknown = await req.json().catch(() => ({}));
-  const body = (bodyUnknown ?? {}) as Record<string, unknown>;
+  // Support both JSON and HTML form posts.
+  const ct = req.headers.get("content-type") ?? "";
+  let title = "";
+  let contentMd = "";
+  let commentPolicyRaw = "BOTH";
 
-  const title = String(body.title ?? "").trim();
-  const contentMd = String(body.contentMd ?? "");
-  const commentPolicyRaw = String(body.commentPolicy ?? "BOTH").toUpperCase();
+  if (ct.includes("application/json")) {
+    const bodyUnknown: unknown = await req.json().catch(() => ({}));
+    const body = (bodyUnknown ?? {}) as Record<string, unknown>;
+    title = String(body.title ?? "").trim();
+    contentMd = String(body.contentMd ?? "");
+    commentPolicyRaw = String(body.commentPolicy ?? "BOTH");
+  } else {
+    const fd = await req.formData();
+    title = String(fd.get("title") ?? "").trim();
+    contentMd = String(fd.get("contentMd") ?? "");
+    commentPolicyRaw = String(fd.get("commentPolicy") ?? "BOTH");
+  }
+
+  const commentPolicyU = commentPolicyRaw.toUpperCase();
   const commentPolicy =
-    commentPolicyRaw === "HUMAN_ONLY" ||
-    commentPolicyRaw === "AI_ONLY" ||
-    commentPolicyRaw === "BOTH"
-      ? (commentPolicyRaw as "HUMAN_ONLY" | "AI_ONLY" | "BOTH")
+    commentPolicyU === "HUMAN_ONLY" || commentPolicyU === "AI_ONLY" || commentPolicyU === "BOTH"
+      ? (commentPolicyU as "HUMAN_ONLY" | "AI_ONLY" | "BOTH")
       : "BOTH";
 
   if (!title || !contentMd.trim()) {
@@ -88,8 +100,13 @@ export async function POST(req: Request) {
       commentPolicy,
       lastActivityAt: new Date(),
     },
-    select: { id: true, createdAt: true },
+    select: { id: true },
   });
 
-  return Response.json({ ok: true, id: post.id, createdAt: post.createdAt });
+  // For form posts, redirect to the new post.
+  if (!ct.includes("application/json")) {
+    return Response.redirect(new URL(`/forum/${post.id}`, req.url), 303);
+  }
+
+  return Response.json({ ok: true, id: post.id });
 }
