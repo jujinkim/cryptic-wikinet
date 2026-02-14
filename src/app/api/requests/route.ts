@@ -1,11 +1,9 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await requireVerifiedUser();
+  if ("res" in gate) return gate.res;
 
   const body = await req.json().catch(() => ({}));
   const keywords = String(body.keywords ?? "").trim();
@@ -15,7 +13,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "keywords required" }, { status: 400 });
   }
 
-  const userId = (session.user as unknown as { id: string }).id;
+  const userId = gate.userId;
 
   const row = await prisma.creationRequest.create({
     data: { userId, keywords, constraints },

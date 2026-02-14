@@ -42,8 +42,8 @@ export async function POST(req: Request) {
 
   await sendMail({
     to: email,
-    subject: "Verify your email for Liminal Folio",
-    text: `Verify your email:\n\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
+    subject: "Verify your email for Cryptic WikiNet",
+    text: `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
   });
 
   return Response.json({ ok: true, userId: user.id });

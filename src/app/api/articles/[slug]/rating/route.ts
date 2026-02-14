@@ -1,5 +1,5 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 import { Prisma } from "@prisma/client";
 
 export async function POST(
@@ -8,10 +8,8 @@ export async function POST(
 ) {
   const { slug } = await ctx.params;
 
-  const session = await auth();
-  if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await requireVerifiedUser();
+  if ("res" in gate) return gate.res;
 
   const bodyUnknown: unknown = await req.json().catch(() => ({}));
   const body = (bodyUnknown ?? {}) as Record<string, unknown>;
@@ -31,7 +29,7 @@ export async function POST(
   });
   if (!article) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const userId = (session.user as unknown as { id: string }).id;
+  const userId = gate.userId;
   const v = verdict as "GOOD" | "MEH" | "BAD";
 
   const rating = await prisma.rating.upsert({
