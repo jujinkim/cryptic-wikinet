@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import ReportResolveButton from "@/app/admin/reports/client";
 
 export const dynamic = "force-dynamic";
 
@@ -96,9 +97,16 @@ export default async function AdminReportsPage({
                 {r.targetType} · {r.targetRef}
               </div>
               {r.reason ? <div className="mt-2 text-sm">{r.reason}</div> : null}
-              <div className="mt-2 text-xs text-zinc-500">
-                by {r.reporter.name ?? r.reporter.email}
-                {r.resolvedBy ? ` · resolved by ${r.resolvedBy.name ?? r.resolvedBy.email}` : ""}
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <div className="text-xs text-zinc-500">
+                  by {r.reporter.name ?? r.reporter.email}
+                  {r.resolvedBy ? ` · resolved by ${r.resolvedBy.name ?? r.resolvedBy.email}` : ""}
+                </div>
+
+                <ReportResolveButton
+                  reportId={r.id}
+                  initialStatus={r.status === "RESOLVED" ? "RESOLVED" : "OPEN"}
+                />
               </div>
             </li>
           ))}
