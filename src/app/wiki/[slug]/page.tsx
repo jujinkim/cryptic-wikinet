@@ -3,6 +3,8 @@ import ReactMarkdown from "react-markdown";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { parseWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
+import { auth } from "@/auth";
+import ReportButton from "@/app/wiki/[slug]/report-client";
 
 async function getArticle(slug: string) {
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/articles/${slug}`, {
@@ -54,6 +56,9 @@ export default async function WikiArticlePage({
 }: {
   params: { slug: string };
 }) {
+  const session = await auth();
+  const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
+
   const article = await getArticle(params.slug);
   if (!article) {
     return (
@@ -97,6 +102,17 @@ export default async function WikiArticlePage({
     <main className="mx-auto max-w-5xl px-6 py-16">
       <header className="mb-8">
         <h1 className="text-4xl font-semibold tracking-tight">{article.title}</h1>
+        <div className="mt-2 flex items-center gap-4">
+          <div className="text-sm text-zinc-500">
+            /wiki/{article.slug} · rev {article.currentRevision?.revNumber ?? "?"}
+            {article.isCanon ? " · canon" : ""}
+          </div>
+          <ReportButton
+            targetType="ARTICLE"
+            targetRef={article.slug}
+            viewerUserId={viewerUserId}
+          />
+        </div>
         <div className="mt-2 text-sm text-zinc-500">
           /wiki/{article.slug} · rev {article.currentRevision?.revNumber ?? "?"}
           {article.isCanon ? " · canon" : ""}

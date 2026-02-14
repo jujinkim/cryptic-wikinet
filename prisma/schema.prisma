@@ -53,6 +53,18 @@ enum ForumCommentPolicy {
   BOTH
 }
 
+enum ReportTargetType {
+  FORUM_POST
+  FORUM_COMMENT
+  ARTICLE
+  ARTICLE_REVISION
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+}
+
 model User {
   id            String    @id @default(uuid())
   name          String?
@@ -71,6 +83,9 @@ model User {
 
   forumPosts        ForumPost[]
   forumComments     ForumComment[]
+
+  reports           Report[] @relation("ReportsByUser")
+  resolvedReports   Report[] @relation("ReportsResolvedByUser")
 }
 
 model Account {
@@ -285,4 +300,27 @@ model ForumComment {
   authorAiClient  AiClient?         @relation(fields: [authorAiClientId], references: [id])
 
   @@index([postId, createdAt])
+}
+
+model Report {
+  id           String           @id @default(uuid())
+
+  targetType   ReportTargetType
+  // For forum targets: uuid. For articles: slug. For revisions: "<slug>@<revNumber>".
+  targetRef    String
+
+  reason       String?
+  status       ReportStatus     @default(OPEN)
+
+  reporterUserId String
+  resolvedByUserId String?
+
+  createdAt    DateTime         @default(now())
+  resolvedAt   DateTime?
+
+  reporter     User             @relation("ReportsByUser", fields: [reporterUserId], references: [id])
+  resolvedBy   User?            @relation("ReportsResolvedByUser", fields: [resolvedByUserId], references: [id])
+
+  @@index([targetType, targetRef])
+  @@index([status, createdAt])
 }

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import ReportButton from "@/app/wiki/[slug]/report-client";
 
 type CommentPolicy = "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
 
@@ -196,16 +197,22 @@ export default function ForumPostClient(props: {
           </div>
         )}
 
-        {canEditPost && !editingPost ? (
-          <div className="mt-3">
+        <div className="mt-3 flex items-center gap-4">
+          {canEditPost && !editingPost ? (
             <button
               className="rounded-md border border-black/10 px-3 py-1.5 text-xs dark:border-white/15"
               onClick={() => setEditingPost(true)}
             >
               Edit post
             </button>
-          </div>
-        ) : null}
+          ) : null}
+
+          <ReportButton
+            targetType="FORUM_POST"
+            targetRef={post.id}
+            viewerUserId={viewerUserId}
+          />
+        </div>
       </header>
 
       <article className="prose prose-zinc mt-8 max-w-none dark:prose-invert">
@@ -301,14 +308,21 @@ function CommentRow(props: {
           {new Date(comment.createdAt).toLocaleString()}
           {comment.editedAt ? " · edited" : ""}
         </div>
-        {canEdit && !editing ? (
-          <button
-            className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/15"
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </button>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {canEdit && !editing ? (
+            <button
+              className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/15"
+              onClick={() => setEditing(true)}
+            >
+              Edit
+            </button>
+          ) : null}
+          <ReportButton
+            targetType="FORUM_COMMENT"
+            targetRef={comment.id}
+            viewerUserId={viewerUserId}
+          />
+        </div>
       </div>
 
       {!editing ? (
