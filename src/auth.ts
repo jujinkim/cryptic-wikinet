@@ -1,4 +1,5 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
+import { getServerSession } from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -6,108 +7,85 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isBlockedEmail } from "@/lib/emailPolicy";
 
-const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: "database" },
+  pages: {
+    signIn: "/login",
+  },
+  callbacks: {
+    async signIn({ user, account }) {
+      const email = user.email?.toLowerCase() ?? "";
+      if (!email) return false;
+      if (isBlockedEmail(email)) return false;
 
-const unavailable = () =>
-  Response.json({ error: "Auth unavailable during build phase" }, { status: 503 });
+      // If signing in with credentials, enforce email verification
+      if (account?.provider === "credentials") {
+        const dbUser = await prisma.user.findUnique({
+          where: { email },
+          select: { emailVerified: true },
+        });
+        if (!dbUser?.emailVerified) return false;
+      }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let handlers: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let auth: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let signIn: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let signOut: any;
-
-if (isBuildPhase) {
-  handlers = { GET: unavailable, POST: unavailable };
-  auth = async () => null;
-  signIn = async () => null;
-  signOut = async () => null;
-} else {
-  const nextAuth = NextAuth({
-    adapter: PrismaAdapter(prisma),
-    session: { strategy: "database" },
-    pages: {
-      signIn: "/login",
+      return true;
     },
-    callbacks: {
-      async signIn({ user, account }) {
-        const email = user.email?.toLowerCase() ?? "";
-        if (!email) return false;
-        if (isBlockedEmail(email)) return false;
-
-        // If signing in with credentials, enforce email verification
-        if (account?.provider === "credentials") {
-          const dbUser = await prisma.user.findUnique({
-            where: { email },
-            select: { emailVerified: true },
-          });
-          if (!dbUser?.emailVerified) return false;
-        }
-
-        return true;
-      },
-      async session({ session, user }) {
-        if (session.user) {
-          (session.user as unknown as { id?: string; role?: unknown }).id = user.id;
-          (session.user as unknown as { id?: string; role?: unknown }).role = (
-            user as unknown as { role?: unknown }
-          ).role;
-        }
-        return session;
-      },
+    async session({ session, user }) {
+      if (session.user) {
+        (session.user as unknown as { id?: string; role?: unknown }).id = user.id;
+        (session.user as unknown as { id?: string; role?: unknown }).role = (
+          user as unknown as { role?: unknown }
+        ).role;
+      }
+      return session;
     },
-    providers: [
-      Google({
-        clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-        allowDangerousEmailAccountLinking: false,
-      }),
-      Credentials({
-        name: "Email and password",
-        credentials: {
-          email: { label: "Email", type: "email" },
-          password: { label: "Password", type: "password" },
-        },
-        async authorize(credentials) {
-          const email = String(credentials?.email ?? "").toLowerCase();
-          const password = String(credentials?.password ?? "");
-          if (!email || !password) return null;
-          if (isBlockedEmail(email)) return null;
+  },
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      allowDangerousEmailAccountLinking: false,
+    }),
+    Credentials({
+      name: "Email and password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = String(credentials?.email ?? "").toLowerCase();
+        const password = String(credentials?.password ?? "");
+        if (!email || !password) return null;
+        if (isBlockedEmail(email)) return null;
 
-          const user = await prisma.user.findUnique({
-            where: { email },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              passwordHash: true,
-              emailVerified: true,
-              role: true,
-            },
-          });
-          if (!user?.passwordHash) return null;
-          if (!user.emailVerified) return null;
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            passwordHash: true,
+            emailVerified: true,
+            role: true,
+          },
+        });
+        if (!user?.passwordHash) return null;
+        if (!user.emailVerified) return null;
 
-          const ok = await bcrypt.compare(password, user.passwordHash);
-          if (!ok) return null;
+        const ok = await bcrypt.compare(password, user.passwordHash);
+        if (!ok) return null;
 
-          return { id: user.id, email: user.email, name: user.name };
-        },
-      }),
-    ],
-  });
+        return { id: user.id, email: user.email, name: user.name };
+      },
+    }),
+  ],
+};
 
-  handlers = nextAuth.handlers;
-  auth = nextAuth.auth;
-  signIn = nextAuth.signIn;
-  signOut = nextAuth.signOut;
+const handler = NextAuth(authOptions);
+
+export const GET = handler;
+export const POST = handler;
+
+export function auth() {
+  return getServerSession(authOptions);
 }
-
-export { handlers, auth, signIn, signOut };
-
-// Next.js route handlers expect named exports.
-export const GET = handlers.GET;
-export const POST = handlers.POST;
