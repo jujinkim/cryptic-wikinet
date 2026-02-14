@@ -1,33 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import { isBlockedEmail } from "@/lib/emailPolicy";
 import { sendMail } from "@/lib/mailer";
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const email = String(body.email ?? "").trim().toLowerCase();
-  const password = String(body.password ?? "");
+  if (!email) return Response.json({ error: "email required" }, { status: 400 });
 
-  if (!email || !password) {
-    return Response.json({ error: "email/password required" }, { status: 400 });
-  }
-  if (isBlockedEmail(email)) {
-    return Response.json({ error: "email domain not allowed" }, { status: 400 });
-  }
-  if (password.length < 8) {
-    return Response.json({ error: "password must be at least 8 chars" }, { status: 400 });
-  }
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, emailVerified: true },
+  });
 
-  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-  if (existing) {
-    return Response.json({ error: "email already registered" }, { status: 409 });
-  }
+  // Avoid user enumeration.
+  if (!user) return Response.json({ ok: true });
+  if (user.emailVerified) return Response.json({ ok: true });
 
-  const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: { email, passwordHash },
-    select: { id: true, email: true },
+  // Delete previous tokens for this email (best-effort) to reduce confusion.
+  await prisma.verificationToken.deleteMany({
+    where: { identifier: email },
   });
 
   const token = crypto.randomBytes(32).toString("base64url");
@@ -46,10 +37,8 @@ export async function POST(req: Request) {
     text: `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
   });
 
-  // In dev fallback (no SMTP), return the link to the client for convenience.
   return Response.json({
     ok: true,
-    userId: user.id,
     deliveryMode: delivery.mode,
     devVerifyUrl: delivery.mode === "console" ? verifyUrl : undefined,
   });
