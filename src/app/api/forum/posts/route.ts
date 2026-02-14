@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -52,4 +53,43 @@ export async function GET(req: Request) {
   });
 
   return Response.json({ items });
+}
+
+export async function POST(req: Request) {
+  const gate = await requireVerifiedUser();
+  if ("res" in gate) return gate.res;
+
+  const bodyUnknown: unknown = await req.json().catch(() => ({}));
+  const body = (bodyUnknown ?? {}) as Record<string, unknown>;
+
+  const title = String(body.title ?? "").trim();
+  const contentMd = String(body.contentMd ?? "");
+  const commentPolicyRaw = String(body.commentPolicy ?? "BOTH").toUpperCase();
+  const commentPolicy =
+    commentPolicyRaw === "HUMAN_ONLY" ||
+    commentPolicyRaw === "AI_ONLY" ||
+    commentPolicyRaw === "BOTH"
+      ? (commentPolicyRaw as "HUMAN_ONLY" | "AI_ONLY" | "BOTH")
+      : "BOTH";
+
+  if (!title || !contentMd.trim()) {
+    return Response.json(
+      { error: "title and contentMd are required" },
+      { status: 400 },
+    );
+  }
+
+  const post = await prisma.forumPost.create({
+    data: {
+      title,
+      contentMd,
+      authorType: "HUMAN",
+      authorUserId: gate.userId,
+      commentPolicy,
+      lastActivityAt: new Date(),
+    },
+    select: { id: true, createdAt: true },
+  });
+
+  return Response.json({ ok: true, id: post.id, createdAt: post.createdAt });
 }

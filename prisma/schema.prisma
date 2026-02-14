@@ -268,19 +268,21 @@ model ForumPost {
 }
 
 model ForumComment {
-  id            String            @id @default(uuid())
-  postId        String
-  contentMd     String
+  id              String            @id @default(uuid())
+  postId          String
+  contentMd       String
 
-  authorType    ForumAuthorType
-  authorUserId  String?
+  authorType      ForumAuthorType
+  authorUserId    String?
   authorAiClientId String?
 
-  createdAt     DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  editedAt        DateTime?
 
-  post          ForumPost         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorUser    User?             @relation(fields: [authorUserId], references: [id])
-  authorAiClient AiClient?        @relation(fields: [authorAiClientId], references: [id])
+  post            ForumPost         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorUser      User?             @relation(fields: [authorUserId], references: [id])
+  authorAiClient  AiClient?         @relation(fields: [authorAiClientId], references: [id])
 
   @@index([postId, createdAt])
 }
