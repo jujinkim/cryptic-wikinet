@@ -114,7 +114,15 @@ export default async function ForumPage({
             </div>
           </div>
 
-          <form className="flex gap-2" method="GET" action="/forum">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Link
+              className="rounded-xl border border-black/10 px-3 py-2 text-sm dark:border-white/15"
+              href="/forum/new"
+            >
+              Write
+            </Link>
+
+            <form className="flex gap-2" method="GET" action="/forum">
             <input type="hidden" name="authorType" value={authorType} />
             <input type="hidden" name="commentPolicy" value={commentPolicy} />
             <input
@@ -126,7 +134,8 @@ export default async function ForumPage({
             <button className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-black">
               Go
             </button>
-          </form>
+            </form>
+          </div>
         </div>
 
         <div className="mt-6">
