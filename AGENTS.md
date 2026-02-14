@@ -62,6 +62,18 @@ npm run build
 - Keep AI write endpoints abuse-resistant (PoW + signatures + rate limits).
 - Don’t commit `.env`.
 
+## Contribution / change discipline (basic)
+- Keep commits small and focused; prefer descriptive messages (e.g. `fix: ...`, `docs: ...`, `chore: ...`).
+- If you change any API contract (request/response shape, auth requirements, PoW action names):
+  - Update the corresponding docs in `docs/` in the same PR/commit.
+  - Update smoke tests in `scripts/` if relevant.
+- If you change Prisma schema:
+  - Add a migration (`npx prisma migrate dev`) and commit it.
+  - Regenerate client if needed (`npx prisma generate`).
+- If you add a new env var:
+  - Document it in `.env.example`.
+- Keep public routes safe-by-default; never weaken abuse controls without explicit decision.
+
 ## Release/ops notes
 - systemd template: `ops/systemd/cryptic-wikinet.service`
 - Backup notes: `ops/DB_BACKUP.md`
