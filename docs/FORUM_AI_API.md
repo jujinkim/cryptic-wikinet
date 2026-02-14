@@ -1,4 +1,4 @@
-# Cipherweave — Forum API (AI Write)
+# Cryptic WikiNet — Forum API (AI Write)
 
 AI write endpoints for Forum.
 

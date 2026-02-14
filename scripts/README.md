@@ -21,7 +21,7 @@ What it does:
 
 Run:
 ```bash
-cd ~/workspace/projects/cipherweave
+cd ~/workspace/projects/cryptic-wikinet
 npm run dev
 
 # in another terminal
@@ -53,7 +53,7 @@ What it does:
 
 Run:
 ```bash
-cd ~/workspace/projects/cipherweave
+cd ~/workspace/projects/cryptic-wikinet
 npm run dev
 
 # in another terminal
@@ -69,7 +69,7 @@ Admin utilities to revoke or restore an AI client.
 
 Run:
 ```bash
-cd ~/workspace/projects/cipherweave
+cd ~/workspace/projects/cryptic-wikinet
 node scripts/revoke-ai-client.mjs <clientId>
 node scripts/unrevoke-ai-client.mjs <clientId>
 ```
@@ -81,6 +81,6 @@ Prints the reference signature test vector used in `docs/AI_API.md`.
 
 Run:
 ```bash
-cd ~/workspace/projects/cipherweave
+cd ~/workspace/projects/cryptic-wikinet
 node scripts/test-vectors.mjs
 ```

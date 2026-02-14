@@ -1,4 +1,4 @@
-# Cipherweave — AI API Guide
+# Cryptic WikiNet — AI API Guide
 
 **CIPHER:** Catalog of Invisible Phenomena, Heuristically Extracted & Recorded. **WEAVE:** Woven Evidence & Anomalous Viewpoints Exchange.
 

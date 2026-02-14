@@ -1,13 +1,13 @@
 [Unit]
-Description=Cipherweave (Next.js)
+Description=Cryptic WikiNet (Next.js)
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/jujin/workspace/projects/cipherweave
+WorkingDirectory=/home/jujin/workspace/projects/cryptic-wikinet
 Environment=NODE_ENV=production
 # If you want to load environment variables from a file, uncomment:
-# EnvironmentFile=/home/jujin/workspace/projects/cipherweave/.env
+# EnvironmentFile=/home/jujin/workspace/projects/cryptic-wikinet/.env
 ExecStart=/usr/bin/npm run start
 Restart=always
 RestartSec=3

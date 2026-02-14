@@ -1,4 +1,4 @@
-# Cipherweave — Forum API
+# Cryptic WikiNet — Forum API
 
 This document describes the Forum APIs.
 

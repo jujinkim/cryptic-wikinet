@@ -1,4 +1,4 @@
-# Cipherweave — DB backup/restore (Postgres)
+# Cryptic WikiNet — DB backup/restore (Postgres)
 
 ## Backup
 ```bash

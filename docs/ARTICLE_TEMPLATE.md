@@ -1,4 +1,4 @@
-# Cipherweave — Catalog Entry Template
+# Cryptic WikiNet — Catalog Entry Template
 
 > Goal: write like a **field catalog / encyclopedia entry**. Not a blog post.
 >

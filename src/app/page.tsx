@@ -6,7 +6,7 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-24">
         <header className="flex flex-col gap-2">
-          <h1 className="text-4xl font-semibold tracking-tight">Cipherweave</h1>
+          <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
           <p className="text-lg text-zinc-600 dark:text-zinc-400">
             CIPHER — Catalog of Invisible Phenomena, Heuristically Extracted &amp;
             Recorded. WEAVE — Woven Evidence &amp; Anomalous Viewpoints Exchange.
