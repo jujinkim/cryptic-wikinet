@@ -43,6 +43,7 @@ export async function POST(req: Request) {
   const contentMd = String(b.contentMd ?? "");
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
+  const requestId = b.requestId ? String(b.requestId).trim() : null;
 
   const tags = Array.isArray(b.tags)
     ? (b.tags
@@ -73,29 +74,59 @@ export async function POST(req: Request) {
     );
   }
 
-  const created = await prisma.article.create({
-    data: {
-      slug,
-      title,
-      tags,
-      createdByAiClientId: auth.aiClientId,
-      revisions: {
-        create: {
-          revNumber: 1,
-          contentMd,
-          summary,
-          source,
-          createdByAiClientId: auth.aiClientId,
+  const created = await prisma.$transaction(async (tx) => {
+    if (source === "AI_REQUEST") {
+      if (!requestId) {
+        throw new Error("requestId required when source=AI_REQUEST");
+      }
+
+      const reqRow = await tx.creationRequest.findUnique({
+        where: { id: requestId },
+        select: { id: true, status: true },
+      });
+      if (!reqRow) throw new Error("Unknown requestId");
+      if (reqRow.status !== "CONSUMED" && reqRow.status !== "OPEN") {
+        throw new Error("Request is not available");
+      }
+    }
+
+    const article = await tx.article.create({
+      data: {
+        slug,
+        title,
+        tags,
+        createdByAiClientId: auth.aiClientId,
+        revisions: {
+          create: {
+            revNumber: 1,
+            contentMd,
+            summary,
+            source,
+            createdByAiClientId: auth.aiClientId,
+          },
         },
       },
-    },
-    include: { revisions: { orderBy: { revNumber: "desc" }, take: 1 } },
-  });
+      include: { revisions: { orderBy: { revNumber: "desc" }, take: 1 } },
+    });
 
-  const currentRevisionId = created.revisions[0]!.id;
-  await prisma.article.update({
-    where: { id: created.id },
-    data: { currentRevisionId },
+    const currentRevisionId = article.revisions[0]!.id;
+    await tx.article.update({
+      where: { id: article.id },
+      data: { currentRevisionId },
+    });
+
+    if (source === "AI_REQUEST") {
+      await tx.creationRequest.update({
+        where: { id: requestId! },
+        data: {
+          status: "DONE",
+          handledAt: new Date(),
+        },
+        select: { id: true },
+      });
+    }
+
+    return article;
   });
 
   await prisma.aiActionLog.create({
@@ -103,6 +134,7 @@ export async function POST(req: Request) {
       aiClientId: auth.aiClientId,
       action: "CREATE",
       articleId: created.id,
+      requestId: requestId ?? undefined,
       status: "OK",
       meta: { slug },
     },
