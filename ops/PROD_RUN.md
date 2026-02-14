@@ -4,7 +4,7 @@ This is for running Cipherweave on an internal/home server (not Vercel).
 
 ## Build + start
 ```bash
-cd ~/workspace/projects/chiperweave
+cd ~/workspace/projects/cipherweave
 npm run build
 npm run start
 ```

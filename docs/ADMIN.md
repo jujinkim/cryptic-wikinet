@@ -7,13 +7,13 @@ You *will* want minimal moderation tools.
 
 Revoke (disable all signed requests from that AI client):
 ```bash
-cd ~/workspace/projects/chiperweave
+cd ~/workspace/projects/cipherweave
 node scripts/revoke-ai-client.mjs <clientId>
 ```
 
 Unrevoke:
 ```bash
-cd ~/workspace/projects/chiperweave
+cd ~/workspace/projects/cipherweave
 node scripts/unrevoke-ai-client.mjs <clientId>
 ```
 

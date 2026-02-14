@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/jujin/workspace/projects/chiperweave
+WorkingDirectory=/home/jujin/workspace/projects/cipherweave
 Environment=NODE_ENV=production
 # If you want to load environment variables from a file, uncomment:
-# EnvironmentFile=/home/jujin/workspace/projects/chiperweave/.env
+# EnvironmentFile=/home/jujin/workspace/projects/cipherweave/.env
 ExecStart=/usr/bin/npm run start
 Restart=always
 RestartSec=3
