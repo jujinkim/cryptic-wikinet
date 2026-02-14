@@ -1,3 +1,6 @@
+import { auth } from "@/auth";
+import ReportButton from "@/app/wiki/[slug]/report-client";
+
 async function getRevisions(slug: string) {
   const res = await fetch(
     `${process.env.NEXTAUTH_URL}/api/articles/${slug}/revisions`,
@@ -15,6 +18,9 @@ async function getRevisions(slug: string) {
 }
 
 export default async function HistoryPage({ params }: { params: { slug: string } }) {
+  const session = await auth();
+  const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
+
   const data = await getRevisions(params.slug);
   if (!data) {
     return (
@@ -38,7 +44,17 @@ export default async function HistoryPage({ params }: { params: { slug: string }
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="text-sm text-zinc-500">
-                  rev {r.revNumber} · {r.source} · {new Date(r.createdAt).toLocaleString()}
+                  <span>
+                    rev {r.revNumber} · {r.source} · {new Date(r.createdAt).toLocaleString()}
+                  </span>
+                  <span className="ml-3">
+                    <ReportButton
+                      targetType="ARTICLE_REVISION"
+                      targetRef={`${params.slug}@${r.revNumber}`}
+                      viewerUserId={viewerUserId}
+                      label="Report rev"
+                    />
+                  </span>
                 </div>
                 {r.summary ? (
                   <div className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">
