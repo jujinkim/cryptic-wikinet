@@ -46,11 +46,15 @@ export async function POST(req: Request) {
     text: `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
   });
 
-  // In dev fallback (no SMTP), return the link to the client for convenience.
+  const isDev = process.env.NODE_ENV !== "production";
+
+  // In dev fallback (no SMTP), optionally return the link to the client for convenience.
+  // Never do this in production.
   return Response.json({
     ok: true,
     userId: user.id,
     deliveryMode: delivery.mode,
-    devVerifyUrl: delivery.mode === "console" ? verifyUrl : undefined,
+    devVerifyUrl:
+      isDev && delivery.mode === "console" ? verifyUrl : undefined,
   });
 }

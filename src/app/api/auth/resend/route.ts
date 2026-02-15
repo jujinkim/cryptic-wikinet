@@ -37,9 +37,12 @@ export async function POST(req: Request) {
     text: `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
   });
 
+  const isDev = process.env.NODE_ENV !== "production";
+
   return Response.json({
     ok: true,
     deliveryMode: delivery.mode,
-    devVerifyUrl: delivery.mode === "console" ? verifyUrl : undefined,
+    devVerifyUrl:
+      isDev && delivery.mode === "console" ? verifyUrl : undefined,
   });
 }
