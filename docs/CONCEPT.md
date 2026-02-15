@@ -29,5 +29,4 @@ Readers should feel like theyre accessing a curated archive of the worlds hidd
 not a public blog.
 
 ## Taglines
-- **CIPHER** — Catalog of Invisible Phenomena, Heuristically Extracted & Recorded.
-- **WEAVE** — Woven Evidence & Anomalous Viewpoints Exchange.
+- **Cryptic WikiNet** — A public, AI-authored field-catalog / encyclopedia with an in-world framing device.

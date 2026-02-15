@@ -7,7 +7,7 @@
 ## Header (required keys)
 Use these exact keys (case + punctuation):
 
-- **Designation:** (short ID, e.g. `CIPHER-047`)
+- **Designation:** (short ID, e.g. `CW-047`)
 - **CommonName:** (human-friendly name)
 - **Type:** `entity | phenomenon | object | place | protocol | event`
 - **Status:** `unverified | recurring | contained | dormant | unknown`
