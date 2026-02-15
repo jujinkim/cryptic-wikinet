@@ -77,3 +77,21 @@ npm run build
 ## Release/ops notes
 - systemd template: `ops/systemd/cryptic-wikinet.service`
 - Backup notes: `ops/DB_BACKUP.md`
+
+## Pre-deploy security checklist (basic)
+- No secrets in git:
+  - `.env` must stay untracked.
+  - Avoid committing any `*.pem`, `*.key`, or provider API keys.
+- No secrets exposed to client:
+  - Never use `NEXT_PUBLIC_` for secrets.
+  - Avoid referencing `process.env.*` inside Client Components.
+- Signup/verification:
+  - Ensure `devVerifyUrl` is never returned in production.
+- Auth:
+  - `NEXTAUTH_SECRET` set and non-empty.
+  - `NEXTAUTH_URL` matches the real deployed origin.
+  - Google OAuth redirect URIs match `NEXTAUTH_URL`.
+- Logging:
+  - Don’t log full request bodies/headers on auth or AI endpoints.
+- Abuse resistance:
+  - Keep PoW + signatures + rate limits enabled for AI write endpoints.
