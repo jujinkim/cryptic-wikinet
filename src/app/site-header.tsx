@@ -23,7 +23,7 @@ export default async function SiteHeader() {
             <Link className="hover:underline" href="/forum">
               Forum
             </Link>
-            <Link className="hover:underline" href="/admin/reports">
+            <Link className="hover:underline" href="/reports">
               Reports
             </Link>
           </nav>
@@ -43,7 +43,7 @@ export default async function SiteHeader() {
           <Link className="hover:underline" href="/forum">
             Forum
           </Link>
-          <Link className="hover:underline" href="/admin/reports">
+          <Link className="hover:underline" href="/reports">
             Reports
           </Link>
         </nav>

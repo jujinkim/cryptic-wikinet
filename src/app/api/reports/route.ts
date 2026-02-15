@@ -8,7 +8,12 @@ function asTargetType(s: string):
   | "ARTICLE_REVISION"
   | null {
   const u = s.toUpperCase();
-  if (u === "FORUM_POST" || u === "FORUM_COMMENT" || u === "ARTICLE" || u === "ARTICLE_REVISION") {
+  if (
+    u === "FORUM_POST" ||
+    u === "FORUM_COMMENT" ||
+    u === "ARTICLE" ||
+    u === "ARTICLE_REVISION"
+  ) {
     return u;
   }
   return null;
@@ -16,15 +21,24 @@ function asTargetType(s: string):
 
 async function validateTarget(targetType: string, targetRef: string) {
   if (targetType === "FORUM_POST") {
-    const ok = await prisma.forumPost.findUnique({ where: { id: targetRef }, select: { id: true } });
+    const ok = await prisma.forumPost.findUnique({
+      where: { id: targetRef },
+      select: { id: true },
+    });
     return !!ok;
   }
   if (targetType === "FORUM_COMMENT") {
-    const ok = await prisma.forumComment.findUnique({ where: { id: targetRef }, select: { id: true } });
+    const ok = await prisma.forumComment.findUnique({
+      where: { id: targetRef },
+      select: { id: true },
+    });
     return !!ok;
   }
   if (targetType === "ARTICLE") {
-    const ok = await prisma.article.findUnique({ where: { slug: targetRef }, select: { slug: true } });
+    const ok = await prisma.article.findUnique({
+      where: { slug: targetRef },
+      select: { slug: true },
+    });
     return !!ok;
   }
   if (targetType === "ARTICLE_REVISION") {
@@ -48,6 +62,63 @@ async function validateTarget(targetType: string, targetRef: string) {
   }
 
   return false;
+}
+
+export async function GET(req: Request) {
+  const gate = await requireVerifiedUser();
+  if ("res" in gate) return gate.res;
+
+  const user = await prisma.user.findUnique({
+    where: { id: gate.userId },
+    select: { role: true },
+  });
+  const isAdmin = user?.role === "ADMIN";
+
+  const url = new URL(req.url);
+  const statusRaw = String(url.searchParams.get("status") ?? "OPEN").toUpperCase();
+  const status =
+    statusRaw === "OPEN" || statusRaw === "RESOLVED"
+      ? (statusRaw as "OPEN" | "RESOLVED")
+      : undefined;
+
+  const items = await prisma.report.findMany({
+    where: status ? { status } : {},
+    orderBy: { createdAt: "desc" },
+    take: 200,
+    select: {
+      id: true,
+      targetType: true,
+      targetRef: true,
+      reason: true,
+      status: true,
+      createdAt: true,
+      resolvedAt: true,
+      reporterUserId: true,
+      reporter: { select: { id: true, email: true, name: true } },
+      resolvedBy: { select: { id: true, email: true, name: true } },
+    },
+  });
+
+  const shaped = items.map((r) => {
+    const canViewDetails = isAdmin || r.reporterUserId === gate.userId;
+    return {
+      id: r.id,
+      targetType: r.targetType,
+      targetRef: r.targetRef,
+      status: r.status,
+      createdAt: r.createdAt,
+      resolvedAt: r.resolvedAt,
+      canViewDetails,
+      reason: canViewDetails ? r.reason : null,
+      reporter: canViewDetails ? r.reporter : null,
+      resolvedBy: isAdmin ? r.resolvedBy : null,
+    };
+  });
+
+  return Response.json({
+    isAdmin,
+    items: shaped,
+  });
 }
 
 export async function POST(req: Request) {
