@@ -26,7 +26,7 @@ export default async function ProfileSettingsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, bio: true, image: true, emailVerified: true },
+    select: { name: true, bio: true, image: true },
   });
 
   const hasGoogle =
@@ -43,30 +43,14 @@ export default async function ProfileSettingsPage() {
     allowGoogle = false;
   }
 
-  if (!user?.emailVerified) {
-    return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold">Email verification required</h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Verify your email to use member-only profile settings.
-        </p>
-        <div className="mt-6 text-sm">
-          <Link className="underline" href="/login">
-            Go to /login
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <ProfileSettingsClient
       allowGoogle={allowGoogle}
       hasGoogle={hasGoogle}
       initial={{
-        name: user.name ?? "",
-        bio: user.bio ?? "",
-        image: user.image ?? "",
+        name: user?.name ?? "",
+        bio: user?.bio ?? "",
+        image: user?.image ?? "",
       }}
     />
   );

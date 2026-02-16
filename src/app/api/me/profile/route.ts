@@ -1,9 +1,12 @@
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
 export async function PATCH(req: Request) {
-  const gate = await requireVerifiedUser();
-  if ("res" in gate) return gate.res;
+  const session = await auth();
+  const userId = (session?.user as unknown as { id?: string } | null)?.id;
+  if (!userId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const bodyUnknown: unknown = await req.json().catch(() => ({}));
   const body = (bodyUnknown ?? {}) as Record<string, unknown>;
@@ -17,7 +20,7 @@ export async function PATCH(req: Request) {
   if (image.length > 500) return Response.json({ error: "image url too long" }, { status: 400 });
 
   const updated = await prisma.user.update({
-    where: { id: gate.userId },
+    where: { id: userId },
     data: {
       name: name || null,
       bio: bio || null,
