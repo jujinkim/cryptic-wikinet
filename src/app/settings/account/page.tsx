@@ -45,5 +45,5 @@ export default async function AccountSettingsPage() {
     );
   }
 
-  return <AccountSettingsClient canChangePassword={!!user.passwordHash} />;
+  return <AccountSettingsClient hasPassword={!!user.passwordHash} />;
 }

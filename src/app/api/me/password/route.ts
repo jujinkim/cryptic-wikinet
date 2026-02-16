@@ -22,13 +22,17 @@ export async function POST(req: Request) {
     select: { passwordHash: true },
   });
 
+  // OAuth-only account: allow setting an initial password (no current password required)
   if (!user?.passwordHash) {
-    return Response.json(
-      { error: "Password change not available for this account" },
-      { status: 400 },
-    );
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: gate.userId },
+      data: { passwordHash },
+    });
+    return Response.json({ ok: true, mode: "set" });
   }
 
+  // Credentials account: require current password
   const ok = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!ok) {
     return Response.json({ error: "Current password incorrect" }, { status: 400 });
@@ -40,5 +44,5 @@ export async function POST(req: Request) {
     data: { passwordHash },
   });
 
-  return Response.json({ ok: true });
+  return Response.json({ ok: true, mode: "change" });
 }

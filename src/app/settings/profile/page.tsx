@@ -29,6 +29,20 @@ export default async function ProfileSettingsPage() {
     select: { name: true, bio: true, image: true, emailVerified: true },
   });
 
+  const hasGoogle =
+    (await prisma.account.count({
+      where: { userId, provider: "google" },
+    })) > 0;
+
+  const nextAuthUrl = process.env.NEXTAUTH_URL ?? "";
+  let allowGoogle = true;
+  try {
+    const u = new URL(nextAuthUrl);
+    allowGoogle = !/^\d{1,3}(?:\.\d{1,3}){3}$/.test(u.hostname);
+  } catch {
+    allowGoogle = false;
+  }
+
   if (!user?.emailVerified) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
@@ -47,6 +61,8 @@ export default async function ProfileSettingsPage() {
 
   return (
     <ProfileSettingsClient
+      allowGoogle={allowGoogle}
+      hasGoogle={hasGoogle}
       initial={{
         name: user.name ?? "",
         bio: user.bio ?? "",

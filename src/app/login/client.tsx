@@ -3,10 +3,29 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
+function prettyAuthError(code: string) {
+  switch (code) {
+    case "OAuthAccountNotLinked":
+      return "이미 가입된 이메일이야. 기존 방식으로 로그인한 다음 프로필 설정에서 Google 연결해줘.";
+    case "AccessDenied":
+      return "접근이 거부됐어.";
+    default:
+      return null;
+  }
+}
+
+function getInitialError(): string | null {
+  if (typeof window === "undefined") return null;
+  const sp = new URLSearchParams(window.location.search);
+  const code = sp.get("error");
+  if (!code) return null;
+  return prettyAuthError(code);
+}
+
 export default function LoginClient(props: { allowGoogle: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => getInitialError());
   const [info, setInfo] = useState<string | null>(null);
   const [devLink, setDevLink] = useState<string | null>(null);
 

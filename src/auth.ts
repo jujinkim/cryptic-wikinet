@@ -14,7 +14,7 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       const email = user.email?.toLowerCase() ?? "";
       if (!email) return false;
       if (isBlockedEmail(email)) return false;
@@ -26,6 +26,26 @@ export const authOptions: NextAuthOptions = {
           select: { emailVerified: true },
         });
         if (!dbUser?.emailVerified) return false;
+      }
+
+      // If signing in with OAuth, mark email verified when the provider asserts verification.
+      // (This prevents OAuth-created users from being blocked by requireVerifiedUser.)
+      if (account?.provider !== "credentials") {
+        const emailVerifiedFlag = (profile as unknown as { email_verified?: unknown } | null)
+          ?.email_verified;
+        const isVerified = emailVerifiedFlag === true || emailVerifiedFlag === "true";
+        if (isVerified) {
+          const current = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { emailVerified: true },
+          });
+          if (!current?.emailVerified) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { emailVerified: new Date() },
+            });
+          }
+        }
       }
 
       return true;
