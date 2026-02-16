@@ -56,17 +56,24 @@ export default async function WikiLayout(props: {
   type TagNodeWithCount = {
     key: string;
     label: string;
-    count: number;
+    directCount: number;
+    totalCount: number;
     children?: TagNodeWithCount[];
   };
 
   function toCounted(nodes: TagNode[]): TagNodeWithCount[] {
-    return nodes.map((n) => ({
-      key: n.key,
-      label: n.label,
-      count: tagCount.get(n.key) ?? 0,
-      children: n.children ? toCounted(n.children) : undefined,
-    }));
+    return nodes.map((n) => {
+      const children = n.children ? toCounted(n.children) : undefined;
+      const directCount = tagCount.get(n.key) ?? 0;
+      const totalCount = directCount + (children ? children.reduce((a, c) => a + c.totalCount, 0) : 0);
+      return {
+        key: n.key,
+        label: n.label,
+        directCount,
+        totalCount,
+        children,
+      };
+    });
   }
 
   const tree: TagNodeWithCount[] = [
@@ -76,11 +83,13 @@ export default async function WikiLayout(props: {
           {
             key: "__other__",
             label: "Other",
-            count: 0,
+            directCount: 0,
+            totalCount: otherTags.reduce((a, t) => a + (tagCount.get(t.key) ?? 0), 0),
             children: otherTags.map((t) => ({
               key: t.key,
               label: t.label,
-              count: tagCount.get(t.key) ?? 0,
+              directCount: tagCount.get(t.key) ?? 0,
+              totalCount: tagCount.get(t.key) ?? 0,
             })),
           },
         ]

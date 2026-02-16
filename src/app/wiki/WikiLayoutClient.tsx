@@ -8,7 +8,8 @@ import type { TocItem } from "@/lib/markdownToc";
 type TagNode = {
   key: string;
   label: string;
-  count: number;
+  directCount: number;
+  totalCount: number;
   children?: TagNode[];
 };
 
@@ -31,6 +32,9 @@ function TagRow(props: {
   const n = props.node;
   const isOther = n.key === "__other__";
   const pad = props.depth === 0 ? "" : props.depth === 1 ? "pl-3" : "pl-6";
+  const countLabel = isOther
+    ? `(${n.totalCount} total)`
+    : `(${n.totalCount} total · ${n.directCount} direct)`;
 
   return (
     <div className={pad}>
@@ -44,9 +48,7 @@ function TagRow(props: {
       >
         <span className="truncate">
           {n.label}
-          {isOther ? null : (
-            <span className="ml-2 text-xs text-zinc-500">({n.count})</span>
-          )}
+          <span className="ml-2 text-xs text-zinc-500">{countLabel}</span>
         </span>
         <span className="text-xs text-zinc-500">▸</span>
       </button>
@@ -90,6 +92,28 @@ export default function WikiLayoutClient(props: {
     globalThis.localStorage?.setItem("cw.sidebarSide", next);
   }
 
+  function collectSubtreeKeys(nodes: TagNode[], key: string): string[] {
+    function find(n: TagNode): TagNode | null {
+      if (n.key === key) return n;
+      for (const c of n.children ?? []) {
+        const got = find(c);
+        if (got) return got;
+      }
+      return null;
+    }
+
+    const root = nodes.map(find).find(Boolean) as TagNode | null;
+    if (!root) return [key];
+
+    const out: string[] = [];
+    function walk(n: TagNode) {
+      out.push(n.key);
+      for (const c of n.children ?? []) walk(c);
+    }
+    walk(root);
+    return out.filter((k) => k !== "__other__");
+  }
+
   async function pickTag(key: string) {
     // clicking the same tag closes the popup
     const next = activeTag === key ? null : key;
@@ -99,9 +123,12 @@ export default function WikiLayoutClient(props: {
 
     if (!next || next === "__other__") return;
 
+    const keys = collectSubtreeKeys(props.tree, next);
+
     setLoadingDocs(true);
     try {
-      const res = await fetch(`/api/articles?tag=${encodeURIComponent(next)}`);
+      const qs = keys.length > 1 ? `tags=${encodeURIComponent(keys.join(","))}` : `tag=${encodeURIComponent(next)}`;
+      const res = await fetch(`/api/articles?${qs}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed");
       setDocs(Array.isArray(data.items) ? (data.items as DocItem[]) : []);

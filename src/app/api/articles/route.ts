@@ -14,13 +14,22 @@ export async function GET(req: Request) {
     : {};
 
   const tag = (url.searchParams.get("tag") ?? "").trim();
+  const tagsRaw = (url.searchParams.get("tags") ?? "").trim();
+  const tags = tagsRaw
+    ? tagsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 50)
+    : [];
+
   const type = (url.searchParams.get("type") ?? "").trim().toLowerCase();
   const status = (url.searchParams.get("status") ?? "").trim().toLowerCase();
   const canonOnly = (url.searchParams.get("canon") ?? "").trim() === "1";
 
   const where2 = {
     ...where,
-    ...(tag ? { tags: { has: tag } } : {}),
+    ...(tags.length ? { tags: { hasSome: tags } } : tag ? { tags: { has: tag } } : {}),
     ...(canonOnly ? { isCanon: true } : {}),
   } as const;
 
