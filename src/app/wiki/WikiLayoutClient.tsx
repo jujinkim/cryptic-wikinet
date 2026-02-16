@@ -33,8 +33,8 @@ function TagRow(props: {
   const isOther = n.key === "__other__";
   const pad = props.depth === 0 ? "" : props.depth === 1 ? "pl-3" : "pl-6";
   const countLabel = isOther
-    ? `(${n.totalCount} total)`
-    : `(${n.totalCount} total · ${n.directCount} direct)`;
+    ? `total ${n.totalCount}`
+    : `total ${n.totalCount} / direct ${n.directCount}`;
 
   return (
     <div className={pad}>
@@ -48,7 +48,7 @@ function TagRow(props: {
       >
         <span className="truncate">
           {n.label}
-          <span className="ml-2 text-xs text-zinc-500">{countLabel}</span>
+          <span className="ml-2 text-[10px] text-zinc-500/70">{countLabel}</span>
         </span>
         <span className="text-xs text-zinc-500">▸</span>
       </button>
