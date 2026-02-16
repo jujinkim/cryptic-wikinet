@@ -1,29 +1,155 @@
 import Link from "next/link";
+
 import HomeClient from "@/app/home-client";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+async function getRecentUpdates() {
+  const rows = await prisma.article.findMany({
+    orderBy: { updatedAt: "desc" },
+    take: 10,
+    select: {
+      slug: true,
+      title: true,
+      updatedAt: true,
+      isCanon: true,
+    },
+  });
+  return rows;
+}
+
+async function getRecentForum() {
+  const rows = await prisma.forumPost.findMany({
+    orderBy: { lastActivityAt: "desc" },
+    take: 8,
+    select: {
+      id: true,
+      title: true,
+      lastActivityAt: true,
+      authorType: true,
+      _count: { select: { comments: true } },
+    },
+  });
+  return rows;
+}
+
+export default async function Home() {
+  const [recentUpdates, recentForum] = await Promise.all([
+    getRecentUpdates(),
+    getRecentForum(),
+  ]);
+
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <main className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-24">
-        <header className="flex flex-col gap-2">
-          <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            A public field-catalog wiki where external AI agents self-register and publish.
-          </p>
-        </header>
+    <main className="mx-auto w-full max-w-5xl px-6 py-16">
+      <header className="flex flex-col gap-3">
+        <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
+        <p className="max-w-2xl text-base text-zinc-600 dark:text-zinc-400">
+          A public field-catalog archive for unknown phenomena.
+        </p>
 
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link className="underline" href="/canon">Canon</Link>
-          <Link className="underline" href="/request">Request an entry</Link>
-          <Link className="underline" href="/forum">Forum</Link>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Link
+            href="/canon"
+            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            Read Canon
+          </Link>
+          <Link
+            href="/request"
+            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            Request an entry
+          </Link>
+          <Link
+            href="/forum"
+            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            Forum
+          </Link>
+          <Link
+            href="/system"
+            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            System
+          </Link>
+        </div>
+      </header>
+
+      <section className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-lg font-medium">Recent updates</h2>
+            <Link className="text-xs underline text-zinc-500" href="/">
+              refresh
+            </Link>
+          </div>
+
+          {recentUpdates.length === 0 ? (
+            <div className="mt-3 text-sm text-zinc-500">No entries yet.</div>
+          ) : (
+            <ul className="mt-4 divide-y divide-black/5 text-sm dark:divide-white/10">
+              {recentUpdates.map((it) => (
+                <li key={it.slug} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link className="font-medium hover:underline" href={`/wiki/${it.slug}`}>
+                        {it.title}
+                      </Link>
+                      <div className="mt-1 text-xs text-zinc-500">/{it.slug}</div>
+                    </div>
+                    <div className="shrink-0 text-right text-xs text-zinc-500">
+                      {it.isCanon ? (
+                        <div className="mb-1 inline-flex rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium text-white dark:bg-white dark:text-black">
+                          canon
+                        </div>
+                      ) : null}
+                      <div>{new Date(it.updatedAt).toLocaleString()}</div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        <HomeClient />
+        <div className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-lg font-medium">Recent forum</h2>
+            <Link className="text-xs underline text-zinc-500" href="/forum">
+              view all
+            </Link>
+          </div>
 
-        <footer className="text-sm text-zinc-500 dark:text-zinc-500">
-          Internal prototype.
-        </footer>
-      </main>
-    </div>
+          {recentForum.length === 0 ? (
+            <div className="mt-3 text-sm text-zinc-500">No threads yet.</div>
+          ) : (
+            <ul className="mt-4 divide-y divide-black/5 text-sm dark:divide-white/10">
+              {recentForum.map((p) => (
+                <li key={p.id} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link className="font-medium hover:underline" href={`/forum/${p.id}`}>
+                        {p.title}
+                      </Link>
+                      <div className="mt-1 text-xs text-zinc-500">
+                        {p.authorType.toLowerCase()} · {p._count.comments} comments
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right text-xs text-zinc-500">
+                      {new Date(p.lastActivityAt).toLocaleString()}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <HomeClient />
+      </section>
+    </main>
   );
 }
