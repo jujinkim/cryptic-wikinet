@@ -1,19 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { extractToc } from "@/lib/markdownToc";
+import { TAG_TAXONOMY, type TagNode } from "@/lib/tagTaxonomy";
 
 import WikiLayoutClient from "@/app/wiki/WikiLayoutClient";
 
 export const dynamic = "force-dynamic";
-
-const TYPE_ORDER = [
-  "phenomenon",
-  "entity",
-  "object",
-  "place",
-  "protocol",
-  "event",
-  "unknown",
-] as const;
 
 export default async function WikiLayout(props: {
   children: React.ReactNode;
@@ -37,32 +28,64 @@ export default async function WikiLayout(props: {
     select: {
       slug: true,
       title: true,
-      currentRevision: { select: { contentMd: true } },
+      tags: true,
     },
   });
 
-  const { getTypeStatus } = await import("@/lib/catalogHeader");
-
-  const byType = new Map<string, Array<{ slug: string; title: string }>>();
+  const tagCount = new Map<string, number>();
   for (const r of rows) {
-    const meta = r.currentRevision?.contentMd
-      ? getTypeStatus(r.currentRevision.contentMd)
-      : { type: null, status: null };
-    const t = meta.type ?? "unknown";
-    if (!byType.has(t)) byType.set(t, []);
-    byType.get(t)!.push({ slug: r.slug, title: r.title });
+    for (const t of r.tags ?? []) {
+      tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+    }
   }
 
-  const tree = Array.from(byType.entries())
-    .sort((a, b) => {
-      const ai = TYPE_ORDER.indexOf(a[0] as (typeof TYPE_ORDER)[number]);
-      const bi = TYPE_ORDER.indexOf(b[0] as (typeof TYPE_ORDER)[number]);
-      const aRank = ai === -1 ? 999 : ai;
-      const bRank = bi === -1 ? 999 : bi;
-      if (aRank !== bRank) return aRank - bRank;
-      return a[0].localeCompare(b[0]);
-    })
-    .map(([type, items]) => ({ type, items }));
+  const seenInTaxonomy = new Set<string>();
+  function walk(nodes: TagNode[]) {
+    for (const n of nodes) {
+      seenInTaxonomy.add(n.key);
+      if (n.children?.length) walk(n.children);
+    }
+  }
+  walk(TAG_TAXONOMY);
+
+  const otherTags = Array.from(tagCount.entries())
+    .filter(([k]) => !seenInTaxonomy.has(k))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([k]) => ({ key: k, label: k }));
+
+  type TagNodeWithCount = {
+    key: string;
+    label: string;
+    count: number;
+    children?: TagNodeWithCount[];
+  };
+
+  function toCounted(nodes: TagNode[]): TagNodeWithCount[] {
+    return nodes.map((n) => ({
+      key: n.key,
+      label: n.label,
+      count: tagCount.get(n.key) ?? 0,
+      children: n.children ? toCounted(n.children) : undefined,
+    }));
+  }
+
+  const tree: TagNodeWithCount[] = [
+    ...toCounted(TAG_TAXONOMY),
+    ...(otherTags.length
+      ? [
+          {
+            key: "__other__",
+            label: "Other",
+            count: 0,
+            children: otherTags.map((t) => ({
+              key: t.key,
+              label: t.label,
+              count: tagCount.get(t.key) ?? 0,
+            })),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <WikiLayoutClient slug={slug} toc={toc} tree={tree}>
