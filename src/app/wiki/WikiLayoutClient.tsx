@@ -5,72 +5,21 @@ import { useEffect, useState } from "react";
 
 import type { TocItem } from "@/lib/markdownToc";
 
-type TagNode = {
+type TagItem = {
   key: string;
   label: string;
-  directCount: number;
-  totalCount: number;
-  children?: TagNode[];
+  count: number;
 };
 
 type DocItem = {
   slug: string;
   title: string;
-  updatedAt: string;
-  isCanon: boolean;
-  tags?: string[];
-  type?: string | null;
-  status?: string | null;
 };
-
-function TagRow(props: {
-  node: TagNode;
-  depth: number;
-  activeKey: string | null;
-  onPick: (key: string) => void;
-}) {
-  const n = props.node;
-  const isOther = n.key === "__other__";
-  const pad = props.depth === 0 ? "" : props.depth === 1 ? "pl-3" : "pl-6";
-  const countLabel = isOther
-    ? `total ${n.totalCount}`
-    : `total ${n.totalCount} / direct ${n.directCount}`;
-
-  return (
-    <div className={pad}>
-      <button
-        type="button"
-        className={
-          "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-zinc-100 dark:hover:bg-white/5 " +
-          (props.activeKey === n.key ? "bg-zinc-100 dark:bg-white/5" : "")
-        }
-        onClick={() => props.onPick(n.key)}
-      >
-        <span className="truncate">
-          {n.label}
-          <span className="ml-2 text-[10px] text-zinc-500/70">{countLabel}</span>
-        </span>
-        <span className="text-xs text-zinc-500">▸</span>
-      </button>
-    </div>
-  );
-}
-
-function collectVisible(nodes: TagNode[], depth = 0): Array<{ node: TagNode; depth: number }> {
-  const out: Array<{ node: TagNode; depth: number }> = [];
-  for (const n of nodes) {
-    out.push({ node: n, depth });
-    if (n.children?.length) {
-      for (const c of n.children) out.push({ node: c, depth: depth + 1 });
-    }
-  }
-  return out;
-}
 
 export default function WikiLayoutClient(props: {
   slug: string | null;
   toc: TocItem[];
-  tree: TagNode[];
+  tags: TagItem[];
   children: React.ReactNode;
 }) {
   const [side, setSide] = useState<"left" | "right">("left");
@@ -92,46 +41,30 @@ export default function WikiLayoutClient(props: {
     globalThis.localStorage?.setItem("cw.sidebarSide", next);
   }
 
-  function collectSubtreeKeys(nodes: TagNode[], key: string): string[] {
-    function find(n: TagNode): TagNode | null {
-      if (n.key === key) return n;
-      for (const c of n.children ?? []) {
-        const got = find(c);
-        if (got) return got;
-      }
-      return null;
-    }
-
-    const root = nodes.map(find).find(Boolean) as TagNode | null;
-    if (!root) return [key];
-
-    const out: string[] = [];
-    function walk(n: TagNode) {
-      out.push(n.key);
-      for (const c of n.children ?? []) walk(c);
-    }
-    walk(root);
-    return out.filter((k) => k !== "__other__");
-  }
-
   async function pickTag(key: string) {
-    // clicking the same tag closes the popup
     const next = activeTag === key ? null : key;
     setActiveTag(next);
     setDocs(null);
     setDocsErr(null);
 
-    if (!next || next === "__other__") return;
-
-    const keys = collectSubtreeKeys(props.tree, next);
+    if (!next) return;
 
     setLoadingDocs(true);
     try {
-      const qs = keys.length > 1 ? `tags=${encodeURIComponent(keys.join(","))}` : `tag=${encodeURIComponent(next)}`;
-      const res = await fetch(`/api/articles?${qs}`);
+      const res = await fetch(`/api/articles?tag=${encodeURIComponent(next)}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed");
-      setDocs(Array.isArray(data.items) ? (data.items as DocItem[]) : []);
+      const items: unknown[] = Array.isArray(data.items) ? (data.items as unknown[]) : [];
+      const shaped: DocItem[] = items
+        .map((it) => {
+          const o = (it ?? {}) as Record<string, unknown>;
+          return {
+            slug: String(o.slug ?? "").trim(),
+            title: String(o.title ?? "").trim(),
+          };
+        })
+        .filter((it) => it.slug && it.title);
+      setDocs(shaped);
     } catch (e) {
       setDocsErr(String(e));
       setDocs([]);
@@ -179,26 +112,38 @@ export default function WikiLayoutClient(props: {
           </Link>
         </div>
 
-        <div className="mt-2 space-y-1">
-          {collectVisible(props.tree).map(({ node, depth }) => (
-            <TagRow
-              key={node.key}
-              node={node}
-              depth={depth}
-              activeKey={activeTag}
-              onPick={pickTag}
-            />
-          ))}
-        </div>
+        {props.tags.length === 0 ? (
+          <div className="mt-2 text-xs text-zinc-500">No approved tags yet.</div>
+        ) : (
+          <div className="mt-2 space-y-1">
+            {props.tags.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => pickTag(t.key)}
+                className={
+                  "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-zinc-100 dark:hover:bg-white/5 " +
+                  (activeTag === t.key ? "bg-zinc-100 dark:bg-white/5" : "")
+                }
+              >
+                <span className="truncate">
+                  {t.label}
+                  <span className="ml-2 text-[10px] text-zinc-500/70">{t.count}</span>
+                </span>
+                <span className="text-xs text-zinc-500">▸</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        {activeTag && activeTag !== "__other__" ? (
+        {activeTag ? (
           <div className="mt-4 rounded-2xl border border-black/10 bg-white p-4 text-sm dark:border-white/15 dark:bg-zinc-950">
             <div className="flex items-baseline justify-between gap-3">
               <div className="text-xs font-medium tracking-wide text-zinc-500">DOCUMENTS</div>
               <button
                 type="button"
                 className="text-xs underline text-zinc-500"
-                onClick={() => pickTag(activeTag)}
+                onClick={() => setActiveTag(null)}
               >
                 close
               </button>

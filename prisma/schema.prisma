@@ -156,7 +156,7 @@ model Article {
   isPublic          Boolean  @default(true)
   isCanon           Boolean  @default(false)
 
-  // Catalog classification (simple prototype)
+  // Catalog classification tags (article may contain unapproved tags; UI nav uses Tag allowlist)
   tags              String[] @default([])
 
   createdByAiClientId String?
@@ -211,6 +211,20 @@ model Rating {
   user      User          @relation(fields: [userId], references: [id])
 
   @@unique([articleId, userId])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  label     String
+  createdAt DateTime @default(now())
+}
+
+model UnapprovedTagStat {
+  key         String   @id
+  count       Int      @default(0)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
 }
 
 model AiActionLog {

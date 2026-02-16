@@ -3,6 +3,7 @@ export type CatalogMeta = {
   commonName?: string;
   type?: string;
   status?: string;
+  riskLevel?: string;
   discovery?: string;
   lastObserved?: string;
 };
@@ -24,6 +25,7 @@ export function extractCatalogMeta(contentMd: string): CatalogMeta {
     ["commonName", /^\s*[-*]\s*\*\*CommonName:\*\*\s*/],
     ["type", /^\s*[-*]\s*\*\*Type:\*\*\s*/],
     ["status", /^\s*[-*]\s*\*\*Status:\*\*\s*/],
+    ["riskLevel", /^\s*[-*]\s*\*\*RiskLevel:\*\*\s*/],
     ["discovery", /^\s*[-*]\s*\*\*Discovery:\*\*\s*/],
     ["lastObserved", /^\s*[-*]\s*\*\*LastObserved:\*\*\s*/],
   ];

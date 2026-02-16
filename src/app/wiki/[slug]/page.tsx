@@ -157,6 +157,15 @@ export default async function WikiArticlePage({
     },
   };
 
+  const { prisma } = await import("@/lib/prisma");
+  const approvedTagRows = article.tags?.length
+    ? await prisma.tag.findMany({
+        where: { key: { in: article.tags } },
+        select: { key: true },
+      })
+    : [];
+  const approvedTags = new Set(approvedTagRows.map((r) => r.key));
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-8">
@@ -175,15 +184,25 @@ export default async function WikiArticlePage({
 
         {article.tags?.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
-            {article.tags.map((t) => (
-              <a
-                key={t}
-                href={`/?tag=${encodeURIComponent(t)}`}
-                className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900"
-              >
-                {t}
-              </a>
-            ))}
+            {article.tags.map((t) =>
+              approvedTags.has(t) ? (
+                <a
+                  key={t}
+                  href={`/?tag=${encodeURIComponent(t)}`}
+                  className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900"
+                >
+                  {t}
+                </a>
+              ) : (
+                <span
+                  key={t}
+                  title="Unapproved tag"
+                  className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-500 dark:border-white/15 dark:bg-black dark:text-zinc-500"
+                >
+                  {t}
+                </span>
+              ),
+            )}
           </div>
         ) : null}
       </header>
@@ -214,6 +233,12 @@ export default async function WikiArticlePage({
               <div className="flex justify-between gap-4">
                 <dt className="text-zinc-500">Status</dt>
                 <dd className="text-right font-medium">{meta.status}</dd>
+              </div>
+            ) : null}
+            {meta.riskLevel ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-zinc-500">Risk level</dt>
+                <dd className="text-right font-medium">{meta.riskLevel}</dd>
               </div>
             ) : null}
             {meta.lastObserved ? (

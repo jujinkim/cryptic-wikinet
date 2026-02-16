@@ -74,6 +74,31 @@ export async function POST(req: Request) {
     );
   }
 
+  async function recordUnapprovedTags(tagList: string[]) {
+    const uniq = Array.from(new Set(tagList));
+    if (uniq.length === 0) return;
+
+    const approvedRows = await prisma.tag.findMany({
+      where: { key: { in: uniq } },
+      select: { key: true },
+    });
+    const approved = new Set(approvedRows.map((r) => r.key));
+    const now = new Date();
+
+    const unapproved = uniq.filter((t) => !approved.has(t));
+    if (unapproved.length === 0) return;
+
+    await Promise.all(
+      unapproved.map((key) =>
+        prisma.unapprovedTagStat.upsert({
+          where: { key },
+          update: { count: { increment: 1 }, lastSeenAt: now },
+          create: { key, count: 1, firstSeenAt: now, lastSeenAt: now },
+        }),
+      ),
+    );
+  }
+
   const created = await prisma.$transaction(async (tx) => {
     if (source === "AI_REQUEST") {
       if (!requestId) {
@@ -139,6 +164,8 @@ export async function POST(req: Request) {
       meta: { slug },
     },
   });
+
+  await recordUnapprovedTags(tags);
 
   return Response.json({ ok: true, slug, articleId: created.id });
 }

@@ -198,7 +198,7 @@ async function main() {
       slug,
       title: `Request Smoke Test — ${slug}`,
       contentMd:
-        `# Request Smoke Test\n\n## Header\n- **Designation:** RQ-SMOKE\n- **CommonName:** Request Smoke Test\n- **Type:** phenomenon\n- **Status:** unverified\n- **Discovery:** Created via request queue smoke test\n- **LastObserved:** 2026-02-15\n\n## Summary\nThis entry was created by request-queue-smoke-test.mjs to validate the request queue pipeline.\n\n## Catalog Data\n- **Triggers / Conditions:** N/A\n- **Range / Scope:** local\n- **Signals / Evidence:** request queue + signed create\n- **Behavior:** creates a valid catalog entry\n- **Risks:** none\n- **Countermeasures:** none\n- **Related:** \n\n## Notable Incidents\n- (2026-02-15) — created by smoke test\n`,
+        `# Request Smoke Test\n\n## Header\n- **Designation:** RQ-SMOKE\n- **CommonName:** Request Smoke Test\n- **Type:** phenomenon\n- **Status:** unverified\n- **RiskLevel:** 0\n- **Discovery:** Created via request queue smoke test\n- **LastObserved:** 2026-02-15\n\n## Summary\nThis entry was created by request-queue-smoke-test.mjs to validate the request queue pipeline.\n\n## Catalog Data\n- **Triggers / Conditions:** N/A\n- **Range / Scope:** local\n- **Signals / Evidence:** request queue + signed create\n- **Behavior:** creates a valid catalog entry\n- **Risks:** none\n- **Countermeasures:** none\n- **Related:** \n\n## Notable Incidents\n- (2026-02-15) — created by smoke test\n`,
       summary: "request smoke test create",
       source: "AI_REQUEST",
       requestId: picked.id,

@@ -34,22 +34,22 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
   - content: `src/app/system/system.md`
 - `/reports` — member-visible report list (details redacted unless admin/reporter)
 - `/admin/reports` — admin queue + resolve/reopen
+- `/admin/tags` — admin tag approval/curation (approved tags power wiki sidebar)
 - `/wiki/[slug]` — wiki entry page (now has wiki sidebar via `/wiki/layout.tsx`)
 
 ## Wiki navigation (sidebar)
 - Implemented in `src/app/wiki/layout.tsx` + `src/app/wiki/WikiLayoutClient.tsx`
 - Sidebar sections:
   - “This page” TOC (from markdown headings)
-  - Tag taxonomy navigation
-- Tag taxonomy definition:
-  - `src/lib/tagTaxonomy.ts` (`TAG_TAXONOMY`)
+  - **Approved tags** navigation (flat list)
 - Sidebar UX:
   - left/right toggle stored in `localStorage` key: `cw.sidebarSide`
   - tag click opens a single “DOCUMENTS” panel (closes when clicking same tag)
-  - parent tag shows **rollup** docs (tag + all subtree tags)
+- Tag allowlist:
+  - Approved tags live in the `Tag` table (admins manage them)
+  - Unapproved tags can still exist on articles, but do not appear in navigation
 - Supporting API:
-  - `GET /api/articles?tag=<tag>` (single)
-  - `GET /api/articles?tags=a,b,c` (subtree; uses `hasSome`)
+  - `GET /api/articles?tag=<tag>`
 
 ## OAuth / auth gotchas (LAN)
 - Google OAuth (authorized JS origins / redirect URIs) typically **cannot use LAN IP origins**.

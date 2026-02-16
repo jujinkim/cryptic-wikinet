@@ -5,6 +5,7 @@ const REQUIRED_HEADER_KEYS = [
   "CommonName",
   "Type",
   "Status",
+  "RiskLevel",
   "Discovery",
   "LastObserved",
 ] as const;
@@ -43,11 +44,23 @@ export function validateCatalogMarkdown(contentMd: string) {
 
   const type = getHeaderValue(contentMd, "Type")?.toLowerCase() ?? null;
   const status = getHeaderValue(contentMd, "Status")?.toLowerCase() ?? null;
+  const riskRaw = getHeaderValue(contentMd, "RiskLevel") ?? null;
+  const risk = riskRaw != null ? Number(String(riskRaw).trim()) : null;
 
-  const invalidEnums: Array<{ field: "Type" | "Status"; value: string }> = [];
+  const invalidEnums: Array<{ field: "Type" | "Status" | "RiskLevel"; value: string }> = [];
   if (type && !TYPE_ENUM.has(type)) invalidEnums.push({ field: "Type", value: type });
   if (status && !STATUS_ENUM.has(status))
     invalidEnums.push({ field: "Status", value: status });
+
+  if (
+    risk === null ||
+    !Number.isFinite(risk) ||
+    !Number.isInteger(risk) ||
+    risk < 0 ||
+    risk > 5
+  ) {
+    invalidEnums.push({ field: "RiskLevel", value: String(riskRaw ?? "") });
+  }
 
   // Keep entries catalog-like.
   const narrativeMax = 2000;

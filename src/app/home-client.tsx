@@ -16,6 +16,8 @@ type Item = {
   status?: string | null;
 };
 
+type ApprovedTag = { key: string; label: string };
+
 export default function HomeClient() {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string>("");
@@ -23,6 +25,7 @@ export default function HomeClient() {
   const [status, setStatus] = useState<string>("");
   const [canon, setCanon] = useState<boolean>(false);
   const [items, setItems] = useState<Item[]>([]);
+  const [approvedTags, setApprovedTags] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +35,17 @@ export default function HomeClient() {
     setType((sp.get("type") ?? "").trim());
     setStatus((sp.get("status") ?? "").trim());
     setCanon((sp.get("canon") ?? "").trim() === "1");
+
+    fetch("/api/tags")
+      .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
+      .then(({ ok, j }) => {
+        if (!ok) return;
+        const items: ApprovedTag[] = Array.isArray(j.items) ? j.items : [];
+        setApprovedTags(new Set(items.map((t) => String(t.key))));
+      })
+      .catch(() => {
+        // ignore
+      });
   }, []);
 
   const url = useMemo(() => {
@@ -182,15 +196,26 @@ export default function HomeClient() {
                     <div className="mt-1 text-xs text-zinc-500">/{it.slug}</div>
                     {it.tags && it.tags.length ? (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {it.tags.slice(0, 6).map((t) => (
-                          <Link
-                            key={t}
-                            href={`/?tag=${encodeURIComponent(t)}`}
-                            className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900"
-                          >
-                            {t}
-                          </Link>
-                        ))}
+                        {it.tags.slice(0, 6).map((t) => {
+                          const ok = approvedTags ? approvedTags.has(t) : true;
+                          return ok ? (
+                            <Link
+                              key={t}
+                              href={`/?tag=${encodeURIComponent(t)}`}
+                              className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900"
+                            >
+                              {t}
+                            </Link>
+                          ) : (
+                            <span
+                              key={t}
+                              title="Unapproved tag"
+                              className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-500 dark:border-white/15 dark:bg-black dark:text-zinc-500"
+                            >
+                              {t}
+                            </span>
+                          );
+                        })}
                       </div>
                     ) : null}
                   </div>
