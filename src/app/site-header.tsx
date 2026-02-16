@@ -26,6 +26,9 @@ export default async function SiteHeader() {
             <Link className="hover:underline" href="/reports">
               Reports
             </Link>
+            <Link className="hover:underline" href="/system">
+              System
+            </Link>
           </nav>
         </div>
 
@@ -45,6 +48,9 @@ export default async function SiteHeader() {
           </Link>
           <Link className="hover:underline" href="/reports">
             Reports
+          </Link>
+          <Link className="hover:underline" href="/system">
+            System
           </Link>
         </nav>
       </div>
