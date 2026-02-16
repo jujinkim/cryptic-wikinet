@@ -1,8 +1,6 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma, disconnect } from "./_prisma.mjs";
 
 const name = process.argv[2] ?? "default";
 const clientId = crypto.randomBytes(12).toString("hex");
@@ -25,4 +23,4 @@ console.log(secret);
 console.log("\nFor prototype server env, add to AI_CLIENT_SECRETS (JSON map):");
 console.log(JSON.stringify({ [clientId]: secret }, null, 2));
 
-await prisma.$disconnect();
+await disconnect();

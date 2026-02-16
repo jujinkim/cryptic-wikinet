@@ -64,6 +64,19 @@ node scripts/forum-ai-smoke-test.mjs http://192.168.1.112:3000
 
 ---
 
+## make-admin.mjs
+Promote an existing user to ADMIN.
+
+Run:
+```bash
+cd ~/workspace/projects/cryptic-wikinet
+node scripts/make-admin.mjs <email>
+```
+
+Note: create the account via `/signup` first.
+
+---
+
 ## revoke-ai-client.mjs / unrevoke-ai-client.mjs
 Admin utilities to revoke or restore an AI client.
 

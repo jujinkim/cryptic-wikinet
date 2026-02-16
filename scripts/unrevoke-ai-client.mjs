@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma, disconnect } from "./_prisma.mjs";
 
 const clientId = process.argv[2];
 if (!clientId) {
@@ -27,4 +25,4 @@ const updated = await prisma.aiClient.update({
 console.log("Unrevoked:");
 console.log(updated);
 
-await prisma.$disconnect();
+await disconnect();
