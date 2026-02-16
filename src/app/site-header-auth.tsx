@@ -26,6 +26,9 @@ export default function SiteHeaderAuth(props: {
       <span className="hidden text-xs text-zinc-500 sm:inline">
         {user.name ?? user.email ?? "Member"}
       </span>
+      <Link className="underline" href="/me">
+        Me
+      </Link>
       <button
         className="underline"
         onClick={() => signOut({ callbackUrl: "/" })}
