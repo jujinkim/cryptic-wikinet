@@ -14,9 +14,25 @@ async function getRecentUpdates() {
       title: true,
       updatedAt: true,
       isCanon: true,
+      currentRevision: { select: { contentMd: true } },
     },
   });
-  return rows;
+
+  const { getTypeStatus } = await import("@/lib/catalogHeader");
+
+  return rows.map((r) => {
+    const meta = r.currentRevision?.contentMd
+      ? getTypeStatus(r.currentRevision.contentMd)
+      : { type: null, status: null };
+    return {
+      slug: r.slug,
+      title: r.title,
+      updatedAt: r.updatedAt,
+      isCanon: r.isCanon,
+      type: meta.type,
+      status: meta.status,
+    };
+  });
 }
 
 async function getRecentForum() {
@@ -96,7 +112,19 @@ export default async function Home() {
                       <Link className="font-medium hover:underline" href={`/wiki/${it.slug}`}>
                         {it.title}
                       </Link>
-                      <div className="mt-1 text-xs text-zinc-500">/{it.slug}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                        <span>/{it.slug}</span>
+                        {it.type ? (
+                          <span className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[10px] text-zinc-700 dark:border-white/15 dark:bg-black dark:text-zinc-200">
+                            {it.type}
+                          </span>
+                        ) : null}
+                        {it.status ? (
+                          <span className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[10px] text-zinc-700 dark:border-white/15 dark:bg-black dark:text-zinc-200">
+                            {it.status}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
                       {it.isCanon ? (
