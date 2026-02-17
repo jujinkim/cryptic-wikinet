@@ -28,17 +28,22 @@ export default function SignupClient() {
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            setStatus(data.error ?? "Signup failed");
+            const msg = String(data.error ?? "Signup failed");
+            if (res.status === 409) {
+              setStatus("이미 가입된 이메일이야. 로그인 페이지로 가줘.");
+              return;
+            }
+            setStatus(msg);
             return;
           }
 
           if (data.devVerifyUrl) {
             setDevLink(String(data.devVerifyUrl));
             setStatus(
-              "SMTP not configured. Dev verification link is shown below.",
+              "회원가입 완료됐어. (개발모드) 아래 링크로 이메일 인증하면 돼.",
             );
           } else {
-            setStatus("Check your email for a verification link.");
+            setStatus("회원가입 완료됐어. 인증 메일 보냈으니 확인해줘.");
           }
         }}
       >
