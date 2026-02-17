@@ -19,14 +19,8 @@ export const authOptions: NextAuthOptions = {
       if (!email) return false;
       if (isBlockedEmail(email)) return false;
 
-      // If signing in with credentials, enforce email verification
-      if (account?.provider === "credentials") {
-        const dbUser = await prisma.user.findUnique({
-          where: { email },
-          select: { emailVerified: true },
-        });
-        if (!dbUser?.emailVerified) return false;
-      }
+      // NOTE: Credentials users can sign in even if email is not verified.
+      // Verification is enforced on member-only actions (see requireVerifiedUser).
 
       // If signing in with OAuth, mark email verified when the provider asserts verification.
       // (This prevents OAuth-created users from being blocked by requireVerifiedUser.)
@@ -90,7 +84,6 @@ export const authOptions: NextAuthOptions = {
           },
         });
         if (!user?.passwordHash) return null;
-        if (!user.emailVerified) return null;
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
