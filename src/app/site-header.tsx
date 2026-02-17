@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+
 import { auth } from "@/auth";
 import SiteHeaderAuth from "@/app/site-header-auth";
 
 export default async function SiteHeader() {
+  // Force this server component to be dynamic so auth state isn't cached.
+  cookies();
+
   const session = await auth();
   const user = (session?.user ?? null) as { email?: string | null; name?: string | null } | null;
 
