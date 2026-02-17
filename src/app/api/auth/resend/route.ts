@@ -28,9 +28,9 @@ export async function POST(req: Request) {
     data: { identifier: email, token, expires },
   });
 
-  const url = new URL(req.url);
-  const verifyUrl = `${url.origin}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
-  const cancelUrl = `${url.origin}/cancel?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
+  const verifyUrl = `${origin}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const cancelUrl = `${origin}/cancel?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
 
   const delivery = await sendMail({
     to: email,
