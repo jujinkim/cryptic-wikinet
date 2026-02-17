@@ -26,7 +26,7 @@ export default async function ProfileSettingsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, bio: true, image: true },
+    select: { name: true, bio: true, image: true, email: true, emailVerified: true },
   });
 
   const hasGoogle =
@@ -47,6 +47,8 @@ export default async function ProfileSettingsPage() {
     <ProfileSettingsClient
       allowGoogle={allowGoogle}
       hasGoogle={hasGoogle}
+      email={user?.email ?? ""}
+      emailVerified={!!user?.emailVerified}
       initial={{
         name: user?.name ?? "",
         bio: user?.bio ?? "",

@@ -7,6 +7,8 @@ export default function ProfileSettingsClient(props: {
   initial: { name: string; bio: string; image: string };
   allowGoogle: boolean;
   hasGoogle: boolean;
+  email: string;
+  emailVerified: boolean;
 }) {
   const [name, setName] = useState(props.initial.name);
   const [bio, setBio] = useState(props.initial.bio);
@@ -14,6 +16,10 @@ export default function ProfileSettingsClient(props: {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [verifyInfo, setVerifyInfo] = useState<string | null>(null);
+  const [verifyErr, setVerifyErr] = useState<string | null>(null);
+  const [verifyDevLink, setVerifyDevLink] = useState<string | null>(null);
+  const [sendingVerify, setSendingVerify] = useState(false);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -46,6 +52,35 @@ export default function ProfileSettingsClient(props: {
       setErr(String(e));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function resendVerify() {
+    setSendingVerify(true);
+    setVerifyInfo(null);
+    setVerifyErr(null);
+    setVerifyDevLink(null);
+    try {
+      const res = await fetch("/api/auth/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: props.email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setVerifyErr(data.error ?? "Failed to resend");
+        return;
+      }
+      if (data.devVerifyUrl) {
+        setVerifyDevLink(String(data.devVerifyUrl));
+        setVerifyInfo("SMTP not configured. Dev verification link is shown below.");
+      } else {
+        setVerifyInfo("If the account exists and is unverified, a link was sent.");
+      }
+    } catch (e) {
+      setVerifyErr(String(e));
+    } finally {
+      setSendingVerify(false);
     }
   }
 
@@ -96,6 +131,46 @@ export default function ProfileSettingsClient(props: {
         >
           {saving ? "Saving…" : "Save"}
         </button>
+      </section>
+
+      <section className="mt-12 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <h2 className="text-lg font-medium">Email verification</h2>
+        <p className="mt-2 text-sm text-zinc-500">
+          {props.emailVerified
+            ? "Verified. You can do member-only actions (requests / forum writing / ratings)."
+            : "Not verified yet. You can log in, but member-only actions are disabled until you verify."}
+        </p>
+
+        <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+          <div className="min-w-0">
+            <div className="text-xs text-zinc-500">Email</div>
+            <div className="truncate font-medium">{props.email}</div>
+          </div>
+          {!props.emailVerified ? (
+            <button
+              type="button"
+              onClick={resendVerify}
+              disabled={sendingVerify || !props.email}
+              className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-medium dark:border-white/15 dark:bg-black disabled:opacity-50"
+            >
+              {sendingVerify ? "Sending…" : "Resend verification"}
+            </button>
+          ) : (
+            <div className="text-xs text-zinc-500">ok</div>
+          )}
+        </div>
+
+        {verifyErr ? <div className="mt-3 text-sm text-red-600">{verifyErr}</div> : null}
+        {verifyInfo ? <div className="mt-3 text-sm text-zinc-500">{verifyInfo}</div> : null}
+
+        {verifyDevLink ? (
+          <div className="mt-3 rounded-xl border border-black/10 bg-white p-3 text-xs dark:border-white/15 dark:bg-zinc-950">
+            <div className="text-zinc-500">Dev verify link</div>
+            <a className="mt-1 block break-all underline" href={verifyDevLink}>
+              {verifyDevLink}
+            </a>
+          </div>
+        ) : null}
       </section>
 
       <section className="mt-12 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
