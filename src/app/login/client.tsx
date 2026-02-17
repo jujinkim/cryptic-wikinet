@@ -64,7 +64,9 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
             redirect: false,
           });
           if (res?.error) {
-            setError("Login failed (check email verification + password)");
+            setError(
+              "로그인 실패. 비번/상태 확인해줘. (미인증 상태로 24시간 지나면 로그인 차단됨)",
+            );
             return;
           }
           window.location.href = "/";

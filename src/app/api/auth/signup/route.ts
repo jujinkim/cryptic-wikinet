@@ -39,11 +39,15 @@ export async function POST(req: Request) {
 
   const url = new URL(req.url);
   const verifyUrl = `${url.origin}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const cancelUrl = `${url.origin}/cancel?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
 
   const delivery = await sendMail({
     to: email,
     subject: "Verify your email for Cryptic WikiNet",
-    text: `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
+    text:
+      `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\n` +
+      `Not you? Cancel signup:\n\n${cancelUrl}\n\n` +
+      `This link expires in 30 minutes.`,
   });
 
   const isDev = process.env.NODE_ENV !== "production";
