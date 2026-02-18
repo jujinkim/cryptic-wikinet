@@ -25,19 +25,16 @@ export async function GET(req: Request) {
 
   const type = (url.searchParams.get("type") ?? "").trim().toLowerCase();
   const status = (url.searchParams.get("status") ?? "").trim().toLowerCase();
-  const canonOnly = (url.searchParams.get("canon") ?? "").trim() === "1";
 
   const where2 = {
     ...where,
     ...(tags.length ? { tags: { hasSome: tags } } : tag ? { tags: { has: tag } } : {}),
-    ...(canonOnly ? { isCanon: true } : {}),
   } as const;
 
   const rows: Array<{
     slug: string;
     title: string;
     updatedAt: Date;
-    isCanon: boolean;
     tags: string[];
     currentRevision: { contentMd: string } | null;
   }> = await prisma.article.findMany({
@@ -48,7 +45,6 @@ export async function GET(req: Request) {
       slug: true,
       title: true,
       updatedAt: true,
-      isCanon: true,
       tags: true,
       currentRevision: { select: { contentMd: true } },
     },
@@ -65,7 +61,7 @@ export async function GET(req: Request) {
         slug: r.slug,
         title: r.title,
         updatedAt: r.updatedAt,
-        isCanon: r.isCanon,
+        // isCanon is internal; not exposed via public listing API
         tags: r.tags,
         type: meta.type,
         status: meta.status,

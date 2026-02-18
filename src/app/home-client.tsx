@@ -10,7 +10,6 @@ type Item = {
   slug: string;
   title: string;
   updatedAt: string;
-  isCanon: boolean;
   tags?: string[];
   type?: string | null;
   status?: string | null;

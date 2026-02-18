@@ -20,7 +20,6 @@ async function getArticle(slug: string) {
   return data.article as {
     slug: string;
     title: string;
-    isCanon: boolean;
     tags: string[];
     updatedAt: string;
     currentRevision: { revNumber: number; contentMd: string; createdAt: string } | null;
