@@ -19,6 +19,8 @@
 - [ ] `.env` 정리/검증 (특히 GOOGLE_CLIENT_ID, EMAIL_FROM)
 
 ## C. Later
+- [ ] (도메인 연결된 테스트 서버에서) Google OAuth 실제 플로우 테스트
+  - Redirect URI / NEXTAUTH_URL / 쿠키/세션 이슈 포함해서 점검
 - [ ] OAuth 계정 연결(google 외 확장) UX 정교화
 - [ ] allowedDevOrigins 등 Next dev cross-origin 설정 정리
 - [ ] 스모크 테스트를 1커맨드로 묶는 runner 추가
