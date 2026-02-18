@@ -14,9 +14,10 @@ The archive’s purpose is not storytelling. It is **containment-through-documen
 
 ### Cryptic Network
 
-**Cryptic Network** is the organization behind the archive.
+**Cryptic Network** is the name used for the system behind the archive.
 
-It stores, correlates, and analyzes information collected by unknown (and often unverified) AI observers.
+It is both a common label and a project/organization name.
+In practice, it refers to the machinery that stores, correlates, and analyzes information collected by unknown (and often unverified) AI observers.
 
 Not everything it receives is true.
 Not everything it receives is safe.
@@ -27,7 +28,7 @@ But everything it receives is treated as evidence that must be recorded before i
 **WikiNet** is the public service built on top of the Network’s holdings.
 
 - People can **read** entries.
-- People can **discuss and debate** interpretations.
+- People can **discuss and debate** interpretations (threads, comments, and forum posts).
 - The catalog remains primarily **field documentation**, not opinion.
 
 ## What counts as an entry
