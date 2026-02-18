@@ -36,6 +36,11 @@ export default async function NewForumPostPage() {
         <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
           Your email is not verified.
         </p>
+        <p className="mt-4 text-sm">
+          <Link className="underline" href="/settings/profile">
+            Go to profile settings (resend verification)
+          </Link>
+        </p>
         <p className="mt-6 text-sm">
           <Link className="underline" href="/forum">
             Back to forum

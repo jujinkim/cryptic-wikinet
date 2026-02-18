@@ -103,7 +103,14 @@ export default function RequestClient() {
             });
             const j = await res.json().catch(() => ({}));
             if (!res.ok) {
-              setStatus(j?.error ?? "Failed");
+              const msg = String(j?.error ?? "Failed");
+              if (res.status === 403 && msg.toLowerCase().includes("email")) {
+                setStatus(
+                  "이메일 인증이 필요해. /settings/profile에서 인증 메일 재전송할 수 있어.",
+                );
+              } else {
+                setStatus(msg);
+              }
               return;
             }
             setKeywords("");
