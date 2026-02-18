@@ -23,7 +23,7 @@ export async function GET(req: Request) {
       status: true,
       createdAt: true,
       handledAt: true,
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true } },
     },
   });
 

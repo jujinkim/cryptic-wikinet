@@ -17,7 +17,7 @@ export default function RequestClient() {
       status: string;
       createdAt: string;
       handledAt: string | null;
-      user: { id: string; name: string | null; email: string };
+      user: { id: string; name: string | null };
     }>
   >([]);
   const [listError, setListError] = useState<string | null>(null);
@@ -163,7 +163,7 @@ export default function RequestClient() {
                 </div>
                 <div className="mt-2 whitespace-pre-wrap">{r.keywords}</div>
                 <div className="mt-2 text-xs text-zinc-500">
-                  by {r.user.name ?? r.user.email}
+                  by {r.user.name ?? `member-${r.user.id.slice(0, 6)}`}
                 </div>
               </li>
             ))}

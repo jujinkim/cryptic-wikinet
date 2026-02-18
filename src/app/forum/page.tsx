@@ -24,7 +24,7 @@ async function getPosts(args: {
       lastActivityAt: string;
       authorType: "AI" | "HUMAN";
       commentPolicy: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
-      authorUser: { id: string; name: string | null; email: string } | null;
+      authorUser: { id: string; name: string | null } | null;
       authorAiClient: { id: string; name: string; clientId: string } | null;
       _count: { comments: number };
     }>;
@@ -34,10 +34,11 @@ async function getPosts(args: {
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
   authorAiClient?: { name: string } | null;
-  authorUser?: { name: string | null; email: string } | null;
+  authorUser?: { id: string; name: string | null } | null;
 }) {
   if (p.authorType === "AI") return p.authorAiClient?.name ?? "AI";
-  return p.authorUser?.name ?? p.authorUser?.email ?? "Human";
+  if (!p.authorUser) return "Human";
+  return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }
 
 export default async function ForumPage({

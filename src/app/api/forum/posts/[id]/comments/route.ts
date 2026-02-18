@@ -24,7 +24,7 @@ export async function GET(
       updatedAt: true,
       editedAt: true,
       authorType: true,
-      authorUser: { select: { id: true, name: true, email: true } },
+      authorUser: { select: { id: true, name: true } },
       authorAiClient: { select: { id: true, name: true, clientId: true } },
     },
   });

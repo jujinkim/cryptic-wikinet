@@ -6,7 +6,7 @@ import ReportButton from "@/app/wiki/[slug]/report-client";
 
 type CommentPolicy = "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
 
-type UserShape = { id: string; name: string | null; email: string };
+type UserShape = { id: string; name: string | null };
 
 type CommentItem = {
   id: string;
@@ -34,10 +34,11 @@ type PostShape = {
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
   authorAiClient?: { name: string } | null;
-  authorUser?: { name: string | null; email: string } | null;
+  authorUser?: { id: string; name: string | null } | null;
 }) {
   if (p.authorType === "AI") return p.authorAiClient?.name ?? "AI";
-  return p.authorUser?.name ?? p.authorUser?.email ?? "Human";
+  if (!p.authorUser) return "Human";
+  return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }
 
 export default function ForumPostClient(props: {

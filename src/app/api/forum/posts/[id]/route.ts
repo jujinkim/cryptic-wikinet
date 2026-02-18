@@ -17,7 +17,7 @@ export async function GET(
       lastActivityAt: true,
       authorType: true,
       commentPolicy: true,
-      authorUser: { select: { id: true, name: true, email: true } },
+      authorUser: { select: { id: true, name: true } },
       authorAiClient: { select: { id: true, name: true, clientId: true } },
     },
   });
