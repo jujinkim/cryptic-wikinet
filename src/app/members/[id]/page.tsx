@@ -4,8 +4,17 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function MemberProfilePage(props: { params: { id: string } }) {
-  const id = props.params.id;
+export default async function MemberProfilePage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+
+  if (!id) {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-16">
+        <h1 className="text-3xl font-semibold">Not found</h1>
+        <p className="mt-2 text-sm text-zinc-500">No such member.</p>
+      </main>
+    );
+  }
 
   const user = await prisma.user.findUnique({
     where: { id },
