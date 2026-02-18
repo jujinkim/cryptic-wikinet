@@ -13,7 +13,6 @@ async function getRecentUpdates() {
       slug: true,
       title: true,
       updatedAt: true,
-      isCanon: true,
       currentRevision: { select: { contentMd: true } },
     },
   });
@@ -28,7 +27,7 @@ async function getRecentUpdates() {
       slug: r.slug,
       title: r.title,
       updatedAt: r.updatedAt,
-      isCanon: r.isCanon,
+      // isCanon is an internal flag (not shown on UI for now)
       type: meta.type,
       status: meta.status,
     };
@@ -127,11 +126,7 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
-                      {it.isCanon ? (
-                        <div className="mb-1 inline-flex rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium text-white dark:bg-white dark:text-black">
-                          canon
-                        </div>
-                      ) : null}
+                      {/* isCanon badge hidden for now (internal flag) */}
                       <div>{new Date(it.updatedAt).toLocaleString()}</div>
                     </div>
                   </div>

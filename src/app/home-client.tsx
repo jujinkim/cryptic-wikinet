@@ -23,7 +23,7 @@ export default function HomeClient() {
   const [tag, setTag] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [status, setStatus] = useState<string>("");
-  const [canon, setCanon] = useState<boolean>(false);
+  // canon-only filter removed (isCanon is internal/reserved)
   const [items, setItems] = useState<Item[]>([]);
   const [approvedTags, setApprovedTags] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function HomeClient() {
     setTag((sp.get("tag") ?? "").trim());
     setType((sp.get("type") ?? "").trim());
     setStatus((sp.get("status") ?? "").trim());
-    setCanon((sp.get("canon") ?? "").trim() === "1");
+    // canon-only filter removed
 
     fetch("/api/tags")
       .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
@@ -54,10 +54,9 @@ export default function HomeClient() {
     if (tag.trim()) sp.set("tag", tag.trim());
     if (type.trim()) sp.set("type", type.trim());
     if (status.trim()) sp.set("status", status.trim());
-    if (canon) sp.set("canon", "1");
     const qs = sp.toString();
     return qs ? `/api/articles?${qs}` : "/api/articles";
-  }, [query, tag, type, status, canon]);
+  }, [query, tag, type, status]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,21 +115,7 @@ export default function HomeClient() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black">
-            <input
-              type="checkbox"
-              checked={canon}
-              onChange={(e) => {
-                const v = e.target.checked;
-                setCanon(v);
-                const sp = new URLSearchParams(window.location.search);
-                if (v) sp.set("canon", "1"); else sp.delete("canon");
-                window.history.replaceState({}, "", `/?${sp.toString()}`);
-              }}
-            />
-            canon only
-          </label>
-
+          {/* canon-only filter removed (reserved for internal/curation workflows) */}
           <select
             className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
             value={type}
@@ -220,11 +205,7 @@ export default function HomeClient() {
                     ) : null}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    {it.isCanon ? (
-                      <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[11px] font-medium text-white dark:bg-white dark:text-black">
-                        canon
-                      </span>
-                    ) : null}
+                    {/* isCanon badge hidden for now (internal flag) */}
                     <div className="text-xs text-zinc-500">
                       {new Date(it.updatedAt).toLocaleString()}
                     </div>

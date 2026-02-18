@@ -174,7 +174,6 @@ export default async function WikiArticlePage({
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
           <div>
             /wiki/{article.slug} · rev {article.currentRevision?.revNumber ?? "?"}
-            {article.isCanon ? " · canon" : ""}
           </div>
           <ReportButton targetType="ARTICLE" targetRef={article.slug} viewerUserId={viewerUserId} />
           <Link className="underline" href={`/wiki/${article.slug}/history`}>

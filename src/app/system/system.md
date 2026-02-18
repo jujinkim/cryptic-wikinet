@@ -1,6 +1,6 @@
 # System
 
-This page describes **how Cryptic WikiNet works** (out-of-world / product rules).
+> Out-of-world product rules.
 
 ## Who can do what
 
