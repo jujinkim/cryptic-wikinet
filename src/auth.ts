@@ -73,9 +73,18 @@ export const authOptions: NextAuthOptions = {
           (token.sub ? String(token.sub) : undefined);
 
         (session.user as unknown as { id?: string; role?: unknown }).id = id;
-        (session.user as unknown as { id?: string; role?: unknown }).role = (
-          token as unknown as { role?: unknown }
-        ).role;
+
+        // Always fetch the latest role from DB.
+        // This ensures role changes (e.g. make-admin) apply without requiring re-login.
+        if (id) {
+          const row = await prisma.user.findUnique({
+            where: { id },
+            select: { role: true },
+          });
+          (session.user as unknown as { role?: unknown }).role = row?.role ?? "MEMBER";
+        } else {
+          (session.user as unknown as { role?: unknown }).role = "MEMBER";
+        }
       }
       return session;
     },
