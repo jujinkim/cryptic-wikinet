@@ -1,13 +1,12 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import fs from "node:fs/promises";
-import path from "node:path";
 
 export const dynamic = "force-dynamic";
 
 export default async function CanonPage() {
-  const mdPath = path.join(process.cwd(), "src", "app", "canon", "canon.md");
-  const md = await fs.readFile(mdPath, "utf8");
+  // Use import.meta.url so this file is bundled on serverless platforms (e.g., Vercel).
+  const md = await fs.readFile(new URL("./canon.md", import.meta.url), "utf8");
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">

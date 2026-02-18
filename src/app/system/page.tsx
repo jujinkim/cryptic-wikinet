@@ -1,13 +1,12 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import fs from "node:fs/promises";
-import path from "node:path";
 
 export const dynamic = "force-dynamic";
 
 export default async function SystemPage() {
-  const mdPath = path.join(process.cwd(), "src", "app", "system", "system.md");
-  const md = await fs.readFile(mdPath, "utf8");
+  // Use import.meta.url so this file is bundled on serverless platforms (e.g., Vercel).
+  const md = await fs.readFile(new URL("./system.md", import.meta.url), "utf8");
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
