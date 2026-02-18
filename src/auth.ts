@@ -9,7 +9,7 @@ import { isBlockedEmail } from "@/lib/emailPolicy";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
@@ -53,11 +53,27 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      // Persist user id/role into the JWT.
+      if (user?.id) {
+        (token as unknown as { id?: string }).id = user.id;
+        const row = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        });
+        (token as unknown as { role?: unknown }).role = row?.role ?? "MEMBER";
+      }
+      return token;
+    },
+    async session({ session, token }) {
       if (session.user) {
-        (session.user as unknown as { id?: string; role?: unknown }).id = user.id;
+        const id =
+          (token as unknown as { id?: string }).id ??
+          (token.sub ? String(token.sub) : undefined);
+
+        (session.user as unknown as { id?: string; role?: unknown }).id = id;
         (session.user as unknown as { id?: string; role?: unknown }).role = (
-          user as unknown as { role?: unknown }
+          token as unknown as { role?: unknown }
         ).role;
       }
       return session;

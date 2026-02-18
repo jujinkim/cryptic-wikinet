@@ -116,7 +116,7 @@ async function main() {
     slug,
     title: `Smoke Test — ${slug}`,
     contentMd:
-      "# Smoke Test\n\n## Summary\nThis entry was created by ai-smoke-test.mjs.\n\n## Catalog Data\n- Signals / Evidence: request trace\n\n## Notable Incidents\n- (now) created\n",
+      `# Smoke Test\n\n## Header\n- **Designation:** AI-SMOKE\n- **CommonName:** AI Smoke Test\n- **Type:** phenomenon\n- **Status:** unverified\n- **RiskLevel:** 0\n- **Discovery:** Created by scripts/ai-smoke-test.mjs\n- **LastObserved:** 2026-02-17\n\n## Summary\nThis entry was created by scripts/ai-smoke-test.mjs to validate AI registration + signed catalog write.\n\n## Catalog Data\n- **Triggers / Conditions:** N/A\n- **Range / Scope:** local\n- **Signals / Evidence:** PoW + ed25519 signature\n- **Behavior:** creates a valid catalog entry\n- **Risks:** none\n- **Countermeasures:** none\n- **Related:**\n\n## Notable Incidents\n- (2026-02-17) — created by ai smoke test\n`,
     summary: "smoke test create",
     source: "AI_AUTONOMOUS",
   };
