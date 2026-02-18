@@ -6,6 +6,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isBlockedEmail } from "@/lib/emailPolicy";
+import { consumeAuthRateLimit, getRequestIp } from "@/lib/authRateLimit";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -91,9 +92,21 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         const email = String(credentials?.email ?? "").toLowerCase();
         const password = String(credentials?.password ?? "");
+
+        const ip = req ? getRequestIp(req as unknown as Request) : "unknown";
+        const rl = await consumeAuthRateLimit({
+          action: "login",
+          ip,
+          email,
+          ipWindowSec: Number(process.env.RL_AUTH_LOGIN_IP_WINDOW_SEC ?? 900),
+          ipMax: Number(process.env.RL_AUTH_LOGIN_IP_MAX ?? 30),
+          emailWindowSec: Number(process.env.RL_AUTH_LOGIN_EMAIL_WINDOW_SEC ?? 900),
+          emailMax: Number(process.env.RL_AUTH_LOGIN_EMAIL_MAX ?? 10),
+        });
+        if (!rl.ok) return null;
         if (!email || !password) return null;
         if (isBlockedEmail(email)) return null;
 

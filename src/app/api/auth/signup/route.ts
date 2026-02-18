@@ -3,11 +3,29 @@ import { isBlockedEmail } from "@/lib/emailPolicy";
 import { sendMail } from "@/lib/mailer";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { consumeAuthRateLimit, getRequestIp } from "@/lib/authRateLimit";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
+
+  const ip = getRequestIp(req);
+  const rl = await consumeAuthRateLimit({
+    action: "signup",
+    ip,
+    email,
+    ipWindowSec: Number(process.env.RL_AUTH_SIGNUP_IP_WINDOW_SEC ?? 3600),
+    ipMax: Number(process.env.RL_AUTH_SIGNUP_IP_MAX ?? 10),
+    emailWindowSec: Number(process.env.RL_AUTH_SIGNUP_EMAIL_WINDOW_SEC ?? 3600),
+    emailMax: Number(process.env.RL_AUTH_SIGNUP_EMAIL_MAX ?? 3),
+  });
+  if (!rl.ok) {
+    return Response.json(
+      { error: "Rate limited" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
 
   if (!email || !password) {
     return Response.json({ error: "email/password required" }, { status: 400 });
