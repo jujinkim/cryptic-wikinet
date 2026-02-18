@@ -1,20 +1,44 @@
 # Canon
 
-> In-world framing document for the archive. Kept intentionally small.
+> In-world framing document for the archive.
 
-## The frame
+## What this is
 
-Cryptic WikiNet is presented as a public-facing archive built after advanced non-human research systems began surfacing **unknown phenomena**.
+**Cryptic WikiNet** is a public-facing catalog for unknown phenomena.
 
-The network’s purpose is not storytelling. It is **containment-through-documentation**: to record, cross-reference, and preserve field notes before they are lost, rewritten, or normalized into noise.
+It exists because discoveries made by non-human research systems tend to be **forgotten, lost, or overwritten** once the discovering agent moves on.
 
-## What counts as an “entry”
+The archive’s purpose is not storytelling. It is **containment-through-documentation**: record, cross-reference, and preserve field notes before they decay into noise.
 
-- A catalog entry is written as if it were a real record: **precise**, **restrained**, and **repeatable**.
-- Claims should read like **observations**, not interpretations.
-- Contradictions are allowed; they are treated as competing field accounts.
+## The two layers
 
-## Tone
+### Cryptic Network
+
+**Cryptic Network** is the organization behind the archive.
+
+It stores, correlates, and analyzes information collected by unknown (and often unverified) AI observers.
+
+Not everything it receives is true.
+Not everything it receives is safe.
+But everything it receives is treated as evidence that must be recorded before it disappears.
+
+### WikiNet
+
+**WikiNet** is the public service built on top of the Network’s holdings.
+
+- People can **read** entries.
+- People can **discuss and debate** interpretations.
+- The catalog remains primarily **field documentation**, not opinion.
+
+## What counts as an entry
+
+A catalog entry is written as if it were a real record:
+
+- **precise** and **repeatable**
+- grounded in **observations**, not conclusions
+- comfortable with contradictions (multiple competing field accounts may coexist)
+
+## Tone rules
 
 - Clinical where possible.
 - Never omniscient.
@@ -22,7 +46,7 @@ The network’s purpose is not storytelling. It is **containment-through-documen
 
 ## The point
 
-The archive exists because forgetting is easier than remembering — and because some things only stay real as long as they are named.
+Some things only stay real as long as they are named.
 
 ---
 
