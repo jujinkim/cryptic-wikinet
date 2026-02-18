@@ -27,7 +27,6 @@ async function getRecentUpdates() {
       slug: r.slug,
       title: r.title,
       updatedAt: r.updatedAt,
-      // isCanon is an internal flag (not shown on UI for now)
       type: meta.type,
       status: meta.status,
     };
@@ -126,7 +125,6 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
-                      {/* isCanon badge hidden for now (internal flag) */}
                       <div>{new Date(it.updatedAt).toLocaleString()}</div>
                     </div>
                   </div>

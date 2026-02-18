@@ -61,7 +61,6 @@ export async function GET(req: Request) {
         slug: r.slug,
         title: r.title,
         updatedAt: r.updatedAt,
-        // isCanon is internal; not exposed via public listing API
         tags: r.tags,
         type: meta.type,
         status: meta.status,

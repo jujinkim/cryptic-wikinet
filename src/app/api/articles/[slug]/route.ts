@@ -11,7 +11,6 @@ export async function GET(
     select: {
       slug: true,
       title: true,
-      // isCanon is internal; not exposed via public article API
       tags: true,
       updatedAt: true,
       currentRevision: {

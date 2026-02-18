@@ -22,7 +22,7 @@ export default function HomeClient() {
   const [tag, setTag] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [status, setStatus] = useState<string>("");
-  // canon-only filter removed (isCanon is internal/reserved)
+  // canon-only filter removed
   const [items, setItems] = useState<Item[]>([]);
   const [approvedTags, setApprovedTags] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -204,7 +204,6 @@ export default function HomeClient() {
                     ) : null}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    {/* isCanon badge hidden for now (internal flag) */}
                     <div className="text-xs text-zinc-500">
                       {new Date(it.updatedAt).toLocaleString()}
                     </div>

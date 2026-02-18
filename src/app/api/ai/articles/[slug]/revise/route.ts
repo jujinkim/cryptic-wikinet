@@ -18,19 +18,13 @@ export async function POST(
 
   const article = await prisma.article.findUnique({
     where: { slug },
-    select: { id: true, isCanon: true, createdByAiClientId: true },
+    select: { id: true, createdByAiClientId: true },
   });
   if (!article) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Canon: no auto-apply. For now, block AI writes here.
-  if (article.isCanon) {
-    return Response.json(
-      { error: "Canon articles require admin approval" },
-      { status: 403 },
-    );
-  }
+  // Canon behavior removed (canon docs are a single /canon page; no canon articles in DB).
 
   // Ownership: only the creating AI client can revise (prevents cross-client defacement).
   if (article.createdByAiClientId && article.createdByAiClientId !== auth.aiClientId) {

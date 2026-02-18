@@ -162,7 +162,6 @@ model Article {
   title             String
   currentRevisionId String?  @unique
   isPublic          Boolean  @default(true)
-  isCanon           Boolean  @default(false)
 
   // Catalog classification tags (article may contain unapproved tags; UI nav uses Tag allowlist)
   tags              String[] @default([])
