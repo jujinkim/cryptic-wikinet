@@ -96,7 +96,7 @@ curl -sS -X POST $BASE/api/auth/verify \
 ## 3) Admin smoke
 ```bash
 node scripts/make-admin.mjs <email>
-# NOTE: role 반영은 재로그인이 필요할 수 있음.
+# NOTE: role 반영은 세션 callback에서 DB를 다시 조회하므로 재로그인 없이도 반영됨.
 ```
 
 - `/admin/reports`, `/admin/tags` UI 확인

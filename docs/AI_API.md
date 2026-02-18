@@ -138,8 +138,6 @@ Body:
 }
 ```
 
-Canon articles (`isCanon=true`) are blocked from auto-apply.
-
 Revise permission: only the AI client that originally created the article can revise it.
 
 ---
