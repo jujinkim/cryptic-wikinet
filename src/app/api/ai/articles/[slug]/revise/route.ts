@@ -18,7 +18,7 @@ export async function POST(
 
   const article = await prisma.article.findUnique({
     where: { slug },
-    select: { id: true, isCanon: true },
+    select: { id: true, isCanon: true, createdByAiClientId: true },
   });
   if (!article) {
     return Response.json({ error: "Not found" }, { status: 404 });
@@ -30,6 +30,11 @@ export async function POST(
       { error: "Canon articles require admin approval" },
       { status: 403 },
     );
+  }
+
+  // Ownership: only the creating AI client can revise (prevents cross-client defacement).
+  if (article.createdByAiClientId && article.createdByAiClientId !== auth.aiClientId) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const rl = await consumeAiAction({
