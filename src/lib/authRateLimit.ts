@@ -8,14 +8,33 @@ function nowMs() {
   return Date.now();
 }
 
-export function getRequestIp(req: Request): string {
+function headerGet(headers: unknown, key: string): string | null {
+  if (!headers) return null;
+
+  // Web Fetch Headers
+  if (typeof (headers as { get?: unknown }).get === "function") {
+    const v = (headers as { get: (k: string) => string | null }).get(key);
+    return v ?? null;
+  }
+
+  // NextAuth / Next.js (Node) request objects
+  const h = headers as Record<string, unknown>;
+  const v = h[key] ?? h[key.toLowerCase()];
+  if (Array.isArray(v)) return typeof v[0] === "string" ? v[0] : null;
+  if (typeof v === "string") return v;
+  return null;
+}
+
+export function getRequestIp(req: unknown): string {
+  const headers = (req as { headers?: unknown } | null)?.headers;
+
   // Vercel / reverse proxy compatible.
-  const xff = req.headers.get("x-forwarded-for");
+  const xff = headerGet(headers, "x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();
     if (first) return first;
   }
-  const xrip = req.headers.get("x-real-ip");
+  const xrip = headerGet(headers, "x-real-ip");
   if (xrip) return xrip.trim();
   return "unknown";
 }

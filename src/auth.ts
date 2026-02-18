@@ -105,7 +105,7 @@ export const authOptions: NextAuthOptions = {
         const email = String(credentials?.email ?? "").toLowerCase();
         const password = String(credentials?.password ?? "");
 
-        const ip = req ? getRequestIp(req as unknown as Request) : "unknown";
+        const ip = req ? getRequestIp(req) : "unknown";
         const rl = await consumeAuthRateLimit({
           action: "login",
           ip,
