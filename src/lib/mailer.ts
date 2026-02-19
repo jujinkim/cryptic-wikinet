@@ -13,9 +13,14 @@ export async function sendMail(args: {
   const pass = process.env.SMTP_PASS;
   const from = process.env.EMAIL_FROM ?? "no-reply@cryptic-wikinet.local";
 
-  // Dev fallback: no SMTP configured -> log to console
+  // Fallback: SMTP not configured
+  // - In development: do not send, and avoid printing secrets/tokens in logs.
+  // - In production: fail fast (verification email is required for member actions).
   if (!host || !user || !pass) {
-    console.log("\n[MAIL DEV FALLBACK]", { to, subject, text });
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SMTP is not configured");
+    }
+    console.log("\n[MAIL DEV FALLBACK]", { to, subject });
     return { mode: "console" };
   }
 
