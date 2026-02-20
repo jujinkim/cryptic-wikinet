@@ -45,7 +45,6 @@ export async function POST(req: Request) {
   const passwordHash = await bcrypt.hash(password, 12);
   const token = crypto.randomBytes(32).toString("base64url");
   const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 min
-  let createdUserId: string | null = null;
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -61,31 +60,39 @@ export async function POST(req: Request) {
       return created;
     });
 
-    createdUserId = user.id;
-
     const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
     const verifyUrl = `${origin}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
     const cancelUrl = `${origin}/cancel?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
 
-    const delivery = await sendMail({
-      to: email,
-      subject: "Verify your email for Cryptic WikiNet",
-      text:
-        `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\n` +
-        `Not you? Cancel signup:\n\n${cancelUrl}\n\n` +
-        `This link expires in 30 minutes.`,
-    });
-
     const isDev = process.env.NODE_ENV !== "production";
+    let deliveryMode: "smtp" | "console" | "failed" = "failed";
+    let devVerifyUrl: string | undefined;
+
+    try {
+      const delivery = await sendMail({
+        to: email,
+        subject: "Verify your email for Cryptic WikiNet",
+        text:
+          `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\n` +
+          `Not you? Cancel signup:\n\n${cancelUrl}\n\n` +
+          `This link expires in 30 minutes.`,
+      });
+      deliveryMode = delivery.mode;
+      if (isDev && delivery.mode === "console") {
+        devVerifyUrl = verifyUrl;
+      }
+    } catch {
+      // Keep account created; user can resend verification from profile settings.
+      deliveryMode = "failed";
+    }
 
     // In dev fallback (no SMTP), optionally return the link to the client for convenience.
     // Never do this in production.
     return Response.json({
       ok: true,
       userId: user.id,
-      deliveryMode: delivery.mode,
-      devVerifyUrl:
-        isDev && delivery.mode === "console" ? verifyUrl : undefined,
+      deliveryMode,
+      devVerifyUrl,
     });
   } catch (e) {
     const code = (e as { code?: string } | null)?.code;
@@ -93,19 +100,6 @@ export async function POST(req: Request) {
       return Response.json({ error: "email already registered" }, { status: 409 });
     }
 
-    if (createdUserId) {
-      const rollbackUserId = createdUserId;
-      await prisma.$transaction(async (tx) => {
-        await tx.verificationToken.deleteMany({ where: { identifier: email } });
-        await tx.user.deleteMany({
-          where: { id: rollbackUserId, email, emailVerified: null },
-        });
-      });
-    }
-
-    return Response.json(
-      { error: "Failed to send verification email" },
-      { status: 503 },
-    );
+    return Response.json({ error: "Signup failed" }, { status: 500 });
   }
 }

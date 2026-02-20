@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
 import LoginClient from "@/app/login/client";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +11,12 @@ function isIpHost(hostname: string) {
   return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname);
 }
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth();
+  if (session?.user) {
+    redirect("/");
+  }
+
   const nextAuthUrl = process.env.NEXTAUTH_URL ?? "";
   let allowGoogle = true;
 

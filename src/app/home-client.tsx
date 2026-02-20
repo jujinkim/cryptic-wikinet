@@ -27,6 +27,7 @@ export default function HomeClient() {
   const [approvedTags, setApprovedTags] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -45,6 +46,13 @@ export default function HomeClient() {
       .catch(() => {
         // ignore
       });
+
+    const flash = globalThis.sessionStorage?.getItem("cw.toast");
+    if (flash) {
+      setToast(flash);
+      globalThis.sessionStorage?.removeItem("cw.toast");
+      globalThis.setTimeout(() => setToast(null), 5000);
+    }
   }, []);
 
   const url = useMemo(() => {
@@ -89,7 +97,19 @@ export default function HomeClient() {
   }, [url]);
 
   return (
-    <section className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+    <section className="relative rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+      {toast ? (
+        <div className="pointer-events-auto fixed right-4 top-4 z-50 max-w-sm rounded-xl border border-black/10 bg-white px-4 py-3 text-sm shadow-lg dark:border-white/15 dark:bg-zinc-950">
+          <div className="pr-7">{toast}</div>
+          <button
+            type="button"
+            className="absolute right-2 top-2 text-xs text-zinc-500 hover:underline"
+            onClick={() => setToast(null)}
+          >
+            닫기
+          </button>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col">

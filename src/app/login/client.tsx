@@ -26,8 +26,6 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(() => getInitialError());
-  const [info, setInfo] = useState<string | null>(null);
-  const [devLink, setDevLink] = useState<string | null>(null);
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
@@ -56,8 +54,6 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
         onSubmit={async (e) => {
           e.preventDefault();
           setError(null);
-          setInfo(null);
-          setDevLink(null);
           const res = await signIn("credentials", {
             email,
             password,
@@ -89,55 +85,15 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
           required
         />
         {error && <div className="text-sm text-red-600">{error}</div>}
-        {info && <div className="text-sm text-zinc-600 dark:text-zinc-400">{info}</div>}
-        {devLink ? (
-          <div className="rounded-xl border border-black/10 bg-white p-3 text-xs dark:border-white/15 dark:bg-zinc-950">
-            <div className="text-zinc-500">Dev verify link</div>
-            <a className="mt-1 block break-all underline" href={devLink}>
-              {devLink}
-            </a>
-          </div>
-        ) : null}
         <button className="rounded-xl bg-black px-4 py-3 text-sm font-medium text-white dark:bg-white dark:text-black">
           Sign in
         </button>
       </form>
 
-      <div className="mt-6 flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
         <p>
           No account? <a className="underline" href="/signup">Sign up</a>
         </p>
-        <button
-          type="button"
-          className="self-start underline"
-          onClick={async () => {
-            setError(null);
-            setInfo(null);
-            setDevLink(null);
-            if (!email.trim()) {
-              setInfo("Enter your email above to resend verification.");
-              return;
-            }
-            const res = await fetch("/api/auth/resend", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email }),
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              setError(data.error ?? "Failed to resend");
-              return;
-            }
-            if (data.devVerifyUrl) {
-              setDevLink(String(data.devVerifyUrl));
-              setInfo("SMTP not configured. Dev verification link is shown above.");
-            } else {
-              setInfo("If the account exists and is unverified, a link was sent.");
-            }
-          }}
-        >
-          Resend verification
-        </button>
       </div>
     </main>
   );

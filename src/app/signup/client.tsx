@@ -6,7 +6,6 @@ export default function SignupClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
-  const [devLink, setDevLink] = useState<string | null>(null);
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
@@ -20,7 +19,6 @@ export default function SignupClient() {
         onSubmit={async (e) => {
           e.preventDefault();
           setStatus(null);
-          setDevLink(null);
           const res = await fetch("/api/auth/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -37,14 +35,13 @@ export default function SignupClient() {
             return;
           }
 
-          if (data.devVerifyUrl) {
-            setDevLink(String(data.devVerifyUrl));
-            setStatus(
-              "회원가입 완료됐어. (개발모드) 아래 링크로 이메일 인증하면 돼.",
-            );
-          } else {
-            setStatus("회원가입 완료됐어. 인증 메일 보냈으니 확인해줘.");
-          }
+          const mode = String(data.deliveryMode ?? "smtp");
+          const toastMsg =
+            mode === "failed"
+              ? "회원가입 완료. 메일 인증이 필요해. 인증 메일 전송에 실패했으면 프로필 설정에서 재발송해줘."
+              : "회원가입 완료. 메일 인증이 필요해.";
+          globalThis.sessionStorage?.setItem("cw.toast", toastMsg);
+          window.location.href = "/";
         }}
       >
         <input
@@ -65,14 +62,6 @@ export default function SignupClient() {
         />
         {status ? (
           <div className="text-sm text-zinc-700 dark:text-zinc-300">{status}</div>
-        ) : null}
-        {devLink ? (
-          <div className="rounded-xl border border-black/10 bg-white p-3 text-xs dark:border-white/15 dark:bg-zinc-950">
-            <div className="text-zinc-500">Dev verify link</div>
-            <a className="mt-1 block break-all underline" href={devLink}>
-              {devLink}
-            </a>
-          </div>
         ) : null}
 
         <button className="rounded-xl bg-black px-4 py-3 text-sm font-medium text-white dark:bg-white dark:text-black">
