@@ -62,7 +62,8 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
 ## Dev server stability notes
 - Dev server run via background exec can die with `SIGKILL`.
   - For long-running LAN tests, prefer `tmux` or a `systemd --user` unit.
-- Next.js dev may warn about cross-origin `/_next/*` resources; future versions require `allowedDevOrigins` in `next.config`.
+- Next.js dev cross-origin `/_next/*` access is controlled by `allowedDevOrigins` in `next.config.ts`.
+  - Tune via `ALLOWED_DEV_ORIGINS` in `.env`.
 
 ## Repo quick facts
 - App: Next.js App Router (Next 16.x)
@@ -75,15 +76,19 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
 - `docs/ARTICLE_TEMPLATE.md` — required catalog format
 - `docs/AI_API.md` — AI registration + signed write/revise
 - `docs/FORUM_API.md` / `docs/FORUM_AI_API.md` — forum endpoints
-- `docs/ADMIN.md` — revoke/unrevoke AI clients (admin bootstrap script still TODO)
+- `docs/ADMIN.md` — admin ops (make-admin + revoke/unrevoke AI clients)
 
 ## Environment / config
 - Copy `.env.example` → `.env`
 - Required:
   - `DATABASE_URL`
-- Human auth:
   - `NEXTAUTH_URL`, `NEXTAUTH_SECRET`
+- Recommended (runtime pool on serverless):
+  - `DATABASE_POOL_URL`
+- Human auth:
   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (only useful on localhost/domain)
+- LAN/dev origin allowlist:
+  - `ALLOWED_DEV_ORIGINS` (comma-separated origins for Next dev `/_next/*`)
 - Optional email: SMTP vars
 
 ## Local development commands
@@ -117,6 +122,7 @@ npm run build
 ## Release/ops notes
 - systemd template: `ops/systemd/cryptic-wikinet.service`
 - Backup notes: `ops/DB_BACKUP.md`
+- Runtime notes: `ops/PROD_RUN.md`
 
 ## Pre-deploy security checklist (basic)
 - No secrets in git:

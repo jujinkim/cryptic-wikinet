@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Item = {
@@ -111,9 +110,7 @@ export default function ReportsClient() {
               )}
 
               <div className="mt-3 flex items-center justify-between gap-4">
-                <Link className="text-xs underline text-zinc-500" href={`/api/reports?id=${r.id}`}>
-                  
-                </Link>
+                <div className="text-xs text-zinc-500">Report ID: {r.id}</div>
                 {isAdmin ? (
                   <button
                     className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/15"
