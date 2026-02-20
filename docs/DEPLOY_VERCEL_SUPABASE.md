@@ -53,6 +53,9 @@ So every deployment applies Prisma migrations automatically.
 Notes:
 - `DATABASE_POOL_URL` is used at runtime; `DATABASE_URL` is still used by migrations.
 - Ensure SSL is enabled in the URL (`sslmode=require`) if Supabase requires it.
+- If Supabase integration auto-injects only `POSTGRES_*` vars, this app supports them as fallbacks:
+  - migrations: `POSTGRES_URL_NON_POOLING` (or `POSTGRES_URL`)
+  - runtime: `POSTGRES_PRISMA_URL` / `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`
 
 ### Email verification (required for member-only actions)
 

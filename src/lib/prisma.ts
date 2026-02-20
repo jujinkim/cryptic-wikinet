@@ -12,9 +12,16 @@ const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 function getDbConnString() {
   // Recommended for Vercel/serverless: use a pooled URL at runtime.
   // For migrations, Prisma uses prisma.config.ts -> DATABASE_URL.
-  const s = process.env.DATABASE_POOL_URL || process.env.DATABASE_URL;
+  const s =
+    process.env.DATABASE_POOL_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING;
   if (!s) {
-    throw new Error("DATABASE_POOL_URL or DATABASE_URL must be set");
+    throw new Error(
+      "DATABASE_POOL_URL or DATABASE_URL must be set (or Supabase POSTGRES_PRISMA_URL/POSTGRES_URL/_NON_POOLING).",
+    );
   }
   return s;
 }

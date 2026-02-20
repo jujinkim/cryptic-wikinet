@@ -3,12 +3,23 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const migrationDbUrl =
+  process.env["DATABASE_URL"] ??
+  process.env["POSTGRES_URL_NON_POOLING"] ??
+  process.env["POSTGRES_URL"];
+
+if (!migrationDbUrl) {
+  throw new Error(
+    "Missing DB URL for migrations. Set DATABASE_URL or Supabase POSTGRES_URL_NON_POOLING.",
+  );
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: migrationDbUrl,
   },
 });
