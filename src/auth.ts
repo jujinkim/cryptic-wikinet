@@ -20,16 +20,13 @@ export const authOptions: NextAuthOptions = {
       if (!email) return false;
       if (isBlockedEmail(email)) return false;
 
-      // Block login if the account is still unverified after 24 hours.
+      // For credentials login, require email verification before sign-in.
       const dbUser = await prisma.user.findUnique({
         where: { email },
-        select: { id: true, emailVerified: true, createdAt: true },
+        select: { id: true, emailVerified: true },
       });
-      if (dbUser && !dbUser.emailVerified) {
-        const ageMs = Date.now() - dbUser.createdAt.getTime();
-        if (ageMs > 1000 * 60 * 60 * 24) {
-          return false;
-        }
+      if (account?.provider === "credentials" && dbUser && !dbUser.emailVerified) {
+        return false;
       }
 
       // If signing in with OAuth, mark email verified when the provider asserts verification.
@@ -127,16 +124,11 @@ export const authOptions: NextAuthOptions = {
             name: true,
             passwordHash: true,
             emailVerified: true,
-            createdAt: true,
             role: true,
           },
         });
         if (!user?.passwordHash) return null;
-
-        if (!user.emailVerified) {
-          const ageMs = Date.now() - user.createdAt.getTime();
-          if (ageMs > 1000 * 60 * 60 * 24) return null;
-        }
+        if (!user.emailVerified) return null;
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;

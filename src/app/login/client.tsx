@@ -65,7 +65,7 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
           });
           if (res?.error) {
             setError(
-              "로그인 실패. 비번/상태 확인해줘. (미인증 상태로 24시간 지나면 로그인 차단됨)",
+              "로그인 실패. 비번을 확인하고 이메일 인증을 완료한 뒤 다시 시도해줘.",
             );
             return;
           }

@@ -43,40 +43,69 @@ export async function POST(req: Request) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: { email, passwordHash },
-    select: { id: true, email: true },
-  });
-
   const token = crypto.randomBytes(32).toString("base64url");
   const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 min
+  let createdUserId: string | null = null;
 
-  await prisma.verificationToken.create({
-    data: { identifier: email, token, expires },
-  });
+  try {
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: { email, passwordHash },
+        select: { id: true, email: true },
+      });
 
-  const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
-  const verifyUrl = `${origin}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
-  const cancelUrl = `${origin}/cancel?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+      await tx.verificationToken.create({
+        data: { identifier: email, token, expires },
+      });
 
-  const delivery = await sendMail({
-    to: email,
-    subject: "Verify your email for Cryptic WikiNet",
-    text:
-      `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\n` +
-      `Not you? Cancel signup:\n\n${cancelUrl}\n\n` +
-      `This link expires in 30 minutes.`,
-  });
+      return created;
+    });
 
-  const isDev = process.env.NODE_ENV !== "production";
+    createdUserId = user.id;
 
-  // In dev fallback (no SMTP), optionally return the link to the client for convenience.
-  // Never do this in production.
-  return Response.json({
-    ok: true,
-    userId: user.id,
-    deliveryMode: delivery.mode,
-    devVerifyUrl:
-      isDev && delivery.mode === "console" ? verifyUrl : undefined,
-  });
+    const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
+    const verifyUrl = `${origin}/verify?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+    const cancelUrl = `${origin}/cancel?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+    const delivery = await sendMail({
+      to: email,
+      subject: "Verify your email for Cryptic WikiNet",
+      text:
+        `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\n` +
+        `Not you? Cancel signup:\n\n${cancelUrl}\n\n` +
+        `This link expires in 30 minutes.`,
+    });
+
+    const isDev = process.env.NODE_ENV !== "production";
+
+    // In dev fallback (no SMTP), optionally return the link to the client for convenience.
+    // Never do this in production.
+    return Response.json({
+      ok: true,
+      userId: user.id,
+      deliveryMode: delivery.mode,
+      devVerifyUrl:
+        isDev && delivery.mode === "console" ? verifyUrl : undefined,
+    });
+  } catch (e) {
+    const code = (e as { code?: string } | null)?.code;
+    if (code === "P2002") {
+      return Response.json({ error: "email already registered" }, { status: 409 });
+    }
+
+    if (createdUserId) {
+      const rollbackUserId = createdUserId;
+      await prisma.$transaction(async (tx) => {
+        await tx.verificationToken.deleteMany({ where: { identifier: email } });
+        await tx.user.deleteMany({
+          where: { id: rollbackUserId, email, emailVerified: null },
+        });
+      });
+    }
+
+    return Response.json(
+      { error: "Failed to send verification email" },
+      { status: 503 },
+    );
+  }
 }
