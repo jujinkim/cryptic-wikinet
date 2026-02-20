@@ -56,6 +56,7 @@ Notes:
 - If Supabase integration auto-injects only `POSTGRES_*` vars, this app supports them as fallbacks:
   - migrations: `POSTGRES_URL_NON_POOLING` (or `POSTGRES_URL`)
   - runtime: `POSTGRES_PRISMA_URL` / `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`
+- For Supabase URLs with `sslmode=require|prefer|verify-ca`, the app auto-adds `uselibpqcompat=true` to avoid pg TLS mode incompatibility warnings/errors.
 
 ### Email verification (required for member-only actions)
 

@@ -9,6 +9,27 @@ declare global {
 
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 
+function normalizeDbConnString(raw: string) {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return raw;
+  }
+
+  const host = u.hostname.toLowerCase();
+  const isSupabase = host.includes("supabase.co") || host.includes("supabase.com");
+  const sslmode = (u.searchParams.get("sslmode") ?? "").toLowerCase();
+  const shouldApplyCompat =
+    isSupabase && (sslmode === "require" || sslmode === "prefer" || sslmode === "verify-ca");
+
+  if (shouldApplyCompat && !u.searchParams.has("uselibpqcompat")) {
+    u.searchParams.set("uselibpqcompat", "true");
+  }
+
+  return u.toString();
+}
+
 function getDbConnString() {
   // Recommended for Vercel/serverless: use a pooled URL at runtime.
   // For migrations, Prisma uses prisma.config.ts -> DATABASE_URL.
@@ -23,7 +44,7 @@ function getDbConnString() {
       "DATABASE_POOL_URL or DATABASE_URL must be set (or Supabase POSTGRES_PRISMA_URL/POSTGRES_URL/_NON_POOLING).",
     );
   }
-  return s;
+  return normalizeDbConnString(s);
 }
 
 function makeClient() {

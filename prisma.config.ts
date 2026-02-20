@@ -3,6 +3,27 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+function normalizeDbConnString(raw: string) {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return raw;
+  }
+
+  const host = u.hostname.toLowerCase();
+  const isSupabase = host.includes("supabase.co") || host.includes("supabase.com");
+  const sslmode = (u.searchParams.get("sslmode") ?? "").toLowerCase();
+  const shouldApplyCompat =
+    isSupabase && (sslmode === "require" || sslmode === "prefer" || sslmode === "verify-ca");
+
+  if (shouldApplyCompat && !u.searchParams.has("uselibpqcompat")) {
+    u.searchParams.set("uselibpqcompat", "true");
+  }
+
+  return u.toString();
+}
+
 const migrationDbUrl =
   process.env["DATABASE_URL"] ??
   process.env["POSTGRES_URL_NON_POOLING"] ??
@@ -20,6 +41,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: migrationDbUrl,
+    url: normalizeDbConnString(migrationDbUrl),
   },
 });
