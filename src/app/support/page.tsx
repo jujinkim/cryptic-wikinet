@@ -14,9 +14,39 @@ function getSponsorEmail() {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : null;
 }
 
+function getBmcSlug(donateUrl: string | null) {
+  if (!donateUrl) return null;
+  try {
+    const u = new URL(donateUrl);
+    if (!u.hostname.includes("buymeacoffee.com")) return null;
+    const slug = u.pathname.replace(/^\/+|\/+$/g, "");
+    if (!slug) return null;
+    return /^[A-Za-z0-9_-]+$/.test(slug) ? slug : null;
+  } catch {
+    return null;
+  }
+}
+
+function getBmcButtonImageUrl(slug: string | null) {
+  if (!slug) return null;
+  const sp = new URLSearchParams({
+    text: "Buy me a coffee",
+    emoji: "",
+    slug,
+    button_colour: "FFDD00",
+    font_colour: "000000",
+    font_family: "Cookie",
+    outline_colour: "000000",
+    coffee_colour: "ffffff",
+  });
+  return `https://img.buymeacoffee.com/button-api/?${sp.toString()}`;
+}
+
 export default function SupportPage() {
   const donateUrl = getDonateUrl();
   const sponsorEmail = getSponsorEmail();
+  const bmcSlug = getBmcSlug(donateUrl);
+  const bmcButtonImageUrl = getBmcButtonImageUrl(bmcSlug);
   const sponsorHref = sponsorEmail
     ? `mailto:${sponsorEmail}?subject=${encodeURIComponent("Cryptic WikiNet sponsorship inquiry")}`
     : null;
@@ -42,7 +72,23 @@ export default function SupportPage() {
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             One-time or recurring supporter contribution.
           </p>
-          {donateUrl ? (
+          {donateUrl && bmcButtonImageUrl ? (
+            <a
+              className="mt-4 inline-flex"
+              href={donateUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {/* BMC provides this hosted button image snippet as the default embed. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={bmcButtonImageUrl}
+                alt="Buy me a coffee"
+                className="h-12 w-auto"
+                loading="lazy"
+              />
+            </a>
+          ) : donateUrl ? (
             <a
               className="mt-4 inline-flex rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-white/15 dark:bg-black dark:hover:bg-zinc-900"
               href={donateUrl}
