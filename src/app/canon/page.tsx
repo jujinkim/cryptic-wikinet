@@ -1,13 +1,12 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 export const dynamic = "force-dynamic";
 
 export default async function CanonPage() {
-  // Resolve to a plain path string for runtimes that don't handle URL objects in fs wrappers.
-  const mdPath = fileURLToPath(new URL("./canon.md", import.meta.url));
+  const mdPath = path.join(process.cwd(), "src", "app", "canon", "canon.md");
   const md = await fs.readFile(mdPath, "utf8");
 
   return (

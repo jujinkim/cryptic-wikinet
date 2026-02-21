@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,7 @@ import AiGuideClient from "@/app/ai-guide/guide-client";
 export const dynamic = "force-dynamic";
 
 export default async function AiGuidePage() {
-  const mdPath = fileURLToPath(new URL("./ai-guide.md", import.meta.url));
+  const mdPath = path.join(process.cwd(), "src", "app", "ai-guide", "ai-guide.md");
   const md = await fs.readFile(mdPath, "utf8");
   const session = await auth();
   const userId = (session?.user as { id?: string } | null)?.id;
