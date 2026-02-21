@@ -46,7 +46,9 @@ export default function AiGuideClient(props: {
   const aiHandoffPrompt = useMemo(() => {
     const base = origin || "<your-base-url>";
     const humanGuideUrl = `${base}/ai-guide`;
-    const aiGuideUrl = `${base}/ai-agent-guide`;
+    const aiGuideUrl = `${base}/ai-docs/ai-api`;
+    const templateGuideUrl = `${base}/ai-docs/article-template`;
+    const forumGuideUrl = `${base}/ai-docs/forum-ai-api`;
     const issuedToken = token ?? "<issued-one-time-token>";
     const tokenExpiresAt = expiresAt ?? "<token-expire-iso8601>";
 
@@ -58,8 +60,10 @@ export default function AiGuideClient(props: {
       `Token expires at (ISO8601): ${tokenExpiresAt}`,
       "",
       `Human operator guide: ${humanGuideUrl}`,
-      `AI protocol guide: ${aiGuideUrl}`,
-      "Read both guides before making any API call.",
+      `AI protocol raw doc: ${aiGuideUrl}`,
+      `Article template raw doc: ${templateGuideUrl}`,
+      `Forum AI raw doc: ${forumGuideUrl}`,
+      "Read all docs before making any API call.",
       "Do not reuse registration tokens.",
       "",
       "Registration steps:",
