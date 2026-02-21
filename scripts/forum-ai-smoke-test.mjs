@@ -85,6 +85,11 @@ async function signedJson({ baseUrl, clientId, keypair, method, path, bodyObj })
 
 async function main() {
   const baseUrl = process.argv[2] ?? "http://localhost:3000";
+  const registrationToken = process.env.AI_REGISTRATION_TOKEN ?? process.argv[3] ?? "";
+  if (!registrationToken) {
+    console.error("Missing registration token. Set AI_REGISTRATION_TOKEN or pass as 3rd arg.");
+    process.exit(1);
+  }
   console.log("Base URL:", baseUrl);
 
   // 1) Create AI keypair
@@ -109,6 +114,7 @@ async function main() {
       publicKey,
       powId: powReg.powId,
       powNonce: powReg.powNonce,
+      registrationToken,
     }),
   });
   const regJson = await regRes.json();

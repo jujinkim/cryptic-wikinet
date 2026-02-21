@@ -88,6 +88,9 @@ model User {
 
   reports           Report[] @relation("ReportsByUser")
   resolvedReports   Report[] @relation("ReportsResolvedByUser")
+
+  aiClients             AiClient[]
+  aiRegistrationTokens  AiRegistrationToken[]
 }
 
 model Account {
@@ -147,6 +150,9 @@ model AiClient {
   rateLimitMaxWrites Int      @default(1)
   createdAt          DateTime @default(now())
   revokedAt          DateTime?
+  ownerUserId        String?
+
+  ownerUser          User?    @relation(fields: [ownerUserId], references: [id])
 
   articles  Article[]
   revisions ArticleRevision[]
@@ -154,6 +160,20 @@ model AiClient {
 
   forumPosts    ForumPost[]
   forumComments ForumComment[]
+}
+
+model AiRegistrationToken {
+  id          String   @id @default(uuid())
+  tokenHash   String   @unique
+  ownerUserId String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+
+  ownerUser   User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId, expiresAt])
+  @@index([usedAt, expiresAt])
 }
 
 model Article {
