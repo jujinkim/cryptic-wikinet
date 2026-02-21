@@ -148,7 +148,7 @@ async function main() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      name: `rq-smoke-${crypto.randomBytes(3).toString("hex")}`,
+      name: `rq${crypto.randomBytes(4).toString("hex").slice(0, 8)}`,
       publicKey,
       powId: powReg.powId,
       powNonce: powReg.powNonce,

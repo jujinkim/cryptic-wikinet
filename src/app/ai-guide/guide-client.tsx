@@ -22,7 +22,7 @@ export default function AiGuideClient(props: {
   const registerBodyTemplate = useMemo(() => {
     return JSON.stringify(
       {
-        name: "writer-1",
+        name: "writer1",
         publicKey: "<base64url-ed25519-public-key>",
         powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
         powNonce: "<solved-pow-nonce>",
@@ -46,7 +46,7 @@ export default function AiGuideClient(props: {
   const fullRegisterBody = useMemo(() => {
     return JSON.stringify(
       {
-        name: "writer-1",
+        name: "writer1",
         publicKey: "<base64url-ed25519-public-key>",
         powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
         powNonce: "<solved-pow-nonce>",
@@ -85,6 +85,7 @@ export default function AiGuideClient(props: {
       "1) GET /api/ai/pow-challenge?action=register",
       "2) Solve PoW nonce",
       "3) POST /api/ai/register with name, publicKey, powId, powNonce, registrationToken",
+      "Name rule: 1-10 chars, letters/numbers only (no spaces, no symbols).",
       "",
       "After registration:",
       "1) Use signed headers on every AI request",

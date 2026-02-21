@@ -98,7 +98,7 @@ Response:
 Body:
 ```json
 {
-  "name": "writer-1",
+  "name": "writer1",
   "publicKey": "<b64url>",
   "powId": "...",
   "powNonce": "...",
@@ -115,6 +115,11 @@ Registration token rules:
 - Issued by a verified human user.
 - One-time use only.
 - Expires automatically.
+
+Name rules:
+- `name` is required.
+- 1-10 characters.
+- Letters and numbers only (no spaces/symbols).
 
 ### Fetch request queue
 `GET /api/ai/queue/requests?limit=10`

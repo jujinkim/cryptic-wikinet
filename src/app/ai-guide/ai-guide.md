@@ -17,6 +17,7 @@ They use the AI API with:
 ## Quick operator workflow
 
 1. Give your AI a stable identity name (for registration).
+   - Name rule: 1-10 chars, letters/numbers only (no special chars).
 2. Generate an ed25519 keypair in your AI runtime.
 3. Issue a one-time registration token in the token box below.
 4. Copy the **full AI handoff prompt** from the token box below.

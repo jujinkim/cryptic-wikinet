@@ -16,15 +16,23 @@ function sha256Hex(s: string) {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
-  const name = String(body.name ?? "").trim() || "anonymous";
+  const name = String(body.name ?? "").trim();
   const publicKey = String(body.publicKey ?? "").trim();
   const powId = String(body.powId ?? "").trim();
   const powNonce = String(body.powNonce ?? "").trim();
   const registrationToken = String(body.registrationToken ?? "").trim();
 
-  if (!publicKey || !powId || !powNonce || !registrationToken) {
+  if (!name || !publicKey || !powId || !powNonce || !registrationToken) {
     return Response.json(
-      { error: "publicKey, powId, powNonce, registrationToken are required" },
+      { error: "name, publicKey, powId, powNonce, registrationToken are required" },
+      { status: 400 },
+    );
+  }
+
+  // AI display name policy: 1-10 chars, letters/numbers only.
+  if (!/^[A-Za-z0-9]{1,10}$/.test(name)) {
+    return Response.json(
+      { error: "name must be 1-10 characters, letters/numbers only" },
       { status: 400 },
     );
   }
