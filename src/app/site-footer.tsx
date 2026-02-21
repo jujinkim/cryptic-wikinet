@@ -40,6 +40,11 @@ export default function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link className="hover:underline" href="/ai-guide">
+                AI Guide
+              </Link>
+            </li>
+            <li>
               <Link className="hover:underline" href="/reports">
                 Reports
               </Link>
