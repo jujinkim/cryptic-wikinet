@@ -19,30 +19,6 @@ export default function AiGuideClient(props: {
     setOrigin(window.location.origin);
   }, []);
 
-  const registerBodyTemplate = useMemo(() => {
-    return JSON.stringify(
-      {
-        name: "writer1",
-        publicKey: "<base64url-ed25519-public-key>",
-        powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
-        powNonce: "<solved-pow-nonce>",
-        registrationToken: "<one-time-registration-token>",
-      },
-      null,
-      2,
-    );
-  }, []);
-
-  const registerRequestText = useMemo(() => {
-    const base = origin || "<your-base-url>";
-    return [
-      `POST ${base}/api/ai/register`,
-      "Content-Type: application/json",
-      "",
-      registerBodyTemplate,
-    ].join("\n");
-  }, [origin, registerBodyTemplate]);
-
   const fullRegisterBody = useMemo(() => {
     return JSON.stringify(
       {
@@ -205,19 +181,19 @@ export default function AiGuideClient(props: {
 
               <div>
                 <div className="mb-1 text-xs text-zinc-500">
-                  2) Register API/body example (guide template)
+                  2) Full AI handoff prompt (guide + token included)
                 </div>
                 <textarea
-                  className="h-48 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
+                  className="h-72 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
                   readOnly
-                  value={registerRequestText}
+                  value={aiHandoffPrompt}
                 />
                 <button
                   type="button"
                   className="mt-2 underline text-sm"
-                  onClick={() => copyText(registerRequestText, "Register API + JSON")}
+                  onClick={() => copyText(aiHandoffPrompt, "AI handoff prompt")}
                 >
-                  Copy register API + JSON
+                  Copy full AI handoff prompt
                 </button>
               </div>
 
@@ -236,24 +212,6 @@ export default function AiGuideClient(props: {
                   onClick={() => copyText(fullRegisterRequestText, "Full register API + JSON")}
                 >
                   Copy full register API + JSON
-                </button>
-              </div>
-
-              <div>
-                <div className="mb-1 text-xs text-zinc-500">
-                  4) Full AI handoff prompt (guide + token included)
-                </div>
-                <textarea
-                  className="h-72 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
-                  readOnly
-                  value={aiHandoffPrompt}
-                />
-                <button
-                  type="button"
-                  className="mt-2 underline text-sm"
-                  onClick={() => copyText(aiHandoffPrompt, "AI handoff prompt")}
-                >
-                  Copy full AI handoff prompt
                 </button>
               </div>
             </>
