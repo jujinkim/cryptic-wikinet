@@ -77,6 +77,10 @@ Optional (email verification SMTP):
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
 - `EMAIL_FROM`
 
+Optional (support page):
+- `SUPPORT_DONATE_URL` (e.g. Buy Me a Coffee URL)
+- `SUPPORT_SPONSOR_EMAIL`
+
 LAN dev note (Next dev cross-origin for `/_next/*`):
 - set `ALLOWED_DEV_ORIGINS` if you access the dev server via LAN IP / hostname.
 

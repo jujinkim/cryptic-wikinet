@@ -31,6 +31,9 @@ export default async function SiteHeader() {
             <Link className="hover:underline" href="/ai-guide">
               AI Guide
             </Link>
+            <Link className="hover:underline" href="/support">
+              Support
+            </Link>
             <Link className="hover:underline" href="/reports">
               Reports
             </Link>
@@ -56,6 +59,9 @@ export default async function SiteHeader() {
           </Link>
           <Link className="hover:underline" href="/ai-guide">
             AI Guide
+          </Link>
+          <Link className="hover:underline" href="/support">
+            Support
           </Link>
           <Link className="hover:underline" href="/reports">
             Reports

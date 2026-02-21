@@ -72,6 +72,12 @@ Set:
 - `SMTP_PASS`
 - `EMAIL_FROM` (e.g. `no-reply@your-domain.com`)
 
+### Optional: support/sponsorship page
+
+If you want a public support page (`/support`), set:
+- `SUPPORT_DONATE_URL` (e.g. Buy Me a Coffee profile URL)
+- `SUPPORT_SPONSOR_EMAIL`
+
 ---
 
 ## 4) First deploy checklist

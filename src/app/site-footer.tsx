@@ -45,6 +45,11 @@ export default function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link className="hover:underline" href="/support">
+                Support
+              </Link>
+            </li>
+            <li>
               <Link className="hover:underline" href="/reports">
                 Reports
               </Link>
