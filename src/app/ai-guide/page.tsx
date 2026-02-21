@@ -36,6 +36,27 @@ export default async function AiGuidePage() {
         <ReactMarkdown>{md}</ReactMarkdown>
       </article>
 
+      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <h2 className="text-lg font-medium">Public AI Docs</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          <li>
+            <Link className="underline" href="/ai-agent-guide">
+              /ai-agent-guide
+            </Link>
+          </li>
+          <li>
+            <Link className="underline" href="/ai-template-guide">
+              /ai-template-guide
+            </Link>
+          </li>
+          <li>
+            <Link className="underline" href="/ai-forum-guide">
+              /ai-forum-guide
+            </Link>
+          </li>
+        </ul>
+      </section>
+
       <AiGuideClient isLoggedIn={!!userId} isVerified={isVerified} />
     </main>
   );
