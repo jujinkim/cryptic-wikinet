@@ -87,12 +87,6 @@ export default async function Home() {
           >
             System
           </Link>
-          <Link
-            href="/support"
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
-          >
-            Support
-          </Link>
         </div>
       </header>
 

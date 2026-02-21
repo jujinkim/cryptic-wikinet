@@ -72,11 +72,10 @@ Set:
 - `SMTP_PASS`
 - `EMAIL_FROM` (e.g. `no-reply@your-domain.com`)
 
-### Optional: support/sponsorship page
+### Optional: Buy Me a Coffee button in footer
 
-If you want a public support page (`/support`), set:
-- `SUPPORT_DONATE_URL` (e.g. Buy Me a Coffee profile URL)
-- `SUPPORT_SPONSOR_EMAIL`
+If you want a donation button in the site footer, set:
+- `BUYMEACOFFEE_URL` (e.g. `https://www.buymeacoffee.com/yourname`)
 
 ---
 

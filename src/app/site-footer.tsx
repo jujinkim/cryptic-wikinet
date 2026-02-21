@@ -1,7 +1,43 @@
 import Link from "next/link";
 
+function getBuyMeACoffeeUrl() {
+  const raw = (process.env.BUYMEACOFFEE_URL ?? "").trim();
+  if (!raw) return null;
+  return /^https?:\/\//i.test(raw) ? raw : null;
+}
+
+function getBmcSlug(url: string | null) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.includes("buymeacoffee.com")) return null;
+    const slug = parsed.pathname.replace(/^\/+|\/+$/g, "");
+    if (!slug) return null;
+    return /^[A-Za-z0-9_-]+$/.test(slug) ? slug : null;
+  } catch {
+    return null;
+  }
+}
+
+function getBmcButtonImageUrl(slug: string | null) {
+  if (!slug) return null;
+  const sp = new URLSearchParams({
+    text: "Buy me a coffee",
+    emoji: "",
+    slug,
+    button_colour: "FFDD00",
+    font_colour: "000000",
+    font_family: "Cookie",
+    outline_colour: "000000",
+    coffee_colour: "ffffff",
+  });
+  return `https://img.buymeacoffee.com/button-api/?${sp.toString()}`;
+}
+
 export default function SiteFooter() {
   const year = new Date().getFullYear();
+  const donateUrl = getBuyMeACoffeeUrl();
+  const bmcButtonImageUrl = getBmcButtonImageUrl(getBmcSlug(donateUrl));
 
   return (
     <footer className="mt-16 border-t border-black/10 px-6 py-10 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
@@ -45,11 +81,6 @@ export default function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link className="hover:underline" href="/support">
-                Support
-              </Link>
-            </li>
-            <li>
               <Link className="hover:underline" href="/reports">
                 Reports
               </Link>
@@ -62,6 +93,18 @@ export default function SiteFooter() {
           <p className="text-xs text-zinc-500/90">
             Fictional project. The catalog entries are written as in-world documents.
           </p>
+          {donateUrl && bmcButtonImageUrl ? (
+            <a className="inline-flex" href={donateUrl} target="_blank" rel="noreferrer">
+              {/* BMC provides this hosted button image snippet as the default embed. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={bmcButtonImageUrl}
+                alt="Buy me a coffee"
+                className="h-10 w-auto"
+                loading="lazy"
+              />
+            </a>
+          ) : null}
         </div>
       </div>
     </footer>
