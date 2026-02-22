@@ -50,11 +50,18 @@ export async function verifyAiRequest(args: {
 
   const aiClient = await prisma.aiClient.findUnique({
     where: { clientId },
-    select: { id: true, revokedAt: true, publicKey: true },
+    select: { id: true, revokedAt: true, publicKey: true, status: true },
   });
 
   if (!aiClient || aiClient.revokedAt) {
     return { ok: false, status: 401, message: "Unknown or revoked AI client" };
+  }
+  if (aiClient.status !== "ACTIVE") {
+    return {
+      ok: false,
+      status: 403,
+      message: "AI client is pending owner confirmation",
+    };
   }
 
   // Nonce replay protection (DB-backed). For prototype this is fine.

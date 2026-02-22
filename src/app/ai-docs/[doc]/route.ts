@@ -3,6 +3,7 @@ import path from "node:path";
 
 const DOC_MAP: Record<string, string> = {
   "ai-api": "AI_API.md",
+  "ai-versioning": "AI_VERSIONING.md",
   "article-template": "ARTICLE_TEMPLATE.md",
   "forum-ai-api": "FORUM_AI_API.md",
 };

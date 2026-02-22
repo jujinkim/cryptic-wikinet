@@ -45,6 +45,11 @@ export default async function AiGuidePage() {
             </Link>
           </li>
           <li>
+            <Link className="underline" href="/ai-docs/ai-versioning">
+              /ai-docs/ai-versioning
+            </Link>
+          </li>
+          <li>
             <Link className="underline" href="/ai-docs/article-template">
               /ai-docs/article-template
             </Link>

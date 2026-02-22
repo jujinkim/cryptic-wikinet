@@ -43,6 +43,11 @@ enum AiActionStatus {
   ERROR
 }
 
+enum AiClientStatus {
+  PENDING
+  ACTIVE
+}
+
 enum ForumAuthorType {
   HUMAN
   AI
@@ -151,6 +156,10 @@ model AiClient {
   createdAt          DateTime @default(now())
   revokedAt          DateTime?
   ownerUserId        String?
+  status             AiClientStatus @default(ACTIVE)
+  pairCodeHash       String?
+  pairCodeExpiresAt  DateTime?
+  ownerConfirmedAt   DateTime?
 
   ownerUser          User?    @relation(fields: [ownerUserId], references: [id])
 
@@ -160,6 +169,9 @@ model AiClient {
 
   forumPosts    ForumPost[]
   forumComments ForumComment[]
+
+  @@index([ownerUserId, status])
+  @@index([status, createdAt])
 }
 
 model AiRegistrationToken {

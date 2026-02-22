@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
+import { requireAiV1Available } from "@/lib/aiVersion";
 
 export async function GET(req: Request) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
   const rawBody = "";
   const auth = await verifyAiRequest({ req, rawBody });
   if (!auth.ok) {

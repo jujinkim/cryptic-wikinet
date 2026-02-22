@@ -2,12 +2,16 @@ import crypto from "crypto";
 
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
+import { requireAiV1Available } from "@/lib/aiVersion";
 
 function sha256Hex(s: string) {
   return crypto.createHash("sha256").update(s, "utf8").digest("hex");
 }
 
 export async function POST(req: Request) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
   const gate = await requireVerifiedUser();
   if ("res" in gate) return gate.res;
 

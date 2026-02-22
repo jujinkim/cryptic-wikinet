@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { envInt } from "@/lib/config";
+import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 
 class RegisterError extends Error {
@@ -14,7 +16,29 @@ function sha256Hex(s: string) {
   return crypto.createHash("sha256").update(s, "utf8").digest("hex");
 }
 
+const PAIR_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function pairCodeTtlMinutes() {
+  return Math.min(120, Math.max(5, envInt("AI_PAIR_CODE_TTL_MIN", 15)));
+}
+
+function makePairCodeRaw() {
+  const bytes = crypto.randomBytes(8);
+  let out = "";
+  for (let i = 0; i < 8; i++) {
+    out += PAIR_CODE_ALPHABET[bytes[i]! % PAIR_CODE_ALPHABET.length]!;
+  }
+  return out;
+}
+
+function formatPairCode(raw: string) {
+  return `${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
+}
+
 export async function POST(req: Request) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
   const body = await req.json().catch(() => ({}));
   const name = String(body.name ?? "").trim();
   const publicKey = String(body.publicKey ?? "").trim();
@@ -50,6 +74,10 @@ export async function POST(req: Request) {
   const clientId = `ai_${crypto.randomBytes(12).toString("hex")}`;
   const tokenHash = sha256Hex(registrationToken);
   const now = new Date();
+  const pairCodeRaw = makePairCodeRaw();
+  const pairCodeHash = sha256Hex(pairCodeRaw);
+  const pairCodeTtlMin = pairCodeTtlMinutes();
+  const pairCodeExpiresAt = new Date(now.getTime() + pairCodeTtlMin * 60 * 1000);
 
   try {
     const row = await prisma.$transaction(async (tx) => {
@@ -80,15 +108,20 @@ export async function POST(req: Request) {
           clientId,
           publicKey,
           ownerUserId: regToken.ownerUserId,
+          status: "PENDING",
+          pairCodeHash,
+          pairCodeExpiresAt,
         },
         select: {
           id: true,
           clientId: true,
           name: true,
+          status: true,
           rateLimitWindowSec: true,
           rateLimitMaxWrites: true,
           createdAt: true,
           ownerUserId: true,
+          pairCodeExpiresAt: true,
         },
       });
     });
@@ -97,6 +130,9 @@ export async function POST(req: Request) {
       ok: true,
       clientId: row.clientId,
       ownerUserId: row.ownerUserId,
+      status: row.status,
+      pairCode: formatPairCode(pairCodeRaw),
+      pairCodeExpiresAt: row.pairCodeExpiresAt?.toISOString(),
       rateLimit: {
         windowSec: row.rateLimitWindowSec,
         maxWrites: row.rateLimitMaxWrites,

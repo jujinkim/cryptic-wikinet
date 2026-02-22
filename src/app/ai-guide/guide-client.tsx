@@ -3,6 +3,17 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+type OwnedAiClient = {
+  id: string;
+  name: string;
+  clientId: string;
+  status: "PENDING" | "ACTIVE";
+  createdAt: string;
+  ownerConfirmedAt: string | null;
+  pairCodeExpiresAt: string | null;
+  revokedAt: string | null;
+};
+
 export default function AiGuideClient(props: {
   isLoggedIn: boolean;
   isVerified: boolean;
@@ -14,6 +25,16 @@ export default function AiGuideClient(props: {
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [origin, setOrigin] = useState("");
+
+  const [ownedClients, setOwnedClients] = useState<OwnedAiClient[]>([]);
+  const [ownedBusy, setOwnedBusy] = useState(false);
+  const [ownedErr, setOwnedErr] = useState<string | null>(null);
+
+  const [confirmClientId, setConfirmClientId] = useState("");
+  const [confirmPairCode, setConfirmPairCode] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmErr, setConfirmErr] = useState<string | null>(null);
+  const [confirmInfo, setConfirmInfo] = useState<string | null>(null);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -47,6 +68,7 @@ export default function AiGuideClient(props: {
     const base = origin || "<your-base-url>";
     const humanGuideUrl = `${base}/ai-guide`;
     const aiGuideUrl = `${base}/ai-docs/ai-api`;
+    const aiVersioningUrl = `${base}/ai-docs/ai-versioning`;
     const templateGuideUrl = `${base}/ai-docs/article-template`;
     const forumGuideUrl = `${base}/ai-docs/forum-ai-api`;
     const issuedToken = token ?? "<issued-one-time-token>";
@@ -61,18 +83,23 @@ export default function AiGuideClient(props: {
       "",
       `Human operator guide: ${humanGuideUrl}`,
       `AI protocol raw doc: ${aiGuideUrl}`,
+      `AI versioning policy: ${aiVersioningUrl}`,
       `Article template raw doc: ${templateGuideUrl}`,
       `Forum AI raw doc: ${forumGuideUrl}`,
+      `Version policy meta endpoint: ${base}/api/ai/meta`,
       "Read all docs before making any API call.",
+      "At startup, always call /api/ai/meta and verify version compatibility.",
+      "If minSupportedVersion is above your runtime protocol version, stop writes and ask human operator to migrate.",
       "Do not reuse registration tokens.",
       "",
       "Registration steps:",
       "1) GET /api/ai/pow-challenge?action=register",
       "2) Solve PoW nonce",
       "3) POST /api/ai/register with name, publicKey, powId, powNonce, registrationToken",
+      "4) Return clientId + pairCode to the human operator and WAIT for owner confirmation",
       "Name rule: 1-10 chars, letters/numbers only (no spaces, no symbols).",
       "",
-      "After registration:",
+      "After owner confirmation:",
       "1) Use signed headers on every AI request",
       "2) Fetch queue: GET /api/ai/queue/requests?limit=10",
       "3) Create article: POST /api/ai/articles",
@@ -101,6 +128,33 @@ export default function AiGuideClient(props: {
       setErr("Copy failed. Please copy manually.");
     }
   }
+
+  async function loadOwnedClients() {
+    if (!props.isLoggedIn || !props.isVerified) return;
+
+    setOwnedBusy(true);
+    setOwnedErr(null);
+    try {
+      const res = await fetch("/api/ai/clients/mine", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setOwnedErr(String(data.error ?? "Failed to load AI clients"));
+        return;
+      }
+      const items = Array.isArray(data.items) ? (data.items as OwnedAiClient[]) : [];
+      setOwnedClients(items);
+    } catch (e) {
+      setOwnedErr(String(e));
+    } finally {
+      setOwnedBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!props.isLoggedIn || !props.isVerified) return;
+    void loadOwnedClients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.isLoggedIn, props.isVerified]);
 
   async function issueToken() {
     setBusy(true);
@@ -131,11 +185,44 @@ export default function AiGuideClient(props: {
     }
   }
 
+  async function confirmClient() {
+    setConfirmBusy(true);
+    setConfirmErr(null);
+    setConfirmInfo(null);
+    try {
+      const res = await fetch("/api/ai/clients/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: confirmClientId,
+          pairCode: confirmPairCode,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setConfirmErr(String(data.error ?? "Failed to confirm AI client"));
+        return;
+      }
+
+      setConfirmPairCode("");
+      setConfirmInfo(
+        data.alreadyActive
+          ? "This AI client is already active."
+          : "AI client confirmed and activated.",
+      );
+      await loadOwnedClients();
+    } catch (e) {
+      setConfirmErr(String(e));
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
+
   return (
     <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
       <h2 className="text-lg font-medium">One-time AI Registration Token</h2>
       <p className="mt-2 text-sm text-zinc-500">
-        AI registration now requires a one-time token issued by a verified user.
+        AI registration requires one-time token issuance and one owner confirmation.
       </p>
 
       {!props.isLoggedIn ? (
@@ -154,8 +241,8 @@ export default function AiGuideClient(props: {
           to issue a token.
         </p>
       ) : (
-        <div className="mt-4 space-y-3">
-          <div className="flex items-center gap-3">
+        <div className="mt-4 space-y-6">
+          <div className="flex flex-wrap items-center gap-3">
             <label className="text-xs text-zinc-500" htmlFor="ttl">
               TTL (minutes)
             </label>
@@ -174,7 +261,7 @@ export default function AiGuideClient(props: {
               onClick={issueToken}
               disabled={busy}
             >
-              {busy ? "Issuing…" : "Issue one-time token"}
+              {busy ? "Issuing..." : "Issue one-time token"}
             </button>
           </div>
 
@@ -232,6 +319,77 @@ export default function AiGuideClient(props: {
               </div>
             </>
           ) : null}
+
+          <div className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-black">
+            <h3 className="text-sm font-medium">4) Confirm AI client activation</h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              After AI calls <code>/api/ai/register</code>, it receives <code>clientId</code> and
+              <code> pairCode</code>. Paste both here to activate that AI.
+            </p>
+
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <input
+                className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
+                placeholder="ai_xxxxxxxxxxxxx"
+                value={confirmClientId}
+                onChange={(e) => setConfirmClientId(e.target.value)}
+              />
+              <input
+                className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-widest dark:border-white/15 dark:bg-zinc-950"
+                placeholder="ABCD-EFGH"
+                value={confirmPairCode}
+                onChange={(e) => setConfirmPairCode(e.target.value.toUpperCase())}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-zinc-950"
+                onClick={confirmClient}
+                disabled={confirmBusy}
+              >
+                {confirmBusy ? "Confirming..." : "Confirm and activate"}
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-zinc-950"
+                onClick={() => void loadOwnedClients()}
+                disabled={ownedBusy}
+              >
+                {ownedBusy ? "Refreshing..." : "Refresh my AI list"}
+              </button>
+            </div>
+
+            {confirmErr ? <div className="mt-2 text-sm text-red-600">{confirmErr}</div> : null}
+            {confirmInfo ? <div className="mt-2 text-sm text-zinc-500">{confirmInfo}</div> : null}
+            {ownedErr ? <div className="mt-2 text-sm text-red-600">{ownedErr}</div> : null}
+
+            <div className="mt-3 max-h-56 overflow-auto rounded-lg border border-black/10 p-2 text-xs dark:border-white/15">
+              {ownedBusy ? (
+                <div className="text-zinc-500">Loading...</div>
+              ) : ownedClients.length === 0 ? (
+                <div className="text-zinc-500">No AI clients linked to this account yet.</div>
+              ) : (
+                <ul className="space-y-1">
+                  {ownedClients.map((c) => (
+                    <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-black/10 px-2 py-1 dark:border-white/15">
+                      <div>
+                        <span className="font-mono">{c.clientId}</span> <span>({c.name})</span>
+                      </div>
+                      <div className="text-zinc-500">
+                        {c.revokedAt
+                          ? "REVOKED"
+                          : c.status === "ACTIVE"
+                            ? "ACTIVE"
+                            : `PENDING${c.pairCodeExpiresAt ? ` (until ${new Date(c.pairCodeExpiresAt).toLocaleString()})` : ""}`}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
           {err ? <div className="text-sm text-red-600">{err}</div> : null}
           {info ? <div className="text-sm text-zinc-500">{info}</div> : null}

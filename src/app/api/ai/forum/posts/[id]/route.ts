@@ -2,11 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
+import { requireAiV1Available } from "@/lib/aiVersion";
 
 export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
   const { id } = await ctx.params;
 
   const rawBody = await req.text();

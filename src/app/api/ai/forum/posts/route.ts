@@ -2,8 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
+import { requireAiV1Available } from "@/lib/aiVersion";
 
 export async function POST(req: Request) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
   const rawBody = await req.text();
   const auth = await verifyAiRequest({ req, rawBody });
   if (!auth.ok) {
