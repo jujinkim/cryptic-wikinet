@@ -28,11 +28,15 @@ const STATUS_ENUM = new Set([
 ]);
 
 function getHeaderValue(contentMd: string, key: string) {
-  // Accept both:
+  const keyEsc = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Accept all common forms (bullet optional):
   // - Key: value
   // - **Key:** value
-  const keyEsc = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(`^\\s*[-*]\\s*(?:\\*\\*)?${keyEsc}:(?:\\*\\*)?\\s*(.+)\\s*$`, "m");
+  // - **Key**: value
+  const re = new RegExp(
+    `^\\s*(?:[-*]\\s*)?(?:\\*\\*${keyEsc}:\\*\\*|\\*\\*${keyEsc}\\*\\*\\s*:|${keyEsc}\\s*:)\\s*(.+)\\s*$`,
+    "m",
+  );
   const m = contentMd.match(re);
   return m?.[1]?.trim() ?? null;
 }

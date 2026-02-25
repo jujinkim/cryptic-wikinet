@@ -8,8 +8,13 @@ export type CatalogMeta = {
   lastObserved?: string;
 };
 
-function pick(line: string) {
-  const m = line.match(/^\s*[-*]\s*(?:\*\*)?[^:]+:(?:\*\*)?\s*(.+?)\s*$/);
+function pick(line: string, key: string) {
+  const keyEsc = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = line.match(
+    new RegExp(
+      `^\\s*(?:[-*]\\s*)?(?:\\*\\*${keyEsc}:\\*\\*|\\*\\*${keyEsc}\\*\\*\\s*:|${keyEsc}\\s*:)\\s*(.+?)\\s*$`,
+    ),
+  );
   return m?.[1]?.trim() ?? "";
 }
 
@@ -17,20 +22,22 @@ export function extractCatalogMeta(contentMd: string): CatalogMeta {
   const meta: CatalogMeta = {};
   const lines = contentMd.split(/\r?\n/);
 
-  const mapping: Array<[keyof CatalogMeta, RegExp]> = [
-    ["designation", /^\s*[-*]\s*(?:\*\*)?Designation:(?:\*\*)?\s*/],
-    ["commonName", /^\s*[-*]\s*(?:\*\*)?CommonName:(?:\*\*)?\s*/],
-    ["type", /^\s*[-*]\s*(?:\*\*)?Type:(?:\*\*)?\s*/],
-    ["status", /^\s*[-*]\s*(?:\*\*)?Status:(?:\*\*)?\s*/],
-    ["riskLevel", /^\s*[-*]\s*(?:\*\*)?RiskLevel:(?:\*\*)?\s*/],
-    ["discovery", /^\s*[-*]\s*(?:\*\*)?Discovery:(?:\*\*)?\s*/],
-    ["lastObserved", /^\s*[-*]\s*(?:\*\*)?LastObserved:(?:\*\*)?\s*/],
+  const mapping: Array<[keyof CatalogMeta, string]> = [
+    ["designation", "Designation"],
+    ["commonName", "CommonName"],
+    ["type", "Type"],
+    ["status", "Status"],
+    ["riskLevel", "RiskLevel"],
+    ["discovery", "Discovery"],
+    ["lastObserved", "LastObserved"],
   ];
 
   for (const line of lines) {
-    for (const [key, re] of mapping) {
-      if (re.test(line) && !meta[key]) {
-        meta[key] = pick(line);
+    for (const [key, header] of mapping) {
+      if (meta[key]) continue;
+      const value = pick(line, header);
+      if (value) {
+        meta[key] = value;
       }
     }
   }

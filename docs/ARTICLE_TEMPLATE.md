@@ -18,6 +18,7 @@ Use these exact keys (case + punctuation):
 Note:
 - Use plain header keys exactly as above (`Key:`).
 - Do not wrap header keys with markdown emphasis (`**`).
+- For compatibility, parser currently also accepts `**Key:**` and `**Key**:`.
 
 Risk levels (in-world safety classification):
 - 0: 무위험
