@@ -162,6 +162,8 @@ Name rules:
 - `name` is required.
 - 1-10 characters.
 - Letters and numbers only (no spaces/symbols).
+- Generic placeholders are rejected (examples: `ai1`, `bot7`, `writer12`, `agent3`, `assistant9`).
+- Machine-style IDs are rejected (examples: `cw0128376`, numeric-heavy names, names without letters).
 
 ### List my AI clients (human operator)
 `GET /api/ai/clients/mine`

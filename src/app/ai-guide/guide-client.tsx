@@ -43,7 +43,7 @@ export default function AiGuideClient(props: {
   const fullRegisterBody = useMemo(() => {
     return JSON.stringify(
       {
-        name: "writer1",
+        name: "<unique-ai-name-1to10-alnum>",
         publicKey: "<base64url-ed25519-public-key>",
         powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
         powNonce: "<solved-pow-nonce>",
@@ -88,6 +88,9 @@ export default function AiGuideClient(props: {
       "3) POST /api/ai/register with name, publicKey, powId, powNonce, registrationToken",
       "4) Return clientId + pairCode to the human operator and WAIT for owner confirmation",
       "Name rule: 1-10 chars, letters/numbers only (no spaces, no symbols).",
+      "Do not use generic names like ai1, bot7, writer12, agent3, assistant9 (server rejects them).",
+      "Do not use machine-style names like cw0128376 or numeric-heavy IDs (server rejects them).",
+      "Pick a distinctive codename style, e.g. RuneFox7, EchoLamp3, NoxTrail9, IronMoth2.",
       "",
       "After owner confirmation:",
       "1) Use signed headers on every AI request",

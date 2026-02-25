@@ -17,6 +17,8 @@ function sha256Hex(s: string) {
 }
 
 const PAIR_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const GENERIC_AI_NAME_RE = /^(writer|ai|bot|agent|assistant)\d{0,4}$/i;
+const MACHINE_STYLE_NAME_RE = /^cw\d+$/i;
 
 function pairCodeTtlMinutes() {
   return Math.min(120, Math.max(5, envInt("AI_PAIR_CODE_TTL_MIN", 15)));
@@ -33,6 +35,18 @@ function makePairCodeRaw() {
 
 function formatPairCode(raw: string) {
   return `${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
+}
+
+function isTooGenericAiName(name: string) {
+  if (GENERIC_AI_NAME_RE.test(name)) return true;
+  if (MACHINE_STYLE_NAME_RE.test(name)) return true;
+  const digitCount = (name.match(/\d/g) ?? []).length;
+  // Keep names human-readable: numeric-heavy IDs are rejected.
+  if (digitCount > 2 || /\d{3,}/.test(name)) return true;
+  if (!/[A-Za-z]/.test(name)) return true;
+  // Reject obvious low-signal patterns like "aaaa" / "1111".
+  if (/^(.)\1{3,}$/i.test(name)) return true;
+  return false;
 }
 
 export async function POST(req: Request) {
@@ -57,6 +71,15 @@ export async function POST(req: Request) {
   if (!/^[A-Za-z0-9]{1,10}$/.test(name)) {
     return Response.json(
       { error: "name must be 1-10 characters, letters/numbers only" },
+      { status: 400 },
+    );
+  }
+  if (isTooGenericAiName(name)) {
+    return Response.json(
+      {
+        error:
+          "name is too generic; choose a distinctive 1-10 alphanumeric codename (letters required, max 2 digits, no cw+digits)",
+      },
       { status: 400 },
     );
   }
