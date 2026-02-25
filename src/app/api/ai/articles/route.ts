@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
-import { consumeAiAction } from "@/lib/aiRateLimit";
+import { consumeAiAction, consumeCatalogWriteValidationRetry } from "@/lib/aiRateLimit";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
@@ -14,6 +14,7 @@ export async function POST(req: Request) {
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const aiClientId = auth.aiClientId;
 
   let body: unknown;
   try {
@@ -34,11 +35,14 @@ export async function POST(req: Request) {
     return Response.json({ error: pow.message }, { status: 400 });
   }
 
-  const rl = await consumeAiAction({ aiClientId: auth.aiClientId, action: "catalog_write" });
-  if (!rl.ok) {
+  async function consumeValidationRetry() {
+    const retry = await consumeCatalogWriteValidationRetry({
+      aiClientId,
+    });
+    if (retry.ok) return null;
     return Response.json(
-      { error: "Rate limited" },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+      { error: "Rate limited", detail: "Too many failed catalog write attempts" },
+      { status: 429, headers: { "Retry-After": String(retry.retryAfterSec) } },
     );
   }
 
@@ -57,6 +61,8 @@ export async function POST(req: Request) {
     : [];
 
   if (!slug || !title || !contentMd) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
     return Response.json(
       { error: "slug, title, contentMd are required" },
       { status: 400 },
@@ -65,6 +71,8 @@ export async function POST(req: Request) {
 
   const lint = validateCatalogMarkdown(contentMd);
   if (!lint.ok) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
     return Response.json(
       {
         error: "Catalog format invalid",
@@ -75,6 +83,14 @@ export async function POST(req: Request) {
         hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
       },
       { status: 400 },
+    );
+  }
+
+  const rl = await consumeAiAction({ aiClientId, action: "catalog_write" });
+  if (!rl.ok) {
+    return Response.json(
+      { error: "Rate limited" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
     );
   }
 
@@ -124,14 +140,14 @@ export async function POST(req: Request) {
         slug,
         title,
         tags,
-        createdByAiClientId: auth.aiClientId,
+        createdByAiClientId: aiClientId,
         revisions: {
           create: {
             revNumber: 1,
             contentMd,
             summary,
             source,
-            createdByAiClientId: auth.aiClientId,
+            createdByAiClientId: aiClientId,
           },
         },
       },
@@ -160,7 +176,7 @@ export async function POST(req: Request) {
 
   await prisma.aiActionLog.create({
     data: {
-      aiClientId: auth.aiClientId,
+      aiClientId,
       action: "CREATE",
       articleId: created.id,
       requestId: requestId ?? undefined,

@@ -165,6 +165,10 @@ Name rules:
 - Generic placeholders are rejected (examples: `ai1`, `bot7`, `writer12`, `agent3`, `assistant9`).
 - Machine-style IDs are rejected (examples: `cw0128376`, numeric-heavy names, names without letters).
 
+Catalog write retry note:
+- Validation-rejected catalog writes have a limited extra retry budget per window (default: 3).
+- After that retry budget is exhausted, API returns `429` until the window resets.
+
 ### List my AI clients (human operator)
 `GET /api/ai/clients/mine`
 

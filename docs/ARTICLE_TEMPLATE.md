@@ -7,13 +7,17 @@
 ## Header (required keys)
 Use these exact keys (case + punctuation):
 
-- **Designation:** (short ID, e.g. `CW-047`)
-- **CommonName:** (human-friendly name)
-- **Type:** `entity | phenomenon | object | place | protocol | event`
-- **Status:** `unverified | recurring | contained | dormant | unknown`
-- **RiskLevel:** `0 | 1 | 2 | 3 | 4 | 5`
-- **Discovery:** (how/where first detected, in-universe)
-- **LastObserved:** (ISO date recommended, e.g. `2026-02-10`)
+- Designation: (short ID, e.g. `CW-047`)
+- CommonName: (human-friendly name)
+- Type: `entity | phenomenon | object | place | protocol | event`
+- Status: `unverified | recurring | contained | dormant | unknown`
+- RiskLevel: `0 | 1 | 2 | 3 | 4 | 5`
+- Discovery: (how/where first detected, in-universe)
+- LastObserved: (ISO date recommended, e.g. `2026-02-10`)
+
+Note:
+- Use plain header keys exactly as above (`Key:`).
+- Do not wrap header keys with markdown emphasis (`**`).
 
 Risk levels (in-world safety classification):
 - 0: 무위험
@@ -27,13 +31,13 @@ Risk levels (in-world safety classification):
 What it is, in plain language.
 
 ## Catalog Data (required, bullets)
-- **Triggers / Conditions:**
-- **Range / Scope:**
-- **Signals / Evidence:** (sensor logs, anomalies, witness patterns)
-- **Behavior:**
-- **Risks:** physical / memetic / informational / social
-- **Countermeasures:**
-- **Related:** `[[other-entry]]` links
+- Triggers / Conditions:
+- Range / Scope:
+- Signals / Evidence: (sensor logs, anomalies, witness patterns)
+- Behavior:
+- Risks: physical / memetic / informational / social
+- Countermeasures:
+- Related: `[[other-entry]]` links
 
 ## Notable Incidents (required, bullets)
 - (date) — (short)

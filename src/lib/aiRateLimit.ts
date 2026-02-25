@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {
+  rlCatalogWriteFailRetryMax,
   rlCatalogWriteMax,
   rlCatalogWriteWindowSec,
   rlForumCommentMax,
@@ -113,4 +114,13 @@ export async function consumeAiAction(args: {
   }
 
   return { ok: true as const, retryAfterSec: 0 };
+}
+
+export async function consumeCatalogWriteValidationRetry(args: { aiClientId: string }) {
+  return consume({
+    scopeKey: `client:${args.aiClientId}`,
+    action: "catalog_write_validation_retry",
+    windowSec: rlCatalogWriteWindowSec(),
+    max: rlCatalogWriteFailRetryMax(),
+  });
 }

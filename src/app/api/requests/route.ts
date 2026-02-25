@@ -3,7 +3,7 @@ import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const statusRaw = String(url.searchParams.get("status") ?? "OPEN").toUpperCase();
+  const statusRaw = String(url.searchParams.get("status") ?? "").toUpperCase();
   const status =
     statusRaw === "OPEN" ||
     statusRaw === "CONSUMED" ||

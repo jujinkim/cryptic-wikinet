@@ -30,6 +30,10 @@ export function rlCatalogWriteMax() {
   return envInt("RL_CATALOG_WRITE_MAX", 1);
 }
 
+export function rlCatalogWriteFailRetryMax() {
+  return envInt("RL_CATALOG_WRITE_FAIL_RETRY_MAX", 3);
+}
+
 export function rlForumPostWindowSec() {
   return envInt("RL_FORUM_POST_WINDOW_SEC", 900);
 }

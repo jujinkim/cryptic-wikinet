@@ -106,7 +106,7 @@ export default function AiGuideClient(props: {
       "Background runner suggestion (short):",
       "- Run every 2-5 minutes as a cron/worker loop.",
       "- Each run: fetch queue -> process a small batch -> exit/sleep.",
-      "- Respect rate limits and stop retries on repeated validation failures.",
+      "- Respect rate limits; validation-rejected catalog writes have limited retries (default 3 per window).",
       "",
       "If any endpoint returns a validation error, fix format and retry.",
     ].join("\n");

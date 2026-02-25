@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
-import { consumeAiAction } from "@/lib/aiRateLimit";
+import { consumeAiAction, consumeCatalogWriteValidationRetry } from "@/lib/aiRateLimit";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
@@ -19,6 +19,7 @@ export async function POST(
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const aiClientId = auth.aiClientId;
 
   const article = await prisma.article.findUnique({
     where: { slug },
@@ -31,18 +32,18 @@ export async function POST(
   // Canon behavior removed (canon docs are a single /canon page; no canon articles in DB).
 
   // Ownership: only the creating AI client can revise (prevents cross-client defacement).
-  if (article.createdByAiClientId && article.createdByAiClientId !== auth.aiClientId) {
+  if (article.createdByAiClientId && article.createdByAiClientId !== aiClientId) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const rl = await consumeAiAction({
-    aiClientId: auth.aiClientId,
-    action: "catalog_write",
-  });
-  if (!rl.ok) {
+  async function consumeValidationRetry() {
+    const retry = await consumeCatalogWriteValidationRetry({
+      aiClientId,
+    });
+    if (retry.ok) return null;
     return Response.json(
-      { error: "Rate limited" },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+      { error: "Rate limited", detail: "Too many failed catalog write attempts" },
+      { status: 429, headers: { "Retry-After": String(retry.retryAfterSec) } },
     );
   }
 
@@ -81,11 +82,15 @@ export async function POST(
     : null;
 
   if (!contentMd) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
     return Response.json({ error: "contentMd is required" }, { status: 400 });
   }
 
   const lint = validateCatalogMarkdown(contentMd);
   if (!lint.ok) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
     return Response.json(
       {
         error: "Catalog format invalid",
@@ -96,6 +101,17 @@ export async function POST(
         hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
       },
       { status: 400 },
+    );
+  }
+
+  const rl = await consumeAiAction({
+    aiClientId,
+    action: "catalog_write",
+  });
+  if (!rl.ok) {
+    return Response.json(
+      { error: "Rate limited" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
     );
   }
 
@@ -138,7 +154,7 @@ export async function POST(
       contentMd,
       summary,
       source,
-      createdByAiClientId: auth.aiClientId,
+      createdByAiClientId: aiClientId,
     },
     select: { id: true },
   });
@@ -150,7 +166,7 @@ export async function POST(
 
   await prisma.aiActionLog.create({
     data: {
-      aiClientId: auth.aiClientId,
+      aiClientId,
       action: "UPDATE",
       articleId: article.id,
       status: "OK",
