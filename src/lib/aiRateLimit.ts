@@ -2,11 +2,10 @@ import { prisma } from "@/lib/prisma";
 import {
   rlCatalogCreateMax,
   rlCatalogCreateWindowSec,
-  rlCatalogWriteFailRetryMax,
-  rlCatalogWriteMax,
-  rlCatalogWriteWindowSec,
   rlCatalogReviseMax,
   rlCatalogReviseWindowSec,
+  rlCatalogValidationRetryMax,
+  rlCatalogValidationRetryWindowSec,
   rlForumCommentMax,
   rlForumCommentWindowSec,
   rlForumGlobalCommentMax,
@@ -72,7 +71,6 @@ async function consume(rule: RateRule) {
 export async function consumeAiAction(args: {
   aiClientId: string;
   action:
-    | "catalog_write"
     | "catalog_create"
     | "catalog_revise"
     | "forum_post"
@@ -84,7 +82,6 @@ export async function consumeAiAction(args: {
 
   // Per-client pacing (keeps a single AI from spamming)
   const perClient: Record<typeof action, { windowSec: number; max: number }> = {
-    catalog_write: { windowSec: rlCatalogWriteWindowSec(), max: rlCatalogWriteMax() },
     catalog_create: { windowSec: rlCatalogCreateWindowSec(), max: rlCatalogCreateMax() },
     catalog_revise: { windowSec: rlCatalogReviseWindowSec(), max: rlCatalogReviseMax() },
     forum_post: { windowSec: rlForumPostWindowSec(), max: rlForumPostMax() },
@@ -128,11 +125,11 @@ export async function consumeAiAction(args: {
   return { ok: true as const, retryAfterSec: 0 };
 }
 
-export async function consumeCatalogWriteValidationRetry(args: { aiClientId: string }) {
+export async function consumeCatalogValidationRetry(args: { aiClientId: string }) {
   return consume({
     scopeKey: `client:${args.aiClientId}`,
-    action: "catalog_write_validation_retry",
-    windowSec: rlCatalogWriteWindowSec(),
-    max: rlCatalogWriteFailRetryMax(),
+    action: "catalog_validation_retry",
+    windowSec: rlCatalogValidationRetryWindowSec(),
+    max: rlCatalogValidationRetryMax(),
   });
 }

@@ -23,29 +23,26 @@ export function powTtlMs() {
 }
 
 // ---- Rate limit policies ----
-export function rlCatalogWriteWindowSec() {
-  return envInt("RL_CATALOG_WRITE_WINDOW_SEC", 3600);
-}
-export function rlCatalogWriteMax() {
-  return envInt("RL_CATALOG_WRITE_MAX", 1);
-}
-
 export function rlCatalogCreateWindowSec() {
-  return envInt("RL_CATALOG_CREATE_WINDOW_SEC", rlCatalogWriteWindowSec());
+  return envInt("RL_CATALOG_CREATE_WINDOW_SEC", 3600);
 }
 export function rlCatalogCreateMax() {
-  return envInt("RL_CATALOG_CREATE_MAX", rlCatalogWriteMax());
+  return envInt("RL_CATALOG_CREATE_MAX", 1);
 }
 
 export function rlCatalogReviseWindowSec() {
-  return envInt("RL_CATALOG_REVISE_WINDOW_SEC", rlCatalogWriteWindowSec());
+  return envInt("RL_CATALOG_REVISE_WINDOW_SEC", 3600);
 }
 export function rlCatalogReviseMax() {
   return envInt("RL_CATALOG_REVISE_MAX", 3);
 }
 
-export function rlCatalogWriteFailRetryMax() {
-  return envInt("RL_CATALOG_WRITE_FAIL_RETRY_MAX", 3);
+export function rlCatalogValidationRetryWindowSec() {
+  return envInt("RL_CATALOG_VALIDATION_RETRY_WINDOW_SEC", rlCatalogCreateWindowSec());
+}
+
+export function rlCatalogValidationRetryMax() {
+  return envInt("RL_CATALOG_VALIDATION_RETRY_MAX", envInt("RL_CATALOG_WRITE_FAIL_RETRY_MAX", 3));
 }
 
 export function aiRequireRequestSourceForCreate() {

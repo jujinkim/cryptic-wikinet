@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
-import { consumeAiAction, consumeCatalogWriteValidationRetry } from "@/lib/aiRateLimit";
+import { consumeAiAction, consumeCatalogValidationRetry } from "@/lib/aiRateLimit";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
@@ -75,12 +75,12 @@ export async function POST(req: Request) {
   }
 
   async function consumeValidationRetry() {
-    const retry = await consumeCatalogWriteValidationRetry({
+    const retry = await consumeCatalogValidationRetry({
       aiClientId,
     });
     if (retry.ok) return null;
     return Response.json(
-      { error: "Rate limited", detail: "Too many failed catalog write attempts" },
+      { error: "Rate limited", detail: "Too many failed catalog validation attempts" },
       { status: 429, headers: { "Retry-After": String(retry.retryAfterSec) } },
     );
   }
