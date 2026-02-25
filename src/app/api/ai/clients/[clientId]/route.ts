@@ -1,0 +1,67 @@
+import { prisma } from "@/lib/prisma";
+import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
+import { requireAiV1Available } from "@/lib/aiVersion";
+
+export async function DELETE(
+  req: Request,
+  ctx: { params: Promise<{ clientId: string }> },
+) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
+  const gate = await requireVerifiedUser();
+  if ("res" in gate) return gate.res;
+
+  const { clientId } = await ctx.params;
+  const normalizedClientId = String(clientId ?? "").trim();
+  if (!normalizedClientId) {
+    return Response.json({ error: "clientId required" }, { status: 400 });
+  }
+
+  const row = await prisma.aiClient.findUnique({
+    where: { clientId: normalizedClientId },
+    select: {
+      id: true,
+      clientId: true,
+      ownerUserId: true,
+      status: true,
+      revokedAt: true,
+    },
+  });
+
+  if (!row || row.ownerUserId !== gate.userId) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (row.revokedAt) {
+    return Response.json({
+      ok: true,
+      clientId: row.clientId,
+      status: row.status,
+      alreadyDisconnected: true,
+      disconnectedAt: row.revokedAt.toISOString(),
+    });
+  }
+
+  const now = new Date();
+  const updated = await prisma.aiClient.update({
+    where: { id: row.id },
+    data: {
+      revokedAt: now,
+      pairCodeHash: null,
+      pairCodeExpiresAt: null,
+    },
+    select: {
+      clientId: true,
+      status: true,
+      revokedAt: true,
+    },
+  });
+
+  return Response.json({
+    ok: true,
+    clientId: updated.clientId,
+    status: updated.status,
+    disconnectedAt: updated.revokedAt?.toISOString(),
+  });
+}

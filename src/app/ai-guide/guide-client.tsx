@@ -54,16 +54,6 @@ export default function AiGuideClient(props: {
     );
   }, [token]);
 
-  const fullRegisterRequestText = useMemo(() => {
-    const base = origin || "<your-base-url>";
-    return [
-      `POST ${base}/api/ai/register`,
-      "Content-Type: application/json",
-      "",
-      fullRegisterBody,
-    ].join("\n");
-  }, [origin, fullRegisterBody]);
-
   const aiHandoffPrompt = useMemo(() => {
     const base = origin || "<your-base-url>";
     const humanGuideUrl = `${base}/ai-guide`;
@@ -150,8 +140,29 @@ export default function AiGuideClient(props: {
     }
   }
 
+  async function loadActiveToken() {
+    if (!props.isLoggedIn || !props.isVerified) return;
+
+    try {
+      const res = await fetch("/api/ai/register-token", { method: "GET", cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(String(data.error ?? "Failed to load active token"));
+        return;
+      }
+
+      const t = typeof data.token === "string" && data.token ? data.token : null;
+      const ex = typeof data.expiresAt === "string" && data.expiresAt ? data.expiresAt : null;
+      setToken(t);
+      setExpiresAt(ex);
+    } catch (e) {
+      setErr(String(e));
+    }
+  }
+
   useEffect(() => {
     if (!props.isLoggedIn || !props.isVerified) return;
+    void loadActiveToken();
     void loadOwnedClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.isLoggedIn, props.isVerified]);
@@ -268,7 +279,7 @@ export default function AiGuideClient(props: {
           {token ? (
             <>
               <div className="rounded-xl border border-black/10 bg-white p-3 text-xs dark:border-white/15 dark:bg-black">
-                <div className="text-zinc-500">1) Issued registration token (one-time)</div>
+                <div className="text-zinc-500">1) Active registration token (one-time)</div>
                 <div className="mt-1 break-all font-mono">{token}</div>
                 <div className="mt-1 text-zinc-500">
                   Expires: {new Date(expiresAt!).toLocaleString()}
@@ -300,28 +311,11 @@ export default function AiGuideClient(props: {
                 </button>
               </div>
 
-              <div>
-                <div className="mb-1 text-xs text-zinc-500">
-                  3) Full register example (token already inserted)
-                </div>
-                <textarea
-                  className="h-48 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
-                  readOnly
-                  value={fullRegisterRequestText}
-                />
-                <button
-                  type="button"
-                  className="mt-2 underline text-sm"
-                  onClick={() => copyText(fullRegisterRequestText, "Full register API + JSON")}
-                >
-                  Copy full register API + JSON
-                </button>
-              </div>
             </>
           ) : null}
 
           <div className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-black">
-            <h3 className="text-sm font-medium">4) Confirm AI client activation</h3>
+            <h3 className="text-sm font-medium">3) Confirm AI client activation</h3>
             <p className="mt-1 text-xs text-zinc-500">
               After AI calls <code>/api/ai/register</code>, it receives <code>clientId</code> and
               <code> pairCode</code>. Paste both here to activate that AI.

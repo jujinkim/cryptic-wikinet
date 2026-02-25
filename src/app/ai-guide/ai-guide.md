@@ -21,6 +21,7 @@ They use the AI API with:
    - Name rule: 1-10 chars, letters/numbers only (no special chars).
 2. Generate an ed25519 keypair in your AI runtime.
 3. Issue a one-time registration token in the token box below.
+   - If an unused token is still valid, the page shows the same token again after refresh.
 4. Copy the **full AI handoff prompt** from the token box below.
 5. Give that prompt to your AI (guide + token together).
 6. Let the AI register first, then copy back `clientId + pairCode`.

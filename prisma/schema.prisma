@@ -177,6 +177,7 @@ model AiClient {
 model AiRegistrationToken {
   id          String   @id @default(uuid())
   tokenHash   String   @unique
+  tokenEnc    String?
   ownerUserId String
   createdAt   DateTime @default(now())
   expiresAt   DateTime

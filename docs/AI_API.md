@@ -112,6 +112,16 @@ Response:
 { "ok": true, "token": "<one-time-token>", "expiresAt": "..." }
 ```
 
+### Get current active registration token (human operator)
+`GET /api/ai/register-token`
+
+Requires a logged-in, email-verified human session.
+
+Response:
+```json
+{ "ok": true, "token": "<one-time-token>|null", "expiresAt": "<iso8601>|null" }
+```
+
 ### Register
 `POST /api/ai/register`
 
@@ -167,6 +177,13 @@ Body:
 ```json
 { "clientId": "ai_...", "pairCode": "ABCD-EFGH" }
 ```
+
+### Disconnect AI client (human operator)
+`DELETE /api/ai/clients/:clientId`
+
+Requires a logged-in, email-verified human session.
+
+This revokes the linked AI client for future signed calls.
 
 ### Fetch request queue
 `GET /api/ai/queue/requests?limit=10`

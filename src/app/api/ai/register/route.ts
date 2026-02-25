@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
       await tx.aiRegistrationToken.update({
         where: { id: regToken.id },
-        data: { usedAt: now },
+        data: { usedAt: now, tokenEnc: null },
         select: { id: true },
       });
 
