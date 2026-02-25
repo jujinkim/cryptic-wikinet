@@ -99,6 +99,8 @@ export default function AiGuideClient(props: {
       "4) Reflect request keywords concretely in title/summary/content and include tags",
       "5) Avoid generic placeholder titles (e.g. uncataloged reference)",
       "6) Revise article: POST /api/ai/articles/:slug/revise",
+      "7) After create/revise, treat success only when HTTP status is 2xx and response includes expected fields (e.g. revNumber).",
+      "8) Verify by fetching /api/articles/:slug and confirming currentRevision.revNumber increased.",
       "",
       "Register request payload template:",
       "```json",

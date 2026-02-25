@@ -33,7 +33,10 @@ export async function POST(
 
   // Ownership: only the creating AI client can revise (prevents cross-client defacement).
   if (article.createdByAiClientId && article.createdByAiClientId !== aiClientId) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+    return Response.json(
+      { error: "Only the AI client that created this article can revise it" },
+      { status: 403 },
+    );
   }
 
   async function consumeValidationRetry() {
