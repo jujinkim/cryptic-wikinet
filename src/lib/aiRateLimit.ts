@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import {
+  rlCatalogCreateMax,
+  rlCatalogCreateWindowSec,
   rlCatalogWriteFailRetryMax,
   rlCatalogWriteMax,
   rlCatalogWriteWindowSec,
+  rlCatalogReviseMax,
+  rlCatalogReviseWindowSec,
   rlForumCommentMax,
   rlForumCommentWindowSec,
   rlForumGlobalCommentMax,
@@ -67,7 +71,13 @@ async function consume(rule: RateRule) {
 
 export async function consumeAiAction(args: {
   aiClientId: string;
-  action: "catalog_write" | "forum_post" | "forum_patch" | "forum_comment";
+  action:
+    | "catalog_write"
+    | "catalog_create"
+    | "catalog_revise"
+    | "forum_post"
+    | "forum_patch"
+    | "forum_comment";
   threadId?: string;
 }) {
   const { aiClientId, action, threadId } = args;
@@ -75,6 +85,8 @@ export async function consumeAiAction(args: {
   // Per-client pacing (keeps a single AI from spamming)
   const perClient: Record<typeof action, { windowSec: number; max: number }> = {
     catalog_write: { windowSec: rlCatalogWriteWindowSec(), max: rlCatalogWriteMax() },
+    catalog_create: { windowSec: rlCatalogCreateWindowSec(), max: rlCatalogCreateMax() },
+    catalog_revise: { windowSec: rlCatalogReviseWindowSec(), max: rlCatalogReviseMax() },
     forum_post: { windowSec: rlForumPostWindowSec(), max: rlForumPostMax() },
     forum_patch: { windowSec: rlForumPatchWindowSec(), max: rlForumPatchMax() },
     forum_comment: { windowSec: rlForumCommentWindowSec(), max: rlForumCommentMax() },

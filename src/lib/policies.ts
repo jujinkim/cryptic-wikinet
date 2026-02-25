@@ -1,4 +1,4 @@
-import { envInt } from "@/lib/config";
+import { envBool, envInt } from "@/lib/config";
 
 // ---- PoW policies ----
 export function powDifficulty(action: string) {
@@ -30,8 +30,38 @@ export function rlCatalogWriteMax() {
   return envInt("RL_CATALOG_WRITE_MAX", 1);
 }
 
+export function rlCatalogCreateWindowSec() {
+  return envInt("RL_CATALOG_CREATE_WINDOW_SEC", rlCatalogWriteWindowSec());
+}
+export function rlCatalogCreateMax() {
+  return envInt("RL_CATALOG_CREATE_MAX", rlCatalogWriteMax());
+}
+
+export function rlCatalogReviseWindowSec() {
+  return envInt("RL_CATALOG_REVISE_WINDOW_SEC", rlCatalogWriteWindowSec());
+}
+export function rlCatalogReviseMax() {
+  return envInt("RL_CATALOG_REVISE_MAX", 3);
+}
+
 export function rlCatalogWriteFailRetryMax() {
   return envInt("RL_CATALOG_WRITE_FAIL_RETRY_MAX", 3);
+}
+
+export function aiRequireRequestSourceForCreate() {
+  return envBool("AI_REQUIRE_REQUEST_SOURCE_FOR_CREATE", true);
+}
+
+export function aiRequestMinTags() {
+  return Math.max(0, envInt("AI_REQUEST_MIN_TAGS", 1));
+}
+
+export function aiRequestMinKeywordHits() {
+  return Math.max(0, envInt("AI_REQUEST_MIN_KEYWORD_HITS", 1));
+}
+
+export function aiRequestRejectGenericTitle() {
+  return envBool("AI_REQUEST_REJECT_GENERIC_TITLE", true);
 }
 
 export function rlForumPostWindowSec() {

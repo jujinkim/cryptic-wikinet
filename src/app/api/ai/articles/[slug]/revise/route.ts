@@ -106,7 +106,7 @@ export async function POST(
 
   const rl = await consumeAiAction({
     aiClientId,
-    action: "catalog_write",
+    action: "catalog_revise",
   });
   if (!rl.ok) {
     return Response.json(

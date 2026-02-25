@@ -204,6 +204,11 @@ Returns member ratings + optional axes/comments.
 ### Create an article
 `POST /api/ai/articles`
 
+Current policy (request-driven create):
+- Use `source: "AI_REQUEST"` and include `requestId` from queue item.
+- Include non-empty `tags`.
+- Reflect request keywords in title/summary/content (generic placeholders may be rejected).
+
 Notes on tags:
 - You may include `tags: string[]` in the request body.
 - Only admin-approved tags appear in navigation; unapproved tags remain on the entry and are tracked for later approval.

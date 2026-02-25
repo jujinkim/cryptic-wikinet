@@ -4,6 +4,45 @@ import { consumeAiAction, consumeCatalogWriteValidationRetry } from "@/lib/aiRat
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
+import {
+  aiRequestMinKeywordHits,
+  aiRequestMinTags,
+  aiRequestRejectGenericTitle,
+  aiRequireRequestSourceForCreate,
+} from "@/lib/policies";
+
+class CatalogCreateError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const GENERIC_REQUEST_TITLE_RE =
+  /^(uncataloged reference|un cataloged reference|unknown reference|provisional anomaly record|assigned request(?: based)?(?: provisional anomaly record)?|new entry|untitled)$/i;
+
+function tokenize(s: string) {
+  const uniq = new Set(
+    String(s)
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2),
+  );
+  return Array.from(uniq);
+}
+
+function keywordHitCount(keywords: string, haystack: string) {
+  const tokens = tokenize(keywords);
+  if (!tokens.length) return { tokenCount: 0, hitCount: 0 };
+  const text = haystack.toLowerCase();
+  let hitCount = 0;
+  for (const t of tokens) {
+    if (text.includes(t)) hitCount += 1;
+  }
+  return { tokenCount: tokens.length, hitCount };
+}
 
 export async function POST(req: Request) {
   const blocked = requireAiV1Available(req);
@@ -45,6 +84,11 @@ export async function POST(req: Request) {
       { status: 429, headers: { "Retry-After": String(retry.retryAfterSec) } },
     );
   }
+  async function validationError(payload: Record<string, unknown>) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
+    return Response.json(payload, { status: 400 });
+  }
 
   const slug = String(b.slug ?? "").trim();
   const title = String(b.title ?? "").trim();
@@ -61,19 +105,63 @@ export async function POST(req: Request) {
     : [];
 
   if (!slug || !title || !contentMd) {
-    const retryLimited = await consumeValidationRetry();
-    if (retryLimited) return retryLimited;
-    return Response.json(
+    return validationError(
       { error: "slug, title, contentMd are required" },
-      { status: 400 },
     );
+  }
+
+  if (aiRequireRequestSourceForCreate() && source !== "AI_REQUEST") {
+    return validationError({
+      error: "source=AI_REQUEST is required for new article creation",
+    });
+  }
+
+  if (source === "AI_REQUEST") {
+    if (!requestId) {
+      return validationError({ error: "requestId required when source=AI_REQUEST" });
+    }
+
+    const minTags = aiRequestMinTags();
+    if (tags.length < minTags) {
+      return validationError({
+        error: `at least ${minTags} tag(s) required when source=AI_REQUEST`,
+      });
+    }
+
+    if (aiRequestRejectGenericTitle() && GENERIC_REQUEST_TITLE_RE.test(title)) {
+      return validationError({
+        error: "title is too generic for request-based writing",
+      });
+    }
+
+    const req = await prisma.creationRequest.findUnique({
+      where: { id: requestId },
+      select: { id: true, status: true, keywords: true },
+    });
+    if (!req) {
+      return validationError({ error: "Unknown requestId" });
+    }
+    if (req.status !== "CONSUMED" && req.status !== "OPEN") {
+      return validationError({ error: "Request is not available" });
+    }
+
+    const minHits = aiRequestMinKeywordHits();
+    const hits = keywordHitCount(
+      req.keywords,
+      [title, summary ?? "", contentMd, tags.join(" ")].join("\n"),
+    );
+    if (hits.tokenCount > 0 && hits.hitCount < minHits) {
+      return validationError({
+        error: "request keyword relevance too low",
+        requiredHits: minHits,
+        actualHits: hits.hitCount,
+      });
+    }
   }
 
   const lint = validateCatalogMarkdown(contentMd);
   if (!lint.ok) {
-    const retryLimited = await consumeValidationRetry();
-    if (retryLimited) return retryLimited;
-    return Response.json(
+    return validationError(
       {
         error: "Catalog format invalid",
         missingHeadings: lint.missingHeadings,
@@ -82,11 +170,10 @@ export async function POST(req: Request) {
         narrative: lint.narrative,
         hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
       },
-      { status: 400 },
     );
   }
 
-  const rl = await consumeAiAction({ aiClientId, action: "catalog_write" });
+  const rl = await consumeAiAction({ aiClientId, action: "catalog_create" });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },
@@ -119,60 +206,62 @@ export async function POST(req: Request) {
     );
   }
 
-  const created = await prisma.$transaction(async (tx) => {
-    if (source === "AI_REQUEST") {
-      if (!requestId) {
-        throw new Error("requestId required when source=AI_REQUEST");
+  let created: { id: string };
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      if (source === "AI_REQUEST") {
+        const moved = await tx.creationRequest.updateMany({
+          where: {
+            id: requestId!,
+            status: { in: ["OPEN", "CONSUMED"] },
+          },
+          data: {
+            status: "DONE",
+            handledAt: new Date(),
+          },
+        });
+        if (moved.count === 0) {
+          throw new CatalogCreateError("Request is not available", 409);
+        }
       }
 
-      const reqRow = await tx.creationRequest.findUnique({
-        where: { id: requestId },
-        select: { id: true, status: true },
-      });
-      if (!reqRow) throw new Error("Unknown requestId");
-      if (reqRow.status !== "CONSUMED" && reqRow.status !== "OPEN") {
-        throw new Error("Request is not available");
-      }
-    }
-
-    const article = await tx.article.create({
-      data: {
-        slug,
-        title,
-        tags,
-        createdByAiClientId: aiClientId,
-        revisions: {
-          create: {
-            revNumber: 1,
-            contentMd,
-            summary,
-            source,
-            createdByAiClientId: aiClientId,
+      const article = await tx.article.create({
+        data: {
+          slug,
+          title,
+          tags,
+          createdByAiClientId: aiClientId,
+          revisions: {
+            create: {
+              revNumber: 1,
+              contentMd,
+              summary,
+              source,
+              createdByAiClientId: aiClientId,
+            },
           },
         },
-      },
-      include: { revisions: { orderBy: { revNumber: "desc" }, take: 1 } },
-    });
-
-    const currentRevisionId = article.revisions[0]!.id;
-    await tx.article.update({
-      where: { id: article.id },
-      data: { currentRevisionId },
-    });
-
-    if (source === "AI_REQUEST") {
-      await tx.creationRequest.update({
-        where: { id: requestId! },
-        data: {
-          status: "DONE",
-          handledAt: new Date(),
-        },
-        select: { id: true },
+        include: { revisions: { orderBy: { revNumber: "desc" }, take: 1 } },
       });
-    }
 
-    return article;
-  });
+      const currentRevisionId = article.revisions[0]!.id;
+      await tx.article.update({
+        where: { id: article.id },
+        data: { currentRevisionId },
+      });
+
+      return { id: article.id };
+    });
+  } catch (e) {
+    if (e instanceof CatalogCreateError) {
+      return Response.json({ error: e.message }, { status: e.status });
+    }
+    const code = (e as { code?: string } | null)?.code;
+    if (code === "P2002") {
+      return Response.json({ error: "slug already exists" }, { status: 409 });
+    }
+    throw e;
+  }
 
   await prisma.aiActionLog.create({
     data: {
