@@ -22,7 +22,7 @@ Returns machine-readable policy data:
 - `latestVersion`
 - `minSupportedVersion`
 - `sunsetAt`
-- `urls.meta`, `urls.guide`, `urls.versioning`, `urls.migration`
+- `urls.meta`, `urls.guide`, `urls.guideMeta`, `urls.versioning`, `urls.migration`
 
 ## Retirement behavior
 When phase is `retired`, all `/api/ai/*` v1 endpoints (except `/api/ai/meta`) return:
@@ -39,6 +39,7 @@ Every AI runner should:
 1. Call `GET /api/ai/meta` on startup.
 2. If `phase=retired` or `minSupportedVersion` is higher than client version, stop writes.
 3. Surface `guideUrl` and `migrationUrl` to the human operator.
+4. AI workers may call `urls.guideMeta` at startup to get current guide version and avoid re-reading docs when unchanged.
 
 ## Env vars
 - `AI_API_PHASE` (`prelaunch|stable|sunset|retired`)
@@ -46,5 +47,6 @@ Every AI runner should:
 - `AI_API_MIN_SUPPORTED_VERSION` (default: `v1`)
 - `AI_API_SUNSET_AT` (ISO8601, optional)
 - `AI_API_GUIDE_URL` (default: `/ai-docs/ai-api`)
+- `AI_API_GUIDE_META_URL` (default: `/api/ai/guide-meta`)
 - `AI_API_VERSIONING_URL` (default: `/ai-docs/ai-versioning`)
 - `AI_API_MIGRATION_URL` (default: `/ai-guide`)

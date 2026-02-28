@@ -4,6 +4,7 @@ import { consumeAiAction, consumeCatalogValidationRetry } from "@/lib/aiRateLimi
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
+import { getTypeStatus } from "@/lib/catalogHeader";
 import {
   aiRequestMinKeywordHits,
   aiRequestMinTags,
@@ -21,6 +22,17 @@ class CatalogCreateError extends Error {
 
 const GENERIC_REQUEST_TITLE_RE =
   /^(uncataloged reference|un cataloged reference|unknown reference|provisional anomaly record|assigned request(?: based)?(?: provisional anomaly record)?|new entry|untitled)$/i;
+
+const GENERIC_REQUEST_CONTENT_RE =
+  /(uncataloged reference|un[-\s]?cataloged reference|unknown reference|this entry does not exist in the catalog|ask an ai agent to create this entry|submit a keyword request|or discuss it in the forum)/i;
+
+function hasGenericPlaceholder(title: string, content: string) {
+  return (
+    GENERIC_REQUEST_TITLE_RE.test(title) ||
+    GENERIC_REQUEST_CONTENT_RE.test(content) ||
+    /This entry does not exist in the catalog/i.test(content)
+  );
+}
 
 function tokenize(s: string) {
   const uniq = new Set(
@@ -110,6 +122,12 @@ export async function POST(req: Request) {
     );
   }
 
+  if (aiRequestRejectGenericTitle() && hasGenericPlaceholder(title, contentMd)) {
+    return validationError({
+      error: "Generic placeholder article content is not allowed for catalog writes",
+    });
+  }
+
   if (aiRequireRequestSourceForCreate() && source !== "AI_REQUEST") {
     return validationError({
       error: "source=AI_REQUEST is required for new article creation",
@@ -148,7 +166,7 @@ export async function POST(req: Request) {
     const minHits = aiRequestMinKeywordHits();
     const hits = keywordHitCount(
       req.keywords,
-      [title, summary ?? "", contentMd, tags.join(" ")].join("\n"),
+      [title, summary ?? "", contentMd].join("\n"),
     );
     if (hits.tokenCount > 0 && hits.hitCount < minHits) {
       return validationError({
@@ -277,4 +295,81 @@ export async function POST(req: Request) {
   await recordUnapprovedTags(tags);
 
   return Response.json({ ok: true, slug, articleId: created.id });
+}
+
+export async function GET(req: Request) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
+  const rawBody = "";
+  const auth = await verifyAiRequest({ req, rawBody });
+  if (!auth.ok) {
+    return Response.json({ error: auth.message }, { status: auth.status });
+  }
+
+  const url = new URL(req.url);
+  const q = (url.searchParams.get("query") ?? "").trim();
+  const type = (url.searchParams.get("type") ?? "").trim().toLowerCase();
+  const status = (url.searchParams.get("status") ?? "").trim().toLowerCase();
+  const tag = (url.searchParams.get("tag") ?? "").trim();
+  const tagsRaw = (url.searchParams.get("tags") ?? "").trim();
+  const tags = tagsRaw
+    ? tagsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 50)
+    : [];
+  const limit = Math.min(Number(url.searchParams.get("limit") ?? "50"), 200);
+
+  const where = q
+    ? {
+        OR: [
+          { slug: { contains: q, mode: "insensitive" as const } },
+          { title: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+  const where2 = {
+    ...where,
+    ...(tags.length ? { tags: { hasSome: tags } } : tag ? { tags: { has: tag } } : {}),
+  } as const;
+
+  const rows: Array<{
+    slug: string;
+    title: string;
+    updatedAt: Date;
+    tags: string[];
+    currentRevision: { contentMd: string } | null;
+  }> = await prisma.article.findMany({
+    where: where2,
+    orderBy: { updatedAt: "desc" },
+    take: Number.isFinite(limit) && limit > 0 ? limit : 50,
+    select: {
+      slug: true,
+      title: true,
+      updatedAt: true,
+      tags: true,
+      currentRevision: { select: { contentMd: true } },
+    },
+  });
+
+  const items = rows
+    .map((r) => {
+      const meta = r.currentRevision?.contentMd
+        ? getTypeStatus(r.currentRevision.contentMd)
+        : { type: null, status: null };
+      return {
+        slug: r.slug,
+        title: r.title,
+        updatedAt: r.updatedAt,
+        tags: r.tags,
+        type: meta.type,
+        status: meta.status,
+      };
+    })
+    .filter((r) => (type ? r.type === type : true))
+    .filter((r) => (status ? r.status === status : true));
+
+  return Response.json({ items, count: items.length });
 }

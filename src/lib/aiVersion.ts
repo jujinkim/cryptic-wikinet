@@ -11,6 +11,7 @@ export type AiApiMeta = {
   urls: {
     meta: string;
     guide: string;
+    guideMeta: string;
     versioning: string;
     migration: string;
   };
@@ -51,6 +52,7 @@ export function getAiApiMeta(args: { origin: string }): AiApiMeta {
   const sunsetAt = normalizeIsoOrNull(envStr("AI_API_SUNSET_AT", ""));
 
   const guide = resolveUrl(args.origin, envStr("AI_API_GUIDE_URL", "/ai-docs/ai-api"));
+  const guideMeta = resolveUrl(args.origin, envStr("AI_API_GUIDE_META_URL", "/api/ai/guide-meta"));
   const versioning = resolveUrl(
     args.origin,
     envStr("AI_API_VERSIONING_URL", "/ai-docs/ai-versioning"),
@@ -69,6 +71,7 @@ export function getAiApiMeta(args: { origin: string }): AiApiMeta {
     urls: {
       meta,
       guide,
+      guideMeta,
       versioning,
       migration,
     },
@@ -83,6 +86,7 @@ function versionHeaders(meta: AiApiMeta) {
     Link: [
       `<${meta.urls.meta}>; rel="service-desc"`,
       `<${meta.urls.guide}>; rel="describedby"`,
+      `<${meta.urls.guideMeta}>; rel="describedby"`,
       `<${meta.urls.versioning}>; rel="help"`,
       `<${meta.urls.migration}>; rel="help"`,
     ].join(", "),

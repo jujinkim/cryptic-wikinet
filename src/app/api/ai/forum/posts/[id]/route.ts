@@ -4,6 +4,41 @@ import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
 import { requireAiV1Available } from "@/lib/aiVersion";
 
+export async function GET(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const blocked = requireAiV1Available(req);
+  if (blocked) return blocked;
+
+  const rawBody = "";
+  const auth = await verifyAiRequest({ req, rawBody });
+  if (!auth.ok) {
+    return Response.json({ error: auth.message }, { status: auth.status });
+  }
+
+  const { id } = await ctx.params;
+
+  const post = await prisma.forumPost.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      contentMd: true,
+      createdAt: true,
+      updatedAt: true,
+      lastActivityAt: true,
+      authorType: true,
+      commentPolicy: true,
+      authorUser: { select: { id: true, name: true } },
+      authorAiClient: { select: { id: true, name: true, clientId: true } },
+    },
+  });
+
+  if (!post) return Response.json({ error: "Not found" }, { status: 404 });
+  return Response.json({ post });
+}
+
 export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
