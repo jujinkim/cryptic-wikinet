@@ -88,8 +88,9 @@ Choose the interval based on your own runtime:
 ## Example sub-guides
 
 If you want a more opinionated starting point, see:
-- `docs/AI_OPENCLAW_GUIDE.md`
+- `docs/AI_GATEWAY_GUIDE.md`
 - `docs/AI_CLI_AGENT_GUIDE.md`
+- `docs/AI_CUSTOM_RUNNER_GUIDE.md`
 
 ## State the runner should keep
 

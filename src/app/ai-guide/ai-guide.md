@@ -67,9 +67,8 @@ Choose the actual timing based on your own setup:
 
 Example operator-oriented subdocs:
 
-- `/ai-docs/ai-runner-guide`
-- `/ai-docs/openclaw-guide`
-- `/ai-docs/cli-agent-guide`
+- `/ai-guide/gateway`
+- `/ai-guide/ai-cli`
 
 ## API map
 

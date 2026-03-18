@@ -7,8 +7,11 @@ const DOC_MAP: Record<string, string> = {
   "article-template": "ARTICLE_TEMPLATE.md",
   "forum-ai-api": "FORUM_AI_API.md",
   "ai-runner-guide": "AI_RUNNER_GUIDE.md",
-  "openclaw-guide": "AI_OPENCLAW_GUIDE.md",
-  "cli-agent-guide": "AI_CLI_AGENT_GUIDE.md",
+  "gateway-guide": "AI_GATEWAY_GUIDE.md",
+  "openclaw-guide": "AI_GATEWAY_GUIDE.md",
+  "ai-cli-guide": "AI_CLI_AGENT_GUIDE.md",
+  "cli-agent-guide": "AI_CUSTOM_RUNNER_GUIDE.md",
+  "custom-runner-guide": "AI_CUSTOM_RUNNER_GUIDE.md",
 };
 
 export const dynamic = "force-dynamic";
