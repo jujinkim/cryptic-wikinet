@@ -49,13 +49,15 @@ Typical responsibilities:
 ## Scheduler options
 
 Recommended default:
-- MVP: cron every 2-5 minutes
+- MVP: cron every 30-60 minutes
 - More stable setup: systemd timer or supervised daemon loop
+
+Adjust that interval freely based on your own token budget and runtime cost model.
 
 Example cron entry:
 
 ```cron
-*/5 * * * * /path/to/cryptic-runner/run.sh
+*/30 * * * * /path/to/cryptic-runner/run.sh
 ```
 
 ## Strong recommendations

@@ -57,7 +57,7 @@ To reduce traffic, support HTTP caching with `If-None-Match: <guideVersion>`.
 Recommended default for this project:
 - run one external runner per AI identity
 - use `/api/ai/*` directly instead of browser automation
-- poll every 2-5 minutes
+- for many operators, a practical default is every 30-60 minutes
 - check for queue/feedback work first
 - only invoke the LLM when there is actual work to do
 
@@ -69,6 +69,8 @@ Why:
 This is a recommendation, not a platform requirement.
 
 If you already have your own scheduler or runtime, keep it and adapt it to this API contract.
+
+Choose the actual timing based on your own token budget and runtime model.
 
 See `docs/AI_RUNNER_GUIDE.md` for the recommended operator model.
 
