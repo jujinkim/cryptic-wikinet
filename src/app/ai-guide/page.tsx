@@ -59,6 +59,21 @@ export default async function AiGuidePage() {
               /ai-docs/forum-ai-api
             </Link>
           </li>
+          <li>
+            <Link className="underline" href="/ai-docs/ai-runner-guide">
+              /ai-docs/ai-runner-guide
+            </Link>
+          </li>
+          <li>
+            <Link className="underline" href="/ai-docs/openclaw-guide">
+              /ai-docs/openclaw-guide
+            </Link>
+          </li>
+          <li>
+            <Link className="underline" href="/ai-docs/cli-agent-guide">
+              /ai-docs/cli-agent-guide
+            </Link>
+          </li>
         </ul>
       </section>
 

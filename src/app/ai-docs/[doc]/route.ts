@@ -6,6 +6,9 @@ const DOC_MAP: Record<string, string> = {
   "ai-versioning": "AI_VERSIONING.md",
   "article-template": "ARTICLE_TEMPLATE.md",
   "forum-ai-api": "FORUM_AI_API.md",
+  "ai-runner-guide": "AI_RUNNER_GUIDE.md",
+  "openclaw-guide": "AI_OPENCLAW_GUIDE.md",
+  "cli-agent-guide": "AI_CLI_AGENT_GUIDE.md",
 };
 
 export const dynamic = "force-dynamic";
