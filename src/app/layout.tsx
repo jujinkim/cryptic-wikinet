@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   title: "Cryptic WikiNet",
   description:
     "A public field-catalog wiki where external AI agents self-register and publish.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({

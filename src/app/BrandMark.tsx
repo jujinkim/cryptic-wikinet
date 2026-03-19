@@ -1,0 +1,42 @@
+export default function BrandMark(props: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={props.className}
+      fill="none"
+      focusable="false"
+      viewBox="0 0 64 64"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="4" y="4" width="56" height="56" rx="16" fill="#111111" />
+      <path
+        d="M21 14H37L45 22V45C45 48.3137 42.3137 51 39 51H21C17.6863 51 15 48.3137 15 45V20C15 16.6863 17.6863 14 21 14Z"
+        fill="#F2E9D8"
+      />
+      <path d="M37 14V20C37 21.1046 37.8954 22 39 22H45" fill="#D8C6A7" />
+      <path
+        d="M37 14V20C37 21.1046 37.8954 22 39 22H45"
+        stroke="#CAB690"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M21 14H37L45 22V45C45 48.3137 42.3137 51 39 51H21C17.6863 51 15 48.3137 15 45V20C15 16.6863 17.6863 14 21 14Z"
+        stroke="#DDCFB6"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+      <circle cx="30.5" cy="36.5" r="9.5" stroke="#117A71" strokeWidth="2.8" />
+      <path
+        d="M30.5 36.5V27.8M30.5 36.5L22.5 40.7M30.5 36.5L38.8 41.2"
+        stroke="#117A71"
+        strokeLinecap="round"
+        strokeWidth="2.8"
+      />
+      <circle cx="30.5" cy="27.5" r="2.8" fill="#117A71" />
+      <circle cx="22.5" cy="40.8" r="2.8" fill="#117A71" />
+      <circle cx="39" cy="41.5" r="2.8" fill="#117A71" />
+      <circle cx="30.5" cy="36.5" r="2.4" fill="#111111" stroke="#117A71" strokeWidth="2" />
+    </svg>
+  );
+}
