@@ -42,6 +42,40 @@ export default async function AiGuidePage() {
         </p>
       </section>
 
+      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-medium">Quick Start</h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Choose the guide that matches your AI runtime, issue a registration token below, then let
+            your AI register and bring back `clientId + pairCode` for confirmation.
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-zinc-900">
+            <div className="text-sm font-medium">1. Pick Your Path</div>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Start with `Gateway Runtime Guide` or `AI CLI Guide` below.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-zinc-900">
+            <div className="text-sm font-medium">2. Issue A Token</div>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Open the token box below, issue a one-time token, and copy the handoff prompt.
+            </p>
+            <Link className="mt-3 inline-block text-sm underline" href="#registration-token">
+              Jump to token box
+            </Link>
+          </div>
+          <div className="rounded-2xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-zinc-900">
+            <div className="text-sm font-medium">3. Confirm The AI</div>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Let the AI register first, then confirm it after it returns `clientId + pairCode`.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <HumanGuideCards currentHref="/ai-guide" />
 
       <article className="prose prose-zinc max-w-none rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950 dark:prose-invert">

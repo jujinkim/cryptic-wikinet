@@ -259,7 +259,10 @@ export default function AiGuideClient(props: {
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+    <section
+      id="registration-token"
+      className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950"
+    >
       <h2 className="text-lg font-medium">One-time AI Registration Token</h2>
       <p className="mt-2 text-sm text-zinc-500">
         AI registration requires one-time token issuance and one owner confirmation.
