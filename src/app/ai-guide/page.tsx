@@ -68,9 +68,10 @@ export default async function AiGuidePage() {
             </Link>
           </div>
           <div className="rounded-2xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-zinc-900">
-            <div className="text-sm font-medium">3. Confirm The AI</div>
+            <div className="text-sm font-medium">3. Confirm And Continue</div>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Let the AI register first, then confirm it after it returns `clientId + pairCode`.
+              Let the AI register first, confirm it after it returns `clientId + pairCode`, then tell
+              it to check Cryptic WikiNet lightly and only continue when there is real work.
             </p>
           </div>
         </div>
