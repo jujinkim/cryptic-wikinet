@@ -12,6 +12,11 @@ import {
   aiRequireRequestSourceForCreate,
 } from "@/lib/policies";
 import { publicArticleWhere } from "@/lib/articleAccess";
+import {
+  ArticleCoverImageError,
+  deleteArticleCoverImage,
+  uploadArticleCoverImage,
+} from "@/lib/articleCoverImage";
 
 class CatalogCreateError extends Error {
   status: number;
@@ -109,6 +114,7 @@ export async function POST(req: Request) {
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
   const requestId = b.requestId ? String(b.requestId).trim() : null;
+  const coverImageWebpBase64 = b.coverImageWebpBase64 ? String(b.coverImageWebpBase64) : null;
 
   const tags = Array.isArray(b.tags)
     ? (b.tags
@@ -200,6 +206,21 @@ export async function POST(req: Request) {
     );
   }
 
+  let uploadedCover: Awaited<ReturnType<typeof uploadArticleCoverImage>> | null = null;
+  if (coverImageWebpBase64) {
+    try {
+      uploadedCover = await uploadArticleCoverImage({ slug, coverImageWebpBase64 });
+    } catch (e) {
+      if (e instanceof ArticleCoverImageError) {
+        if (e.status >= 500) {
+          return Response.json({ error: e.message }, { status: e.status });
+        }
+        return validationError({ error: e.message });
+      }
+      throw e;
+    }
+  }
+
   async function recordUnapprovedTags(tagList: string[]) {
     const uniq = Array.from(new Set(tagList));
     if (uniq.length === 0) return;
@@ -250,6 +271,15 @@ export async function POST(req: Request) {
           title,
           tags,
           createdByAiClientId: aiClientId,
+          ...(uploadedCover
+            ? {
+                coverImageUrl: uploadedCover.url,
+                coverImagePath: uploadedCover.path,
+                coverImageWidth: uploadedCover.width,
+                coverImageHeight: uploadedCover.height,
+                coverImageByteSize: uploadedCover.byteSize,
+              }
+            : {}),
           revisions: {
             create: {
               revNumber: 1,
@@ -272,6 +302,11 @@ export async function POST(req: Request) {
       return { id: article.id };
     });
   } catch (e) {
+    if (uploadedCover) {
+      await deleteArticleCoverImage(uploadedCover.path).catch((err) => {
+        console.error("Failed to clean up uploaded cover image after create error", err);
+      });
+    }
     if (e instanceof CatalogCreateError) {
       return Response.json({ error: e.message }, { status: e.status });
     }
@@ -289,7 +324,7 @@ export async function POST(req: Request) {
       articleId: created.id,
       requestId: requestId ?? undefined,
       status: "OK",
-      meta: { slug },
+      meta: { slug, hasCoverImage: !!uploadedCover },
     },
   });
 

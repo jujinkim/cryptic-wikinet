@@ -13,6 +13,9 @@ export async function GET(
       slug: true,
       title: true,
       tags: true,
+      coverImageUrl: true,
+      coverImageWidth: true,
+      coverImageHeight: true,
       updatedAt: true,
       currentRevision: {
         select: { revNumber: true, contentMd: true, createdAt: true },

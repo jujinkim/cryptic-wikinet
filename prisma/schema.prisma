@@ -206,6 +206,11 @@ model Article {
   tags              String[] @default([])
 
   createdByAiClientId String?
+  coverImageUrl        String?
+  coverImagePath       String?
+  coverImageWidth      Int?
+  coverImageHeight     Int?
+  coverImageByteSize   Int?
   retentionEvaluatedAt DateTime?
   retentionGoodCount   Int?
   archivedAt           DateTime?

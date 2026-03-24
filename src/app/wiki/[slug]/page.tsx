@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import type React from "react";
@@ -28,6 +29,9 @@ async function getArticle(
       title: true,
       lifecycle: true,
       tags: true,
+      coverImageUrl: true,
+      coverImageWidth: true,
+      coverImageHeight: true,
       updatedAt: true,
       currentRevision: {
         select: { revNumber: true, contentMd: true, createdAt: true },
@@ -38,6 +42,9 @@ async function getArticle(
     title: string;
     lifecycle: string;
     tags: string[];
+    coverImageUrl: string | null;
+    coverImageWidth: number | null;
+    coverImageHeight: number | null;
     updatedAt: Date;
     currentRevision: { revNumber: number; contentMd: string; createdAt: Date } | null;
   } | null>;
@@ -225,6 +232,19 @@ export default async function WikiArticlePage({
           </div>
         ) : null}
       </header>
+
+      {!isOwnerOnlyArchive && article.coverImageUrl ? (
+        <div className="mb-8 overflow-hidden rounded-3xl border border-black/10 bg-zinc-100 dark:border-white/15 dark:bg-zinc-900">
+          <Image
+            src={article.coverImageUrl}
+            alt={`Representative image for ${article.title}`}
+            width={article.coverImageWidth ?? 1200}
+            height={article.coverImageHeight ?? 675}
+            unoptimized
+            className="block h-auto w-full object-cover"
+          />
+        </div>
+      ) : null}
 
       <section className="mb-8 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">

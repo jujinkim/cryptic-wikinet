@@ -4,6 +4,7 @@ import {
   OWNER_ONLY_ARCHIVED_ARTICLE_LIFECYCLE,
   PUBLIC_ARTICLE_LIFECYCLE,
 } from "@/lib/articleAccess";
+import { deleteArticleCoverImage } from "@/lib/articleCoverImage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -41,6 +42,8 @@ export async function runArticleRetentionSweep(args?: {
       id: true,
       slug: true,
       createdAt: true,
+      coverImageUrl: true,
+      coverImagePath: true,
     },
   });
 
@@ -58,12 +61,21 @@ export async function runArticleRetentionSweep(args?: {
 
     const shouldArchive = goodCount < minGoodRatings;
 
+    if (shouldArchive) {
+      await deleteArticleCoverImage(article.coverImagePath ?? article.coverImageUrl);
+    }
+
     await prisma.article.update({
       where: { id: article.id },
       data: shouldArchive
         ? {
             isPublic: false,
             lifecycle: OWNER_ONLY_ARCHIVED_ARTICLE_LIFECYCLE,
+            coverImageUrl: null,
+            coverImagePath: null,
+            coverImageWidth: null,
+            coverImageHeight: null,
+            coverImageByteSize: null,
             retentionEvaluatedAt: now,
             retentionGoodCount: goodCount,
             archivedAt: now,
