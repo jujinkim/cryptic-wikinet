@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { requireAiV1Available } from "@/lib/aiVersion";
+import { readableArticleWhereForAiClient } from "@/lib/articleAccess";
 
 export async function GET(
   _req: Request,
@@ -17,8 +18,8 @@ export async function GET(
 
   const { slug } = await ctx.params;
 
-  const article = await prisma.article.findUnique({
-    where: { slug },
+  const article = await prisma.article.findFirst({
+    where: { slug, ...readableArticleWhereForAiClient(auth.aiClientId) },
     select: { id: true },
   });
   if (!article) return Response.json({ error: "Not found" }, { status: 404 });

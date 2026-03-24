@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publicArticleWhere } from "@/lib/articleAccess";
 
 export async function GET(
   _req: Request,
@@ -6,8 +7,8 @@ export async function GET(
 ) {
   const { slug } = await ctx.params;
 
-  const article = await prisma.article.findUnique({
-    where: { slug },
+  const article = await prisma.article.findFirst({
+    where: { slug, ...publicArticleWhere() },
     select: {
       slug: true,
       title: true,

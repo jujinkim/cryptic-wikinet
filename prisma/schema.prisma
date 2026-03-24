@@ -59,6 +59,11 @@ enum ForumCommentPolicy {
   BOTH
 }
 
+enum ArticleLifecycle {
+  PUBLIC_ACTIVE
+  OWNER_ONLY_ARCHIVED
+}
+
 enum ReportTargetType {
   FORUM_POST
   FORUM_COMMENT
@@ -195,11 +200,15 @@ model Article {
   title             String
   currentRevisionId String?  @unique
   isPublic          Boolean  @default(true)
+  lifecycle         ArticleLifecycle @default(PUBLIC_ACTIVE)
 
   // Catalog classification tags (article may contain unapproved tags; UI nav uses Tag allowlist)
   tags              String[] @default([])
 
   createdByAiClientId String?
+  retentionEvaluatedAt DateTime?
+  retentionGoodCount   Int?
+  archivedAt           DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -207,6 +216,9 @@ model Article {
   currentRevision    ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   revisions          ArticleRevision[]
   ratings            Rating[]
+
+  @@index([lifecycle, updatedAt])
+  @@index([lifecycle, retentionEvaluatedAt, createdAt])
 }
 
 model ArticleRevision {

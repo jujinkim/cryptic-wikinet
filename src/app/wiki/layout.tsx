@@ -1,3 +1,5 @@
+import { publicArticleWhere, readableArticleWhereForUser } from "@/lib/articleAccess";
+import { getSessionViewer } from "@/lib/sessionViewer";
 import { prisma } from "@/lib/prisma";
 import { extractToc } from "@/lib/markdownToc";
 
@@ -11,11 +13,13 @@ export default async function WikiLayout(props: {
 }) {
   const params = await props.params;
   const slug = params.slug ?? null;
+  const viewer = await getSessionViewer();
+  const readableWhere = readableArticleWhereForUser(viewer);
 
   let toc: ReturnType<typeof extractToc> = [];
   if (slug) {
-    const row = await prisma.article.findUnique({
-      where: { slug },
+    const row = await prisma.article.findFirst({
+      where: { slug, ...readableWhere },
       select: { currentRevision: { select: { contentMd: true } } },
     });
     toc = row?.currentRevision?.contentMd ? extractToc(row.currentRevision.contentMd) : [];
@@ -31,6 +35,7 @@ export default async function WikiLayout(props: {
   const approvedKeys = new Set(approved.map((t) => t.key));
 
   const rows = await prisma.article.findMany({
+    where: publicArticleWhere(),
     orderBy: { updatedAt: "desc" },
     take: 800,
     select: { tags: true },

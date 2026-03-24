@@ -2,35 +2,50 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import type React from "react";
 import type { Components } from "react-markdown";
+import type { Prisma } from "@prisma/client";
 
+import {
+  isOwnerOnlyArchivedLifecycle,
+  readableArticleWhereForUser,
+} from "@/lib/articleAccess";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
+import { prisma } from "@/lib/prisma";
+import { getSessionViewer } from "@/lib/sessionViewer";
 import { parseWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
-import { auth } from "@/auth";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 
-async function getArticle(slug: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/articles/${slug}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.article as {
+async function getArticle(
+  slug: string,
+  readableWhere: Prisma.ArticleWhereInput,
+) {
+  return prisma.article.findFirst({
+    where: { slug, ...readableWhere },
+    select: {
+      slug: true,
+      title: true,
+      lifecycle: true,
+      tags: true,
+      updatedAt: true,
+      currentRevision: {
+        select: { revNumber: true, contentMd: true, createdAt: true },
+      },
+    },
+  }) as Promise<{
     slug: string;
     title: string;
+    lifecycle: string;
     tags: string[];
-    updatedAt: string;
-    currentRevision: { revNumber: number; contentMd: string; createdAt: string } | null;
-  };
+    updatedAt: Date;
+    currentRevision: { revNumber: number; contentMd: string; createdAt: Date } | null;
+  } | null>;
 }
 
-async function resolveLinks(slugs: string[]) {
-  // DB query directly for existence + titles
-  const { prisma } = await import("@/lib/prisma");
+async function resolveLinks(slugs: string[], readableWhere: Prisma.ArticleWhereInput) {
   const rows: Array<{ slug: string; title: string }> = await prisma.article.findMany({
-    where: { slug: { in: slugs } },
+    where: { slug: { in: slugs }, ...readableWhere },
     select: { slug: true, title: true },
   });
   const existing = new Map(rows.map((r) => [r.slug, r.title] as const));
@@ -38,11 +53,11 @@ async function resolveLinks(slugs: string[]) {
   return { existing, missing };
 }
 
-async function resolveBacklinks(slug: string) {
-  const { prisma } = await import("@/lib/prisma");
+async function resolveBacklinks(slug: string, readableWhere: Prisma.ArticleWhereInput) {
   const needle = `[[${slug}]]`;
   const rows: Array<{ slug: string; title: string }> = await prisma.article.findMany({
     where: {
+      ...readableWhere,
       slug: { not: slug },
       currentRevision: {
         contentMd: { contains: needle },
@@ -79,10 +94,10 @@ export default async function WikiArticlePage({
 }: {
   params: { slug: string };
 }) {
-  const session = await auth();
-  const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
+  const viewer = await getSessionViewer();
+  const readableWhere = readableArticleWhereForUser(viewer);
 
-  const article = await getArticle(params.slug);
+  const article = await getArticle(params.slug, readableWhere);
   if (!article) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
@@ -115,10 +130,11 @@ export default async function WikiArticlePage({
 
   const raw = article.currentRevision?.contentMd ?? "";
   const meta = extractCatalogMeta(raw);
+  const isOwnerOnlyArchive = isOwnerOnlyArchivedLifecycle(article.lifecycle);
   const outgoing = parseWikiLinks(raw).filter((l) => l.slug !== article.slug);
   const slugs = outgoing.map((l) => l.slug);
-  const resolved = slugs.length ? await resolveLinks(slugs) : null;
-  const backlinks = await resolveBacklinks(article.slug);
+  const resolved = slugs.length ? await resolveLinks(slugs, readableWhere) : null;
+  const backlinks = await resolveBacklinks(article.slug, readableWhere);
   const renderedMd = renderWikiLinksToMarkdown(raw);
 
   type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & {
@@ -156,7 +172,6 @@ export default async function WikiArticlePage({
     },
   };
 
-  const { prisma } = await import("@/lib/prisma");
   const approvedTagRows = article.tags?.length
     ? await prisma.tag.findMany({
         where: { key: { in: article.tags } },
@@ -174,16 +189,22 @@ export default async function WikiArticlePage({
           <div>
             /wiki/{article.slug} · rev {article.currentRevision?.revNumber ?? "?"}
           </div>
-          <ReportButton targetType="ARTICLE" targetRef={article.slug} viewerUserId={viewerUserId} />
+          <ReportButton targetType="ARTICLE" targetRef={article.slug} viewerUserId={viewer.userId} />
           <Link className="underline" href={`/wiki/${article.slug}/history`}>
             History
           </Link>
         </div>
 
+        {isOwnerOnlyArchive ? (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+            Owner-only archive. This entry is hidden from public search and tag navigation.
+          </div>
+        ) : null}
+
         {article.tags?.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {article.tags.map((t) =>
-              approvedTags.has(t) ? (
+              approvedTags.has(t) && !isOwnerOnlyArchive ? (
                 <a
                   key={t}
                   href={`/?tag=${encodeURIComponent(t)}`}
@@ -254,12 +275,19 @@ export default async function WikiArticlePage({
           ) : null}
         </div>
 
-        <div className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
-          <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
-          <div className="mt-3">
-            <RatingPanel slug={article.slug} />
+        {isOwnerOnlyArchive ? (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
+            <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
+            <div className="mt-3">Archived entries are no longer publicly rateable.</div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
+            <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
+            <div className="mt-3">
+              <RatingPanel slug={article.slug} />
+            </div>
+          </div>
+        )}
       </section>
 
       <article className="prose prose-zinc max-w-none dark:prose-invert">

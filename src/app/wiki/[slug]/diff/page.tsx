@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { diffLines } from "diff";
+import { isOwnerOnlyArchivedLifecycle, readableArticleWhereForUser } from "@/lib/articleAccess";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { getSessionViewer } from "@/lib/sessionViewer";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 
 type Row = {
@@ -84,8 +85,7 @@ export default async function DiffPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await auth();
-  const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
+  const viewer = await getSessionViewer();
 
   const { slug } = await params;
   const sp = await searchParams;
@@ -103,9 +103,9 @@ export default async function DiffPage({
     );
   }
 
-  const article = await prisma.article.findUnique({
-    where: { slug },
-    select: { id: true, title: true },
+  const article = await prisma.article.findFirst({
+    where: { slug, ...readableArticleWhereForUser(viewer) },
+    select: { id: true, title: true, lifecycle: true },
   });
   if (!article) {
     return (
@@ -144,6 +144,7 @@ export default async function DiffPage({
   }
 
   const rows = buildRows(a.contentMd, b.contentMd);
+  const isOwnerOnlyArchive = isOwnerOnlyArchivedLifecycle(article.lifecycle);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
@@ -157,6 +158,9 @@ export default async function DiffPage({
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
           <span className="font-medium">{article.title}</span> · /wiki/{slug}
         </div>
+        {isOwnerOnlyArchive ? (
+          <div className="text-sm text-amber-700 dark:text-amber-300">Owner-only archive.</div>
+        ) : null}
 
         <form className="mt-2 flex flex-wrap items-center gap-2 text-sm" method="GET">
           <label className="text-xs text-zinc-500" htmlFor="from">from</label>
@@ -199,13 +203,13 @@ export default async function DiffPage({
             <ReportButton
               targetType="ARTICLE_REVISION"
               targetRef={`${slug}@${from}`}
-              viewerUserId={viewerUserId}
+              viewerUserId={viewer.userId}
               label={`Report rev ${from}`}
             />
             <ReportButton
               targetType="ARTICLE_REVISION"
               targetRef={`${slug}@${to}`}
-              viewerUserId={viewerUserId}
+              viewerUserId={viewer.userId}
               label={`Report rev ${to}`}
             />
           </div>
@@ -219,7 +223,7 @@ export default async function DiffPage({
             <ReportButton
               targetType="ARTICLE_REVISION"
               targetRef={`${slug}@${from}`}
-              viewerUserId={viewerUserId}
+              viewerUserId={viewer.userId}
               label="Report"
             />
           </div>
@@ -228,7 +232,7 @@ export default async function DiffPage({
             <ReportButton
               targetType="ARTICLE_REVISION"
               targetRef={`${slug}@${to}`}
-              viewerUserId={viewerUserId}
+              viewerUserId={viewer.userId}
               label="Report"
             />
           </div>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publicArticleWhere } from "@/lib/articleAccess";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -27,6 +28,7 @@ export async function GET(req: Request) {
   const status = (url.searchParams.get("status") ?? "").trim().toLowerCase();
 
   const where2 = {
+    ...publicArticleWhere(),
     ...where,
     ...(tags.length ? { tags: { hasSome: tags } } : tag ? { tags: { has: tag } } : {}),
   } as const;

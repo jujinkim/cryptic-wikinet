@@ -1,12 +1,14 @@
 import Link from "next/link";
 
 import HomeClient from "@/app/home-client";
+import { publicArticleWhere } from "@/lib/articleAccess";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 async function getRecentUpdates() {
   const rows = await prisma.article.findMany({
+    where: publicArticleWhere(),
     orderBy: { updatedAt: "desc" },
     take: 10,
     select: {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
+import { publicArticleWhere } from "@/lib/articleAccess";
 import { Prisma } from "@prisma/client";
 
 export async function POST(
@@ -23,8 +24,8 @@ export async function POST(
     return Response.json({ error: "Invalid verdict" }, { status: 400 });
   }
 
-  const article = await prisma.article.findUnique({
-    where: { slug },
+  const article = await prisma.article.findFirst({
+    where: { slug, ...publicArticleWhere() },
     select: { id: true },
   });
   if (!article) return Response.json({ error: "Not found" }, { status: 404 });

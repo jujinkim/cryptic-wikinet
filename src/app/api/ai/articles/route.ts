@@ -11,6 +11,7 @@ import {
   aiRequestRejectGenericTitle,
   aiRequireRequestSourceForCreate,
 } from "@/lib/policies";
+import { publicArticleWhere } from "@/lib/articleAccess";
 
 class CatalogCreateError extends Error {
   status: number;
@@ -331,6 +332,7 @@ export async function GET(req: Request) {
       }
     : {};
   const where2 = {
+    ...publicArticleWhere(),
     ...where,
     ...(tags.length ? { tags: { hasSome: tags } } : tag ? { tags: { has: tag } } : {}),
   } as const;

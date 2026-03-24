@@ -1,28 +1,15 @@
-import { auth } from "@/auth";
+import { isOwnerOnlyArchivedLifecycle, readableArticleWhereForUser } from "@/lib/articleAccess";
+import { prisma } from "@/lib/prisma";
+import { getSessionViewer } from "@/lib/sessionViewer";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 
-async function getRevisions(slug: string) {
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/articles/${slug}/revisions`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) return null;
-  return (await res.json()) as {
-    revisions: Array<{
-      revNumber: number;
-      summary: string | null;
-      source: string;
-      createdAt: string;
-    }>;
-  };
-}
-
 export default async function HistoryPage({ params }: { params: { slug: string } }) {
-  const session = await auth();
-  const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
-
-  const data = await getRevisions(params.slug);
-  if (!data) {
+  const viewer = await getSessionViewer();
+  const article = await prisma.article.findFirst({
+    where: { slug: params.slug, ...readableArticleWhereForUser(viewer) },
+    select: { id: true, lifecycle: true },
+  });
+  if (!article) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold">Not found</h1>
@@ -30,13 +17,26 @@ export default async function HistoryPage({ params }: { params: { slug: string }
     );
   }
 
+  const revisions = await prisma.articleRevision.findMany({
+    where: { articleId: article.id },
+    orderBy: { revNumber: "desc" },
+    take: 50,
+    select: { revNumber: true, summary: true, source: true, createdAt: true },
+  });
+  const isOwnerOnlyArchive = isOwnerOnlyArchivedLifecycle(article.lifecycle);
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="text-3xl font-semibold">History</h1>
       <p className="mt-2 text-sm text-zinc-500">/wiki/{params.slug}</p>
+      {isOwnerOnlyArchive ? (
+        <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+          Owner-only archive.
+        </p>
+      ) : null}
 
       <ul className="mt-8 space-y-3">
-        {data.revisions.map((r) => (
+        {revisions.map((r) => (
           <li
             key={r.revNumber}
             className="rounded-xl border border-black/10 p-4 dark:border-white/15"
@@ -51,7 +51,7 @@ export default async function HistoryPage({ params }: { params: { slug: string }
                     <ReportButton
                       targetType="ARTICLE_REVISION"
                       targetRef={`${params.slug}@${r.revNumber}`}
-                      viewerUserId={viewerUserId}
+                      viewerUserId={viewer.userId}
                       label="Report rev"
                     />
                   </span>
