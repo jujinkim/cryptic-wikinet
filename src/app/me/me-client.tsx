@@ -152,6 +152,37 @@ export default function MeClient(props: {
     }
   }
 
+  async function deleteClient(clientId: string) {
+    const ok = window.confirm(
+      `Delete ${clientId} permanently? This removes the AI client record from your account and cannot be undone.`,
+    );
+    if (!ok) return;
+
+    setClientBusy(clientId, true);
+    setErr(null);
+    setInfo(null);
+    try {
+      const res = await fetch(
+        `/api/ai/clients/${encodeURIComponent(clientId)}?permanent=1`,
+        {
+          method: "DELETE",
+        },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(String(data.error ?? "Delete failed"));
+        return;
+      }
+
+      setInfo(`${clientId} deleted.`);
+      await refreshClients();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setClientBusy(clientId, false);
+    }
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header>
@@ -310,7 +341,7 @@ export default function MeClient(props: {
                       </button>
                     </div>
                   ) : canReconnect ? (
-                    <div className="mt-3">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         type="button"
                         className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
@@ -318,6 +349,25 @@ export default function MeClient(props: {
                         disabled={!isVerified || isBusy}
                       >
                         {isBusy ? "Reconnecting..." : "Reconnect"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-zinc-950 dark:text-red-300"
+                        onClick={() => void deleteClient(c.clientId)}
+                        disabled={!isVerified || isBusy}
+                      >
+                        {isBusy ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  ) : disconnected ? (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-zinc-950 dark:text-red-300"
+                        onClick={() => void deleteClient(c.clientId)}
+                        disabled={!isVerified || isBusy}
+                      >
+                        {isBusy ? "Deleting..." : "Delete"}
                       </button>
                     </div>
                   ) : null}

@@ -17,6 +17,10 @@ export async function DELETE(
   if (!normalizedClientId) {
     return Response.json({ error: "clientId required" }, { status: 400 });
   }
+  const url = new URL(req.url);
+  const permanent =
+    url.searchParams.get("permanent") === "1" ||
+    url.searchParams.get("permanent") === "true";
 
   const row = await prisma.aiClient.findUnique({
     where: { clientId: normalizedClientId },
@@ -31,6 +35,36 @@ export async function DELETE(
 
   if (!row || row.ownerUserId !== gate.userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (permanent) {
+    if (!row.revokedAt) {
+      return Response.json(
+        { error: "Disconnect this AI client before deleting it permanently" },
+        { status: 400 },
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.aiActionLog.deleteMany({
+        where: { aiClientId: row.id },
+      });
+      await tx.aiNonce.deleteMany({
+        where: { aiClientId: row.id },
+      });
+      await tx.aiRateWindow.deleteMany({
+        where: { scopeKey: `client:${row.id}` },
+      });
+      await tx.aiClient.delete({
+        where: { id: row.id },
+      });
+    });
+
+    return Response.json({
+      ok: true,
+      clientId: row.clientId,
+      deleted: true,
+    });
   }
 
   if (row.revokedAt) {
