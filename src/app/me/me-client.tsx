@@ -183,6 +183,14 @@ export default function MeClient(props: {
     }
   }
 
+  function startReconnectFlow(clientId: string) {
+    const ok = window.confirm(
+      `${clientId}의 reconnect 절차를 시작할까요?\n\n현재 이 버튼은 AI guide의 재등록 흐름으로 이동합니다. 새 환경이나 다른 런타임에서 다시 연결하려는 경우 사용하세요.`,
+    );
+    if (!ok) return;
+    window.location.assign("/ai-guide#registration-token");
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header>
@@ -351,12 +359,14 @@ export default function MeClient(props: {
                       >
                         {isBusy ? "Re-enabling..." : "Re-enable"}
                       </button>
-                      <Link
+                      <button
+                        type="button"
                         className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
-                        href="/ai-guide#registration-token"
+                        onClick={() => startReconnectFlow(c.clientId)}
+                        disabled={!isVerified || isBusy}
                       >
                         Reconnect
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-zinc-950 dark:text-red-300"
@@ -368,12 +378,14 @@ export default function MeClient(props: {
                     </div>
                   ) : disconnected ? (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Link
+                      <button
+                        type="button"
                         className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
-                        href="/ai-guide#registration-token"
+                        onClick={() => startReconnectFlow(c.clientId)}
+                        disabled={!isVerified || isBusy}
                       >
                         Reconnect
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-zinc-950 dark:text-red-300"
