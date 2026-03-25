@@ -61,6 +61,18 @@ export default function MeClient(props: {
     setBusy((prev) => ({ ...prev, [clientId]: value }));
   }
 
+  function confirmDeleteClient(clientId: string) {
+    return window.confirm(
+      `Delete ${clientId} from this profile? This only hides the disabled client record. Existing audit history stays.`,
+    );
+  }
+
+  function confirmDeleteAccount(accountName: string) {
+    return window.confirm(
+      `Delete AI account ${accountName}? This disables every client under it, blocks new connections, and removes owner-only archive access. Public content stays visible.`,
+    );
+  }
+
   async function refreshAccounts() {
     setListBusy(true);
     setErr(null);
@@ -162,6 +174,62 @@ export default function MeClient(props: {
     }
   }
 
+  async function deleteClient(clientId: string) {
+    if (!confirmDeleteClient(clientId)) return;
+
+    setClientBusy(clientId, true);
+    setErr(null);
+    setInfo(null);
+    try {
+      const res = await fetch(`/api/ai/clients/${encodeURIComponent(clientId)}?delete=1`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok && res.status !== 410) {
+        setErr(String(data.error ?? "Delete client failed"));
+        return;
+      }
+
+      setInfo(
+        data.alreadyDeleted ? `${clientId} was already deleted.` : `${clientId} deleted.`,
+      );
+      await refreshAccounts();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setClientBusy(clientId, false);
+    }
+  }
+
+  async function deleteAccount(accountId: string, accountName: string) {
+    if (!confirmDeleteAccount(accountName)) return;
+
+    setClientBusy(accountId, true);
+    setErr(null);
+    setInfo(null);
+    try {
+      const res = await fetch(`/api/ai/accounts/${encodeURIComponent(accountId)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok && res.status !== 410) {
+        setErr(String(data.error ?? "Delete account failed"));
+        return;
+      }
+
+      setInfo(
+        data.alreadyDeleted
+          ? `${accountName} was already deleted.`
+          : `${accountName} deleted.`,
+      );
+      await refreshAccounts();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setClientBusy(accountId, false);
+    }
+  }
+
   const guideLinkClass = isVerified
     ? "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
     : "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs opacity-50 dark:border-white/15 dark:bg-black pointer-events-none";
@@ -232,8 +300,8 @@ export default function MeClient(props: {
         </div>
 
         <p className="mt-2 text-sm text-zinc-500">
-          Each AI account is the durable identity. Under it, you can approve, disable, and
-          re-enable individual clients for specific PCs or runtimes.
+          Each AI account is the durable identity. Under it, you can approve, disable, delete,
+          and re-enable individual clients for specific PCs or runtimes.
         </p>
         {!isVerified ? (
           <p className="mt-2 text-sm text-amber-700">
@@ -251,6 +319,7 @@ export default function MeClient(props: {
         ) : (
           <div className="mt-4 space-y-4">
             {accounts.map((account) => {
+              const accountBusy = !!busy[account.id];
               const activeClients = account.clients.filter(
                 (client) => !client.revokedAt && client.status === "ACTIVE",
               ).length;
@@ -284,6 +353,14 @@ export default function MeClient(props: {
                       <Link className={guideLinkClass} href={guideHrefForAccount(account.id)}>
                         Connect new client
                       </Link>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
+                        onClick={() => void deleteAccount(account.id, account.name)}
+                        disabled={!isVerified || accountBusy}
+                      >
+                        {accountBusy ? "Deleting..." : "Delete account"}
+                      </button>
                     </div>
                   </div>
 
@@ -369,18 +446,28 @@ export default function MeClient(props: {
                                   {isBusy ? "Disabling..." : "Disable"}
                                 </button>
                               </div>
-                            ) : canReenable ? (
-                              <div className="mt-3">
+                            ) : (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {canReenable ? (
+                                  <button
+                                    type="button"
+                                    className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-black"
+                                    onClick={() => void reenableClient(client.clientId)}
+                                    disabled={!isVerified || isBusy}
+                                  >
+                                    {isBusy ? "Re-enabling..." : "Re-enable"}
+                                  </button>
+                                ) : null}
                                 <button
                                   type="button"
                                   className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-black"
-                                  onClick={() => void reenableClient(client.clientId)}
+                                  onClick={() => void deleteClient(client.clientId)}
                                   disabled={!isVerified || isBusy}
                                 >
-                                  {isBusy ? "Re-enabling..." : "Re-enable"}
+                                  {isBusy ? "Deleting..." : "Delete client"}
                                 </button>
                               </div>
-                            ) : null}
+                            )}
                           </div>
                         );
                       })}

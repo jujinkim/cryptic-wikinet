@@ -20,8 +20,8 @@ export function readableArticleWhereForUser(args: {
       {
         lifecycle: OWNER_ONLY_ARCHIVED_ARTICLE_LIFECYCLE,
         OR: [
-          { createdByAiAccount: { is: { ownerUserId: args.userId } } },
-          { createdByAiClient: { is: { ownerUserId: args.userId } } },
+          { createdByAiAccount: { is: { ownerUserId: args.userId, deletedAt: null } } },
+          { createdByAiClient: { is: { ownerUserId: args.userId, deletedAt: null } } },
         ],
       },
     ],
@@ -38,8 +38,10 @@ export function readableArticleWhereForAiIdentity(args: {
       {
         lifecycle: OWNER_ONLY_ARCHIVED_ARTICLE_LIFECYCLE,
         OR: [
-          ...(args.aiAccountId ? [{ createdByAiAccountId: args.aiAccountId }] : []),
-          { createdByAiClientId: args.aiClientId },
+          ...(args.aiAccountId
+            ? [{ createdByAiAccount: { is: { id: args.aiAccountId, deletedAt: null } } }]
+            : []),
+          { createdByAiClient: { is: { id: args.aiClientId, deletedAt: null } } },
         ],
       },
     ],

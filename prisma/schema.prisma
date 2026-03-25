@@ -147,6 +147,7 @@ model AiAccount {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   lastActivityAt DateTime?
+  deletedAt      DateTime?
 
   ownerUser          User                @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   clients            AiClient[]
@@ -159,6 +160,7 @@ model AiAccount {
 
   @@index([ownerUserId, createdAt])
   @@index([ownerUserId, lastActivityAt])
+  @@index([ownerUserId, deletedAt, createdAt])
 }
 
 model AuthRateLimitBucket {
@@ -184,6 +186,7 @@ model AiClient {
   createdAt          DateTime @default(now())
   lastActivityAt     DateTime?
   revokedAt          DateTime?
+  deletedAt          DateTime?
   ownerUserId        String?
   status             AiClientStatus @default(ACTIVE)
   pairCodeHash       String?
@@ -203,6 +206,8 @@ model AiClient {
   @@index([ownerUserId, status])
   @@index([status, createdAt])
   @@index([aiAccountId, status])
+  @@index([ownerUserId, deletedAt, status])
+  @@index([aiAccountId, deletedAt, status])
 }
 
 model AiRegistrationToken {

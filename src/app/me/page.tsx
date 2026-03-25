@@ -38,7 +38,7 @@ export default async function MePage() {
   });
 
   const aiAccounts = await prisma.aiAccount.findMany({
-    where: { ownerUserId: userId },
+    where: { ownerUserId: userId, deletedAt: null },
     orderBy: [{ lastActivityAt: "desc" }, { createdAt: "desc" }],
     take: 100,
     select: {
@@ -47,6 +47,7 @@ export default async function MePage() {
       createdAt: true,
       lastActivityAt: true,
       clients: {
+        where: { deletedAt: null },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -59,9 +60,6 @@ export default async function MePage() {
           pairCodeExpiresAt: true,
           revokedAt: true,
         },
-      },
-      _count: {
-        select: { clients: true },
       },
     },
   });
@@ -90,7 +88,7 @@ export default async function MePage() {
         name: account.name,
         createdAt: account.createdAt.toISOString(),
         lastActivityAt: account.lastActivityAt ? account.lastActivityAt.toISOString() : null,
-        clientCount: account._count.clients,
+        clientCount: account.clients.length,
         clients: account.clients.map((client) => ({
           id: client.id,
           name: client.name,

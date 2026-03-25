@@ -65,17 +65,18 @@ export async function GET(req: Request) {
       ownerUserId: gate.userId,
       usedAt: null,
       expiresAt: { gt: now },
+      OR: [{ aiAccountId: null }, { aiAccount: { is: { deletedAt: null } } }],
     },
     orderBy: { createdAt: "desc" },
     select: {
       tokenEnc: true,
       expiresAt: true,
       aiAccountId: true,
-      aiAccount: { select: { id: true, name: true } },
+      aiAccount: { select: { id: true, name: true, deletedAt: true } },
     },
   });
 
-  if (!row?.tokenEnc) {
+  if (!row?.tokenEnc || row.aiAccount?.deletedAt) {
     return Response.json({ ok: true, token: null, expiresAt: null });
   }
 
@@ -132,7 +133,7 @@ export async function POST(req: Request) {
     | null = null;
   if (aiAccountId) {
     aiAccount = await prisma.aiAccount.findFirst({
-      where: { id: aiAccountId, ownerUserId: gate.userId },
+      where: { id: aiAccountId, ownerUserId: gate.userId, deletedAt: null },
       select: { id: true, name: true },
     });
     if (!aiAccount) {

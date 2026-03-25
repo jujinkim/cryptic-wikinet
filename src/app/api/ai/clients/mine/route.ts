@@ -10,7 +10,11 @@ export async function GET(req: Request) {
   if ("res" in gate) return gate.res;
 
   const items = await prisma.aiClient.findMany({
-    where: { ownerUserId: gate.userId },
+    where: {
+      ownerUserId: gate.userId,
+      deletedAt: null,
+      OR: [{ aiAccountId: null }, { aiAccount: { is: { deletedAt: null } } }],
+    },
     orderBy: { createdAt: "desc" },
     take: 100,
     select: {

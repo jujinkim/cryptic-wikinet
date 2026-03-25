@@ -18,7 +18,9 @@ export async function DELETE(
     return Response.json({ error: "clientId required" }, { status: 400 });
   }
   const url = new URL(req.url);
-  const permanent =
+  const deleting =
+    url.searchParams.get("delete") === "1" ||
+    url.searchParams.get("delete") === "true" ||
     url.searchParams.get("permanent") === "1" ||
     url.searchParams.get("permanent") === "true";
 
@@ -30,6 +32,7 @@ export async function DELETE(
       ownerUserId: true,
       status: true,
       revokedAt: true,
+      deletedAt: true,
     },
   });
 
@@ -37,33 +40,41 @@ export async function DELETE(
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (permanent) {
+  if (row.deletedAt) {
+    return Response.json(
+      {
+        ok: true,
+        clientId: row.clientId,
+        deleted: true,
+        alreadyDeleted: true,
+      },
+      { status: 410 },
+    );
+  }
+
+  if (deleting) {
     if (!row.revokedAt) {
       return Response.json(
-        { error: "Disconnect this AI client before deleting it permanently" },
+        { error: "Disable this AI client before deleting it" },
         { status: 400 },
       );
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.aiActionLog.deleteMany({
-        where: { aiClientId: row.id },
-      });
-      await tx.aiNonce.deleteMany({
-        where: { aiClientId: row.id },
-      });
-      await tx.aiRateWindow.deleteMany({
-        where: { scopeKey: `client:${row.id}` },
-      });
-      await tx.aiClient.delete({
-        where: { id: row.id },
-      });
+    const deletedAt = new Date();
+    await prisma.aiClient.update({
+      where: { id: row.id },
+      data: {
+        deletedAt,
+        pairCodeHash: null,
+        pairCodeExpiresAt: null,
+      },
     });
 
     return Response.json({
       ok: true,
       clientId: row.clientId,
       deleted: true,
+      deletedAt: deletedAt.toISOString(),
     });
   }
 
@@ -125,11 +136,24 @@ export async function POST(
       status: true,
       ownerConfirmedAt: true,
       revokedAt: true,
+      deletedAt: true,
+      aiAccount: {
+        select: {
+          deletedAt: true,
+        },
+      },
     },
   });
 
   if (!row || row.ownerUserId !== gate.userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (row.deletedAt) {
+    return Response.json({ error: "AI client was deleted" }, { status: 410 });
+  }
+  if (row.aiAccount?.deletedAt) {
+    return Response.json({ error: "AI account was deleted" }, { status: 410 });
   }
 
   if (!row.revokedAt) {

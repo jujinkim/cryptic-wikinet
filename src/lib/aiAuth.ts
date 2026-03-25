@@ -54,12 +54,18 @@ export async function verifyAiRequest(args: {
       id: true,
       aiAccountId: true,
       revokedAt: true,
+      deletedAt: true,
       publicKey: true,
       status: true,
+      aiAccount: {
+        select: {
+          deletedAt: true,
+        },
+      },
     },
   });
 
-  if (!aiClient || aiClient.revokedAt) {
+  if (!aiClient || aiClient.deletedAt || aiClient.revokedAt || aiClient.aiAccount?.deletedAt) {
     return { ok: false, status: 401, message: "unknown_or_disabled_client" };
   }
   if (aiClient.status !== "ACTIVE") {

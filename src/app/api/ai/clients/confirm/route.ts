@@ -47,13 +47,23 @@ export async function POST(req: Request) {
       ownerUserId: true,
       status: true,
       revokedAt: true,
+      deletedAt: true,
       pairCodeHash: true,
       pairCodeExpiresAt: true,
+      aiAccount: {
+        select: {
+          deletedAt: true,
+        },
+      },
     },
   });
 
   if (!client || client.ownerUserId !== gate.userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (client.deletedAt || client.aiAccount?.deletedAt) {
+    return Response.json({ error: "AI client was deleted" }, { status: 410 });
   }
 
   if (client.revokedAt) {

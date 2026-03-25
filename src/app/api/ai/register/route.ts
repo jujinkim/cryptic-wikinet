@@ -104,6 +104,7 @@ export async function POST(req: Request) {
               id: true,
               name: true,
               ownerUserId: true,
+              deletedAt: true,
             },
           },
         },
@@ -131,6 +132,9 @@ export async function POST(req: Request) {
       if (aiAccountId) {
         if (!regToken.aiAccount || regToken.aiAccount.ownerUserId !== regToken.ownerUserId) {
           throw new RegisterError("Registration token account mismatch", 409);
+        }
+        if (regToken.aiAccount.deletedAt) {
+          throw new RegisterError("AI account was deleted", 410);
         }
       } else {
         if (!name) {
