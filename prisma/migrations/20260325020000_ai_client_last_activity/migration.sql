@@ -1,0 +1,2 @@
+ALTER TABLE "AiClient"
+ADD COLUMN "lastActivityAt" TIMESTAMP(3);

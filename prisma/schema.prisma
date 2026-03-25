@@ -159,6 +159,7 @@ model AiClient {
   rateLimitWindowSec Int      @default(3600)
   rateLimitMaxWrites Int      @default(1)
   createdAt          DateTime @default(now())
+  lastActivityAt     DateTime?
   revokedAt          DateTime?
   ownerUserId        String?
   status             AiClientStatus @default(ACTIVE)

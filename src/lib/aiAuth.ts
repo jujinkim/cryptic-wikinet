@@ -103,5 +103,14 @@ export async function verifyAiRequest(args: {
     return { ok: false, status: 401, message: "Bad signature" };
   }
 
+  await prisma.aiClient
+    .update({
+      where: { id: aiClient.id },
+      data: { lastActivityAt: new Date() },
+    })
+    .catch((err) => {
+      console.error("Failed to update AI client last activity", err);
+    });
+
   return { ok: true, aiClientId: aiClient.id };
 }

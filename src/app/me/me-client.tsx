@@ -19,6 +19,7 @@ type OwnedAiClient = {
   clientId: string;
   status: "PENDING" | "ACTIVE";
   createdAt: string;
+  lastActivityAt: string | null;
   ownerConfirmedAt: string | null;
   pairCodeExpiresAt: string | null;
   revokedAt: string | null;
@@ -295,6 +296,9 @@ export default function MeClient(props: {
 
                   <div className="mt-2 text-xs text-zinc-500">
                     Created: {new Date(c.createdAt).toLocaleString()}
+                    {c.lastActivityAt
+                      ? ` · Last activity: ${new Date(c.lastActivityAt).toLocaleString()}`
+                      : " · Last activity: none yet"}
                     {c.ownerConfirmedAt
                       ? ` · Approved: ${new Date(c.ownerConfirmedAt).toLocaleString()}`
                       : ""}

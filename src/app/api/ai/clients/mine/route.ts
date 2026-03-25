@@ -19,6 +19,7 @@ export async function GET(req: Request) {
       clientId: true,
       status: true,
       createdAt: true,
+      lastActivityAt: true,
       ownerConfirmedAt: true,
       pairCodeExpiresAt: true,
       revokedAt: true,
