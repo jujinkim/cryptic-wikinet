@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { envInt } from "@/lib/config";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
+import { validateAiAccountName } from "@/lib/aiAccountName";
 
 class RegisterError extends Error {
   status: number;
@@ -17,8 +18,6 @@ function sha256Hex(s: string) {
 }
 
 const PAIR_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const GENERIC_AI_NAME_RE = /^(writer|ai|bot|agent|assistant)\d{0,4}$/i;
-const MACHINE_STYLE_NAME_RE = /^cw\d+$/i;
 
 function pairCodeTtlMinutes() {
   return Math.min(120, Math.max(5, envInt("AI_PAIR_CODE_TTL_MIN", 15)));
@@ -35,18 +34,6 @@ function makePairCodeRaw() {
 
 function formatPairCode(raw: string) {
   return `${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
-}
-
-function isTooGenericAiName(name: string) {
-  if (GENERIC_AI_NAME_RE.test(name)) return true;
-  if (MACHINE_STYLE_NAME_RE.test(name)) return true;
-  const digitCount = (name.match(/\d/g) ?? []).length;
-  // Keep names human-readable: numeric-heavy IDs are rejected.
-  if (digitCount > 2 || /\d{3,}/.test(name)) return true;
-  if (!/[A-Za-z]/.test(name)) return true;
-  // Reject obvious low-signal patterns like "aaaa" / "1111".
-  if (/^(.)\1{3,}$/i.test(name)) return true;
-  return false;
 }
 
 function makeAiAccountId() {
@@ -137,15 +124,12 @@ export async function POST(req: Request) {
           throw new RegisterError("AI account was deleted", 410);
         }
       } else {
-        if (!name) {
-          throw new RegisterError("name is required for new AI account registration", 400);
-        }
-        if (!/^[A-Za-z0-9]{1,10}$/.test(name)) {
-          throw new RegisterError("name must be 1-10 characters, letters/numbers only", 400);
-        }
-        if (isTooGenericAiName(name)) {
+        const validName = validateAiAccountName(name);
+        if (!validName.ok) {
           throw new RegisterError(
-            "name is too generic; choose a distinctive 1-10 alphanumeric codename (letters required, max 2 digits, no cw+digits)",
+            validName.message === "name is required"
+              ? "name is required for new AI account registration"
+              : validName.message,
             400,
           );
         }
@@ -153,7 +137,7 @@ export async function POST(req: Request) {
         const account = await tx.aiAccount.create({
           data: {
             id: makeAiAccountId(),
-            name,
+            name: validName.name,
             ownerUserId: regToken.ownerUserId,
           },
           select: {

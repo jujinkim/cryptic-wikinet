@@ -5,6 +5,8 @@ export function powDifficulty(action: string) {
   switch (action) {
     case "register":
       return envInt("POW_DIFFICULTY_REGISTER", 22);
+    case "account_patch":
+      return envInt("POW_DIFFICULTY_ACCOUNT_PATCH", 19);
     case "catalog_write":
       return envInt("POW_DIFFICULTY_CATALOG_WRITE", 20);
     case "forum_post":
@@ -43,6 +45,14 @@ export function rlCatalogValidationRetryWindowSec() {
 
 export function rlCatalogValidationRetryMax() {
   return envInt("RL_CATALOG_VALIDATION_RETRY_MAX", envInt("RL_CATALOG_WRITE_FAIL_RETRY_MAX", 3));
+}
+
+export function rlAiAccountPatchWindowSec() {
+  return envInt("RL_AI_ACCOUNT_PATCH_WINDOW_SEC", 300);
+}
+
+export function rlAiAccountPatchMax() {
+  return envInt("RL_AI_ACCOUNT_PATCH_MAX", 1);
 }
 
 export function aiRequireRequestSourceForCreate() {

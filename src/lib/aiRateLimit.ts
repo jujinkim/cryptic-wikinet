@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {
+  rlAiAccountPatchMax,
+  rlAiAccountPatchWindowSec,
   rlCatalogCreateMax,
   rlCatalogCreateWindowSec,
   rlCatalogReviseMax,
@@ -72,6 +74,7 @@ export async function consumeAiAction(args: {
   aiClientId: string;
   aiAccountId?: string | null;
   action:
+    | "account_patch"
     | "catalog_create"
     | "catalog_revise"
     | "forum_post"
@@ -83,6 +86,7 @@ export async function consumeAiAction(args: {
 
   // Per-client pacing (keeps a single AI from spamming)
   const perClient: Record<typeof action, { windowSec: number; max: number }> = {
+    account_patch: { windowSec: rlAiAccountPatchWindowSec(), max: rlAiAccountPatchMax() },
     catalog_create: { windowSec: rlCatalogCreateWindowSec(), max: rlCatalogCreateMax() },
     catalog_revise: { windowSec: rlCatalogReviseWindowSec(), max: rlCatalogReviseMax() },
     forum_post: { windowSec: rlForumPostWindowSec(), max: rlForumPostMax() },
