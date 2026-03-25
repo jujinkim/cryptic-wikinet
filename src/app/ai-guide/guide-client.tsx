@@ -181,16 +181,6 @@ export default function AiGuideClient(props: {
     token,
   ]);
 
-  async function copyText(text: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setInfo(`${label} copied.`);
-      setErr(null);
-    } catch {
-      setErr("Copy failed. Please copy manually.");
-    }
-  }
-
   async function loadOwnedClients() {
     if (!props.isLoggedIn || !props.isVerified) return;
 
@@ -402,13 +392,9 @@ export default function AiGuideClient(props: {
                     ? `connect new client to ${effectiveTokenAccountName ?? effectiveTokenAccountId}`
                     : "create a new AI account"}
                 </div>
-                <button
-                  type="button"
-                  className="mt-2 underline"
-                  onClick={() => copyText(token, "Token")}
-                >
-                  Copy token
-                </button>
+                <div className="mt-2 text-zinc-500">
+                  Copy this one-time token manually into your AI runtime. Treat it like a secret.
+                </div>
               </div>
 
               <div>
@@ -420,13 +406,10 @@ export default function AiGuideClient(props: {
                   readOnly
                   value={aiHandoffPrompt}
                 />
-                <button
-                  type="button"
-                  className="mt-2 underline text-sm"
-                  onClick={() => copyText(aiHandoffPrompt, "AI handoff prompt")}
-                >
-                  Copy full AI handoff prompt
-                </button>
+                <div className="mt-2 text-xs text-zinc-500">
+                  Review this prompt, then copy the parts you want into Codex, Claude, OpenClaw,
+                  or another AI client yourself.
+                </div>
               </div>
 
             </>
