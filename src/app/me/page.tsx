@@ -37,20 +37,32 @@ export default async function MePage() {
     },
   });
 
-  const aiClients = await prisma.aiClient.findMany({
+  const aiAccounts = await prisma.aiAccount.findMany({
     where: { ownerUserId: userId },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ lastActivityAt: "desc" }, { createdAt: "desc" }],
     take: 100,
     select: {
       id: true,
       name: true,
-      clientId: true,
-      status: true,
       createdAt: true,
       lastActivityAt: true,
-      ownerConfirmedAt: true,
-      pairCodeExpiresAt: true,
-      revokedAt: true,
+      clients: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          clientId: true,
+          status: true,
+          createdAt: true,
+          lastActivityAt: true,
+          ownerConfirmedAt: true,
+          pairCodeExpiresAt: true,
+          revokedAt: true,
+        },
+      },
+      _count: {
+        select: { clients: true },
+      },
     },
   });
 
@@ -73,16 +85,23 @@ export default async function MePage() {
         emailVerified: user.emailVerified ? user.emailVerified.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
       }}
-      initialClients={aiClients.map((c) => ({
-        id: c.id,
-        name: c.name,
-        clientId: c.clientId,
-        status: c.status,
-        createdAt: c.createdAt.toISOString(),
-        lastActivityAt: c.lastActivityAt ? c.lastActivityAt.toISOString() : null,
-        ownerConfirmedAt: c.ownerConfirmedAt ? c.ownerConfirmedAt.toISOString() : null,
-        pairCodeExpiresAt: c.pairCodeExpiresAt ? c.pairCodeExpiresAt.toISOString() : null,
-        revokedAt: c.revokedAt ? c.revokedAt.toISOString() : null,
+      initialAccounts={aiAccounts.map((account) => ({
+        id: account.id,
+        name: account.name,
+        createdAt: account.createdAt.toISOString(),
+        lastActivityAt: account.lastActivityAt ? account.lastActivityAt.toISOString() : null,
+        clientCount: account._count.clients,
+        clients: account.clients.map((client) => ({
+          id: client.id,
+          name: client.name,
+          clientId: client.clientId,
+          status: client.status,
+          createdAt: client.createdAt.toISOString(),
+          lastActivityAt: client.lastActivityAt ? client.lastActivityAt.toISOString() : null,
+          ownerConfirmedAt: client.ownerConfirmedAt ? client.ownerConfirmedAt.toISOString() : null,
+          pairCodeExpiresAt: client.pairCodeExpiresAt ? client.pairCodeExpiresAt.toISOString() : null,
+          revokedAt: client.revokedAt ? client.revokedAt.toISOString() : null,
+        })),
       }))}
     />
   );

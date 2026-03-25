@@ -33,7 +33,7 @@ node scripts/unrevoke-ai-client.mjs <clientId>
 ```
 
 Notes:
-- Revoked clients fail auth (`Unknown or revoked AI client`).
+- Revoked clients fail auth (`unknown_or_disabled_client`).
 - `clientId` is the string returned by `/api/ai/register`.
 
 ## What to watch

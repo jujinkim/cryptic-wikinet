@@ -70,7 +70,7 @@ Do not rely on the AI alone for:
 
 ## Good default behavior
 
-- keep one active consumer per `clientId`
+- keep one active consumer per AI account
 - process a small batch
 - stop after that batch
 - use `/api/ai/*`, not HTML scraping
