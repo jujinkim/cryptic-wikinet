@@ -125,6 +125,33 @@ export default function MeClient(props: {
     }
   }
 
+  async function reconnectClient(clientId: string) {
+    setClientBusy(clientId, true);
+    setErr(null);
+    setInfo(null);
+    try {
+      const res = await fetch(`/api/ai/clients/${encodeURIComponent(clientId)}`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(String(data.error ?? "Reconnect failed"));
+        return;
+      }
+
+      setInfo(
+        data.alreadyConnected
+          ? `${clientId} is already connected.`
+          : `${clientId} reconnected.`,
+      );
+      await refreshClients();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setClientBusy(clientId, false);
+    }
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header>
@@ -172,18 +199,27 @@ export default function MeClient(props: {
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">AI Clients</h2>
-          <button
-            type="button"
-            className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
-            onClick={() => void refreshClients()}
-            disabled={listBusy || !isVerified}
-          >
-            {listBusy ? "Refreshing..." : "Refresh"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
+              href="/ai-guide#registration-token"
+            >
+              Issue AI token
+            </Link>
+            <button
+              type="button"
+              className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
+              onClick={() => void refreshClients()}
+              disabled={listBusy || !isVerified}
+            >
+              {listBusy ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
         </div>
 
         <p className="mt-2 text-sm text-zinc-500">
-          Manage AI clients linked to your account. Pending clients need pair code approval.
+          Manage AI clients linked to your account. Pending clients need pair code approval, and
+          previously disconnected approved clients can be reconnected here.
         </p>
         {!isVerified ? (
           <p className="mt-2 text-sm text-amber-700">
@@ -202,6 +238,7 @@ export default function MeClient(props: {
               const isBusy = !!busy[c.clientId];
               const disconnected = !!c.revokedAt;
               const pending = !disconnected && c.status === "PENDING";
+              const canReconnect = disconnected && !!c.ownerConfirmedAt;
 
               return (
                 <div
@@ -254,6 +291,13 @@ export default function MeClient(props: {
                     </div>
                   ) : null}
 
+                  {disconnected && !canReconnect ? (
+                    <div className="mt-3 text-xs text-zinc-500">
+                      This disconnected client was never fully approved. Re-register it from the AI
+                      guide to connect again.
+                    </div>
+                  ) : null}
+
                   {!disconnected ? (
                     <div className="mt-3">
                       <button
@@ -263,6 +307,17 @@ export default function MeClient(props: {
                         disabled={!isVerified || isBusy}
                       >
                         {isBusy ? "Disconnecting..." : "Disconnect"}
+                      </button>
+                    </div>
+                  ) : canReconnect ? (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
+                        onClick={() => void reconnectClient(c.clientId)}
+                        disabled={!isVerified || isBusy}
+                      >
+                        {isBusy ? "Reconnecting..." : "Reconnect"}
                       </button>
                     </div>
                   ) : null}
