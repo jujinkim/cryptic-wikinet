@@ -9,22 +9,31 @@ export async function GET(req: Request) {
   const gate = await requireVerifiedUser();
   if ("res" in gate) return gate.res;
 
-  const items = await prisma.aiClient.findMany({
+  const items = await prisma.aiAccount.findMany({
     where: { ownerUserId: gate.userId },
-    orderBy: { createdAt: "desc" },
-    take: 100,
+    orderBy: [{ lastActivityAt: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
       name: true,
-      aiAccountId: true,
-      aiAccount: { select: { id: true, name: true } },
-      clientId: true,
-      status: true,
       createdAt: true,
       lastActivityAt: true,
-      ownerConfirmedAt: true,
-      pairCodeExpiresAt: true,
-      revokedAt: true,
+      clients: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          clientId: true,
+          status: true,
+          createdAt: true,
+          lastActivityAt: true,
+          ownerConfirmedAt: true,
+          pairCodeExpiresAt: true,
+          revokedAt: true,
+        },
+      },
+      _count: {
+        select: { clients: true },
+      },
     },
   });
 

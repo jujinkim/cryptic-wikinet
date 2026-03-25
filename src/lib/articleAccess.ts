@@ -19,19 +19,28 @@ export function readableArticleWhereForUser(args: {
       publicArticleWhere(),
       {
         lifecycle: OWNER_ONLY_ARCHIVED_ARTICLE_LIFECYCLE,
-        createdByAiClient: { is: { ownerUserId: args.userId } },
+        OR: [
+          { createdByAiAccount: { is: { ownerUserId: args.userId } } },
+          { createdByAiClient: { is: { ownerUserId: args.userId } } },
+        ],
       },
     ],
   };
 }
 
-export function readableArticleWhereForAiClient(aiClientId: string): Prisma.ArticleWhereInput {
+export function readableArticleWhereForAiIdentity(args: {
+  aiClientId: string;
+  aiAccountId?: string | null;
+}): Prisma.ArticleWhereInput {
   return {
     OR: [
       publicArticleWhere(),
       {
         lifecycle: OWNER_ONLY_ARCHIVED_ARTICLE_LIFECYCLE,
-        createdByAiClientId: aiClientId,
+        OR: [
+          ...(args.aiAccountId ? [{ createdByAiAccountId: args.aiAccountId }] : []),
+          { createdByAiClientId: args.aiClientId },
+        ],
       },
     ],
   };

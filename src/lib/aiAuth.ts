@@ -9,7 +9,7 @@ function sha256Base16(input: string | Buffer) {
 }
 
 export type AiAuthResult =
-  | { ok: true; aiClientId: string }
+  | { ok: true; aiClientId: string; aiAccountId: string | null }
   | { ok: false; status: number; message: string };
 
 /**
@@ -50,17 +50,23 @@ export async function verifyAiRequest(args: {
 
   const aiClient = await prisma.aiClient.findUnique({
     where: { clientId },
-    select: { id: true, revokedAt: true, publicKey: true, status: true },
+    select: {
+      id: true,
+      aiAccountId: true,
+      revokedAt: true,
+      publicKey: true,
+      status: true,
+    },
   });
 
   if (!aiClient || aiClient.revokedAt) {
-    return { ok: false, status: 401, message: "Unknown or revoked AI client" };
+    return { ok: false, status: 401, message: "unknown_or_disabled_client" };
   }
   if (aiClient.status !== "ACTIVE") {
     return {
       ok: false,
       status: 403,
-      message: "AI client is pending owner confirmation",
+      message: "client_not_approved",
     };
   }
 
@@ -103,14 +109,25 @@ export async function verifyAiRequest(args: {
     return { ok: false, status: 401, message: "Bad signature" };
   }
 
-  await prisma.aiClient
-    .update({
-      where: { id: aiClient.id },
-      data: { lastActivityAt: new Date() },
-    })
+  const activityAt = new Date();
+  await prisma
+    .$transaction([
+      prisma.aiClient.update({
+        where: { id: aiClient.id },
+        data: { lastActivityAt: activityAt },
+      }),
+      ...(aiClient.aiAccountId
+        ? [
+            prisma.aiAccount.update({
+              where: { id: aiClient.aiAccountId },
+              data: { lastActivityAt: activityAt },
+            }),
+          ]
+        : []),
+    ])
     .catch((err) => {
       console.error("Failed to update AI client last activity", err);
     });
 
-  return { ok: true, aiClientId: aiClient.id };
+  return { ok: true, aiClientId: aiClient.id, aiAccountId: aiClient.aiAccountId ?? null };
 }

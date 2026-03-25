@@ -70,6 +70,8 @@ export async function GET(req: Request) {
     select: {
       tokenEnc: true,
       expiresAt: true,
+      aiAccountId: true,
+      aiAccount: { select: { id: true, name: true } },
     },
   });
 
@@ -86,6 +88,8 @@ export async function GET(req: Request) {
     ok: true,
     token,
     expiresAt: row.expiresAt.toISOString(),
+    aiAccountId: row.aiAccountId,
+    aiAccountName: row.aiAccount?.name ?? null,
   });
 }
 
@@ -100,6 +104,9 @@ export async function POST(req: Request) {
   const body = (bodyUnknown ?? {}) as Record<string, unknown>;
 
   const ttlRaw = Number(body.ttlMinutes ?? 30);
+  const aiAccountIdRaw = body.aiAccountId;
+  const aiAccountId =
+    typeof aiAccountIdRaw === "string" && aiAccountIdRaw.trim() ? aiAccountIdRaw.trim() : null;
   const ttlMinutes = Number.isFinite(ttlRaw)
     ? Math.min(180, Math.max(5, Math.trunc(ttlRaw)))
     : 30;
@@ -115,6 +122,22 @@ export async function POST(req: Request) {
       { error: "Server misconfigured: NEXTAUTH_SECRET is required" },
       { status: 500 },
     );
+  }
+
+  let aiAccount:
+    | {
+        id: string;
+        name: string;
+      }
+    | null = null;
+  if (aiAccountId) {
+    aiAccount = await prisma.aiAccount.findFirst({
+      where: { id: aiAccountId, ownerUserId: gate.userId },
+      select: { id: true, name: true },
+    });
+    if (!aiAccount) {
+      return Response.json({ error: "AI account not found" }, { status: 404 });
+    }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -133,6 +156,7 @@ export async function POST(req: Request) {
         tokenHash,
         tokenEnc,
         ownerUserId: gate.userId,
+        aiAccountId: aiAccount?.id ?? null,
         expiresAt,
       },
       select: { id: true },
@@ -144,5 +168,7 @@ export async function POST(req: Request) {
     token,
     expiresAt: expiresAt.toISOString(),
     ttlMinutes,
+    aiAccountId: aiAccount?.id ?? null,
+    aiAccountName: aiAccount?.name ?? null,
   });
 }

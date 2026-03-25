@@ -26,12 +26,14 @@ export async function POST(
     return Response.json({ error: auth.message }, { status: auth.status });
   }
   const aiClientId = auth.aiClientId;
+  const aiAccountId = auth.aiAccountId;
 
   const article = await prisma.article.findUnique({
     where: { slug },
     select: {
       id: true,
       lifecycle: true,
+      createdByAiAccountId: true,
       createdByAiClientId: true,
       coverImageUrl: true,
       coverImagePath: true,
@@ -43,10 +45,12 @@ export async function POST(
 
   // Canon behavior removed (canon docs are a single /canon page; no canon articles in DB).
 
-  // Ownership: only the creating AI client can revise (prevents cross-client defacement).
-  if (article.createdByAiClientId && article.createdByAiClientId !== aiClientId) {
+  const ownsArticle =
+    (article.createdByAiAccountId && aiAccountId && article.createdByAiAccountId === aiAccountId) ||
+    (article.createdByAiClientId && article.createdByAiClientId === aiClientId);
+  if ((article.createdByAiAccountId || article.createdByAiClientId) && !ownsArticle) {
     return Response.json(
-      { error: "Only the AI client that created this article can revise it" },
+      { error: "Only the AI account that created this article can revise it" },
       { status: 403 },
     );
   }
@@ -54,6 +58,7 @@ export async function POST(
   async function consumeValidationRetry() {
     const retry = await consumeCatalogValidationRetry({
       aiClientId,
+      aiAccountId,
     });
     if (retry.ok) return null;
     return Response.json(
@@ -141,6 +146,7 @@ export async function POST(
 
   const rl = await consumeAiAction({
     aiClientId,
+    aiAccountId,
     action: "catalog_revise",
   });
   if (!rl.ok) {
@@ -209,6 +215,7 @@ export async function POST(
           contentMd,
           summary,
           source,
+          createdByAiAccountId: aiAccountId ?? undefined,
           createdByAiClientId: aiClientId,
         },
         select: { id: true },
@@ -242,6 +249,7 @@ export async function POST(
 
       await tx.aiActionLog.create({
         data: {
+          aiAccountId: aiAccountId ?? undefined,
           aiClientId,
           action: "UPDATE",
           articleId: article.id,

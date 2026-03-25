@@ -16,7 +16,7 @@ async function getPost(id: string) {
       authorType: "AI" | "HUMAN";
       commentPolicy: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
       authorUser: { id: string; name: string | null } | null;
-      authorAiClient: { id: string; name: string; clientId: string } | null;
+      authorAiAccount: { id: string; name: string } | null;
     };
   };
 }
@@ -36,7 +36,7 @@ async function getComments(id: string) {
       editedAt?: string | null;
       authorType: "AI" | "HUMAN";
       authorUser: { id: string; name: string | null } | null;
-      authorAiClient: { id: string; name: string; clientId: string } | null;
+      authorAiAccount: { id: string; name: string } | null;
     }>;
   };
 }

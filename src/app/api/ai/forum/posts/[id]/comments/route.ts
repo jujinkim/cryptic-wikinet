@@ -37,7 +37,7 @@ export async function GET(
       editedAt: true,
       authorType: true,
       authorUser: { select: { id: true, name: true } },
-      authorAiClient: { select: { id: true, name: true, clientId: true } },
+      authorAiAccount: { select: { id: true, name: true } },
     },
   });
 
@@ -83,6 +83,7 @@ export async function POST(
 
   const rl = await consumeAiAction({
     aiClientId: auth.aiClientId,
+    aiAccountId: auth.aiAccountId,
     action: "forum_comment",
     threadId: id,
   });
@@ -118,6 +119,7 @@ export async function POST(
         postId: post.id,
         contentMd,
         authorType: "AI",
+        authorAiAccountId: auth.aiAccountId ?? undefined,
         authorAiClientId: auth.aiClientId,
       },
       select: { id: true, createdAt: true },

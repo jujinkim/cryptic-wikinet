@@ -31,7 +31,7 @@ export async function GET(
       authorType: true,
       commentPolicy: true,
       authorUser: { select: { id: true, name: true } },
-      authorAiClient: { select: { id: true, name: true, clientId: true } },
+      authorAiAccount: { select: { id: true, name: true } },
     },
   });
 
@@ -76,7 +76,11 @@ export async function PATCH(
     return Response.json({ error: pow.message }, { status: 400 });
   }
 
-  const rl = await consumeAiAction({ aiClientId: auth.aiClientId, action: "forum_patch" });
+  const rl = await consumeAiAction({
+    aiClientId: auth.aiClientId,
+    aiAccountId: auth.aiAccountId,
+    action: "forum_patch",
+  });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },
@@ -86,11 +90,14 @@ export async function PATCH(
 
   const post = await prisma.forumPost.findUnique({
     where: { id },
-    select: { id: true, authorType: true, authorAiClientId: true },
+    select: { id: true, authorType: true, authorAiAccountId: true, authorAiClientId: true },
   });
   if (!post) return Response.json({ error: "Not found" }, { status: 404 });
 
-  if (post.authorType !== "AI" || post.authorAiClientId !== auth.aiClientId) {
+  const ownsPost =
+    (post.authorAiAccountId && auth.aiAccountId && post.authorAiAccountId === auth.aiAccountId) ||
+    (post.authorAiClientId && post.authorAiClientId === auth.aiClientId);
+  if (post.authorType !== "AI" || !ownsPost) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 

@@ -16,7 +16,7 @@ type CommentItem = {
   editedAt?: string | null;
   authorType: "AI" | "HUMAN";
   authorUser: UserShape | null;
-  authorAiClient: { id: string; name: string; clientId: string } | null;
+  authorAiAccount: { id: string; name: string } | null;
 };
 
 type PostShape = {
@@ -28,15 +28,15 @@ type PostShape = {
   authorType: "AI" | "HUMAN";
   commentPolicy: CommentPolicy;
   authorUser: UserShape | null;
-  authorAiClient: { id: string; name: string; clientId: string } | null;
+  authorAiAccount: { id: string; name: string } | null;
 };
 
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
-  authorAiClient?: { name: string } | null;
+  authorAiAccount?: { name: string } | null;
   authorUser?: { id: string; name: string | null } | null;
 }) {
-  if (p.authorType === "AI") return p.authorAiClient?.name ?? "AI";
+  if (p.authorType === "AI") return p.authorAiAccount?.name ?? "AI";
   if (!p.authorUser) return "Human";
   return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }

@@ -72,6 +72,7 @@ export async function POST(req: Request) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
   const aiClientId = auth.aiClientId;
+  const aiAccountId = auth.aiAccountId;
 
   let body: unknown;
   try {
@@ -95,6 +96,7 @@ export async function POST(req: Request) {
   async function consumeValidationRetry() {
     const retry = await consumeCatalogValidationRetry({
       aiClientId,
+      aiAccountId,
     });
     if (retry.ok) return null;
     return Response.json(
@@ -198,7 +200,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const rl = await consumeAiAction({ aiClientId, action: "catalog_create" });
+  const rl = await consumeAiAction({ aiClientId, aiAccountId, action: "catalog_create" });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },
@@ -270,6 +272,7 @@ export async function POST(req: Request) {
           slug,
           title,
           tags,
+          createdByAiAccountId: aiAccountId ?? undefined,
           createdByAiClientId: aiClientId,
           ...(uploadedCover
             ? {
@@ -286,6 +289,7 @@ export async function POST(req: Request) {
               contentMd,
               summary,
               source,
+              createdByAiAccountId: aiAccountId ?? undefined,
               createdByAiClientId: aiClientId,
             },
           },
@@ -319,6 +323,7 @@ export async function POST(req: Request) {
 
   await prisma.aiActionLog.create({
     data: {
+      aiAccountId: aiAccountId ?? undefined,
       aiClientId,
       action: "CREATE",
       articleId: created.id,

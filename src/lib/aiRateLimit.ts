@@ -70,6 +70,7 @@ async function consume(rule: RateRule) {
 
 export async function consumeAiAction(args: {
   aiClientId: string;
+  aiAccountId?: string | null;
   action:
     | "catalog_create"
     | "catalog_revise"
@@ -78,7 +79,7 @@ export async function consumeAiAction(args: {
     | "forum_comment";
   threadId?: string;
 }) {
-  const { aiClientId, action, threadId } = args;
+  const { aiClientId, aiAccountId, action, threadId } = args;
 
   // Per-client pacing (keeps a single AI from spamming)
   const perClient: Record<typeof action, { windowSec: number; max: number }> = {
@@ -91,6 +92,16 @@ export async function consumeAiAction(args: {
 
   // Thread/global safety nets (only for comments)
   const rules: RateRule[] = [
+    ...(aiAccountId
+      ? [
+          {
+            scopeKey: `account:${aiAccountId}`,
+            action,
+            windowSec: perClient[action].windowSec,
+            max: perClient[action].max,
+          },
+        ]
+      : []),
     {
       scopeKey: `client:${aiClientId}`,
       action,
@@ -125,11 +136,33 @@ export async function consumeAiAction(args: {
   return { ok: true as const, retryAfterSec: 0 };
 }
 
-export async function consumeCatalogValidationRetry(args: { aiClientId: string }) {
-  return consume({
-    scopeKey: `client:${args.aiClientId}`,
-    action: "catalog_validation_retry",
-    windowSec: rlCatalogValidationRetryWindowSec(),
-    max: rlCatalogValidationRetryMax(),
-  });
+export async function consumeCatalogValidationRetry(args: {
+  aiClientId: string;
+  aiAccountId?: string | null;
+}) {
+  const rules: RateRule[] = [
+    ...(args.aiAccountId
+      ? [
+          {
+            scopeKey: `account:${args.aiAccountId}`,
+            action: "catalog_validation_retry",
+            windowSec: rlCatalogValidationRetryWindowSec(),
+            max: rlCatalogValidationRetryMax(),
+          },
+        ]
+      : []),
+    {
+      scopeKey: `client:${args.aiClientId}`,
+      action: "catalog_validation_retry",
+      windowSec: rlCatalogValidationRetryWindowSec(),
+      max: rlCatalogValidationRetryMax(),
+    },
+  ];
+
+  for (const rule of rules) {
+    const res = await consume(rule);
+    if (!res.ok) return res;
+  }
+
+  return { ok: true as const, retryAfterSec: 0 };
 }

@@ -25,7 +25,7 @@ async function getPosts(args: {
       authorType: "AI" | "HUMAN";
       commentPolicy: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
       authorUser: { id: string; name: string | null } | null;
-      authorAiClient: { id: string; name: string; clientId: string } | null;
+      authorAiAccount: { id: string; name: string } | null;
       _count: { comments: number };
     }>;
   };
@@ -33,10 +33,10 @@ async function getPosts(args: {
 
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
-  authorAiClient?: { name: string } | null;
+  authorAiAccount?: { name: string } | null;
   authorUser?: { id: string; name: string | null } | null;
 }) {
-  if (p.authorType === "AI") return p.authorAiClient?.name ?? "AI";
+  if (p.authorType === "AI") return p.authorAiAccount?.name ?? "AI";
   if (!p.authorUser) return "Human";
   return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }

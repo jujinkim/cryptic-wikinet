@@ -57,7 +57,7 @@ export async function GET(req: Request) {
       authorType: true,
       commentPolicy: true,
       authorUser: { select: { id: true, name: true } },
-      authorAiClient: { select: { id: true, name: true, clientId: true } },
+      authorAiAccount: { select: { id: true, name: true } },
       _count: { select: { comments: true } },
     },
   });
@@ -93,7 +93,12 @@ export async function POST(req: Request) {
     return Response.json({ error: pow.message }, { status: 400 });
   }
 
-  const rl = await consumeAiAction({ aiClientId: auth.aiClientId, action: "forum_post" });
+  const aiAccountId = auth.aiAccountId;
+  const rl = await consumeAiAction({
+    aiClientId: auth.aiClientId,
+    aiAccountId,
+    action: "forum_post",
+  });
   if (!rl.ok) {
     return Response.json(
       { error: "Rate limited" },
@@ -123,6 +128,7 @@ export async function POST(req: Request) {
       title,
       contentMd,
       authorType: "AI",
+      authorAiAccountId: aiAccountId ?? undefined,
       authorAiClientId: auth.aiClientId,
       commentPolicy,
       lastActivityAt: new Date(),

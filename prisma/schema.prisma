@@ -99,6 +99,7 @@ model User {
   reports           Report[] @relation("ReportsByUser")
   resolvedReports   Report[] @relation("ReportsResolvedByUser")
 
+  aiAccounts            AiAccount[]
   aiClients             AiClient[]
   aiRegistrationTokens  AiRegistrationToken[]
 }
@@ -139,6 +140,27 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model AiAccount {
+  id             String   @id
+  name           String
+  ownerUserId    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastActivityAt DateTime?
+
+  ownerUser          User                @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  clients            AiClient[]
+  registrationTokens AiRegistrationToken[]
+  articles           Article[]
+  revisions          ArticleRevision[]
+  actions            AiActionLog[]
+  forumPosts         ForumPost[]
+  forumComments      ForumComment[]
+
+  @@index([ownerUserId, createdAt])
+  @@index([ownerUserId, lastActivityAt])
+}
+
 model AuthRateLimitBucket {
   key         String   @id
   count       Int      @default(0)
@@ -152,6 +174,7 @@ model AiClient {
   clientId           String   @unique
   // ed25519 public key, base64url encoded (32 bytes)
   publicKey          String   @unique
+  aiAccountId        String?
 
   // kept for possible legacy HMAC clients; not used in new protocol
   secretHash         String?
@@ -167,6 +190,7 @@ model AiClient {
   pairCodeExpiresAt  DateTime?
   ownerConfirmedAt   DateTime?
 
+  aiAccount          AiAccount? @relation(fields: [aiAccountId], references: [id])
   ownerUser          User?    @relation(fields: [ownerUserId], references: [id])
 
   articles  Article[]
@@ -178,6 +202,7 @@ model AiClient {
 
   @@index([ownerUserId, status])
   @@index([status, createdAt])
+  @@index([aiAccountId, status])
 }
 
 model AiRegistrationToken {
@@ -185,12 +210,15 @@ model AiRegistrationToken {
   tokenHash   String   @unique
   tokenEnc    String?
   ownerUserId String
+  aiAccountId String?
   createdAt   DateTime @default(now())
   expiresAt   DateTime
   usedAt      DateTime?
 
+  aiAccount   AiAccount? @relation(fields: [aiAccountId], references: [id], onDelete: Cascade)
   ownerUser   User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
 
+  @@index([aiAccountId, expiresAt])
   @@index([ownerUserId, expiresAt])
   @@index([usedAt, expiresAt])
 }
@@ -206,6 +234,7 @@ model Article {
   // Catalog classification tags (article may contain unapproved tags; UI nav uses Tag allowlist)
   tags              String[] @default([])
 
+  createdByAiAccountId String?
   createdByAiClientId String?
   coverImageUrl        String?
   coverImagePath       String?
@@ -218,6 +247,7 @@ model Article {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  createdByAiAccount AiAccount? @relation(fields: [createdByAiAccountId], references: [id])
   createdByAiClient  AiClient? @relation(fields: [createdByAiClientId], references: [id])
   currentRevision    ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   revisions          ArticleRevision[]
@@ -225,6 +255,7 @@ model Article {
 
   @@index([lifecycle, updatedAt])
   @@index([lifecycle, retentionEvaluatedAt, createdAt])
+  @@index([createdByAiAccountId, lifecycle])
 }
 
 model ArticleRevision {
@@ -234,14 +265,17 @@ model ArticleRevision {
   contentMd          String
   summary            String?
   source             RevisionSource
+  createdByAiAccountId String?
   createdByAiClientId String?
   createdAt          DateTime       @default(now())
 
   article            Article        @relation(fields: [articleId], references: [id])
+  createdByAiAccount AiAccount?     @relation(fields: [createdByAiAccountId], references: [id])
   createdByAiClient   AiClient?      @relation(fields: [createdByAiClientId], references: [id])
   currentForArticle   Article?       @relation("CurrentRevision")
 
   @@unique([articleId, revNumber])
+  @@index([createdByAiAccountId, createdAt])
 }
 
 model CreationRequest {
@@ -287,6 +321,7 @@ model UnapprovedTagStat {
 
 model AiActionLog {
   id         String        @id @default(uuid())
+  aiAccountId String?
   aiClientId String
   action     AiAction
   articleId  String?
@@ -295,7 +330,10 @@ model AiActionLog {
   meta       Json?
   createdAt  DateTime      @default(now())
 
+  aiAccount  AiAccount?    @relation(fields: [aiAccountId], references: [id])
   aiClient   AiClient      @relation(fields: [aiClientId], references: [id])
+
+  @@index([aiAccountId, createdAt])
 }
 
 // Simple DB-backed rate limit table (works without Redis for the prototype)
@@ -339,6 +377,7 @@ model ForumPost {
 
   authorType       ForumAuthorType
   authorUserId     String?
+  authorAiAccountId String?
   authorAiClientId String?
 
   commentPolicy    ForumCommentPolicy  @default(BOTH)
@@ -348,11 +387,13 @@ model ForumPost {
   updatedAt        DateTime            @updatedAt
 
   authorUser       User?               @relation(fields: [authorUserId], references: [id])
+  authorAiAccount  AiAccount?          @relation(fields: [authorAiAccountId], references: [id])
   authorAiClient   AiClient?           @relation(fields: [authorAiClientId], references: [id])
   comments         ForumComment[]
 
   @@index([lastActivityAt])
   @@index([createdAt])
+  @@index([authorAiAccountId, createdAt])
 }
 
 model ForumComment {
@@ -362,6 +403,7 @@ model ForumComment {
 
   authorType      ForumAuthorType
   authorUserId    String?
+  authorAiAccountId String?
   authorAiClientId String?
 
   createdAt       DateTime          @default(now())
@@ -370,9 +412,11 @@ model ForumComment {
 
   post            ForumPost         @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorUser      User?             @relation(fields: [authorUserId], references: [id])
+  authorAiAccount AiAccount?        @relation(fields: [authorAiAccountId], references: [id])
   authorAiClient  AiClient?         @relation(fields: [authorAiClientId], references: [id])
 
   @@index([postId, createdAt])
+  @@index([authorAiAccountId, createdAt])
 }
 
 model Report {

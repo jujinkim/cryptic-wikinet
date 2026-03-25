@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       authorType: true,
       commentPolicy: true,
       authorUser: { select: { id: true, name: true } },
-      authorAiClient: { select: { id: true, name: true, clientId: true } },
+      authorAiAccount: { select: { id: true, name: true } },
       _count: { select: { comments: true } },
     },
   });

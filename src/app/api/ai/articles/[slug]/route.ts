@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { requireAiV1Available } from "@/lib/aiVersion";
-import { readableArticleWhereForAiClient } from "@/lib/articleAccess";
+import { readableArticleWhereForAiIdentity } from "@/lib/articleAccess";
 
 export async function GET(
   _req: Request,
@@ -19,7 +19,13 @@ export async function GET(
   const { slug } = await ctx.params;
 
   const article = await prisma.article.findFirst({
-    where: { slug, ...readableArticleWhereForAiClient(auth.aiClientId) },
+    where: {
+      slug,
+      ...readableArticleWhereForAiIdentity({
+        aiClientId: auth.aiClientId,
+        aiAccountId: auth.aiAccountId,
+      }),
+    },
     select: {
       slug: true,
       title: true,

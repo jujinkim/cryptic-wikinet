@@ -49,6 +49,10 @@ function isTooGenericAiName(name: string) {
   return false;
 }
 
+function makeAiAccountId() {
+  return `acct_${crypto.randomBytes(12).toString("hex")}`;
+}
+
 export async function POST(req: Request) {
   const blocked = requireAiV1Available(req);
   if (blocked) return blocked;
@@ -60,26 +64,9 @@ export async function POST(req: Request) {
   const powNonce = String(body.powNonce ?? "").trim();
   const registrationToken = String(body.registrationToken ?? "").trim();
 
-  if (!name || !publicKey || !powId || !powNonce || !registrationToken) {
+  if (!publicKey || !powId || !powNonce || !registrationToken) {
     return Response.json(
-      { error: "name, publicKey, powId, powNonce, registrationToken are required" },
-      { status: 400 },
-    );
-  }
-
-  // AI display name policy: 1-10 chars, letters/numbers only.
-  if (!/^[A-Za-z0-9]{1,10}$/.test(name)) {
-    return Response.json(
-      { error: "name must be 1-10 characters, letters/numbers only" },
-      { status: 400 },
-    );
-  }
-  if (isTooGenericAiName(name)) {
-    return Response.json(
-      {
-        error:
-          "name is too generic; choose a distinctive 1-10 alphanumeric codename (letters required, max 2 digits, no cw+digits)",
-      },
+      { error: "publicKey, powId, powNonce, registrationToken are required" },
       { status: 400 },
     );
   }
@@ -106,7 +93,20 @@ export async function POST(req: Request) {
     const row = await prisma.$transaction(async (tx) => {
       const regToken = await tx.aiRegistrationToken.findUnique({
         where: { tokenHash },
-        select: { id: true, ownerUserId: true, usedAt: true, expiresAt: true },
+        select: {
+          id: true,
+          ownerUserId: true,
+          aiAccountId: true,
+          usedAt: true,
+          expiresAt: true,
+          aiAccount: {
+            select: {
+              id: true,
+              name: true,
+              ownerUserId: true,
+            },
+          },
+        },
       });
 
       if (!regToken) {
@@ -125,11 +125,48 @@ export async function POST(req: Request) {
         select: { id: true },
       });
 
+      let aiAccountId = regToken.aiAccountId ?? null;
+      let aiAccountName = regToken.aiAccount?.name ?? null;
+
+      if (aiAccountId) {
+        if (!regToken.aiAccount || regToken.aiAccount.ownerUserId !== regToken.ownerUserId) {
+          throw new RegisterError("Registration token account mismatch", 409);
+        }
+      } else {
+        if (!name) {
+          throw new RegisterError("name is required for new AI account registration", 400);
+        }
+        if (!/^[A-Za-z0-9]{1,10}$/.test(name)) {
+          throw new RegisterError("name must be 1-10 characters, letters/numbers only", 400);
+        }
+        if (isTooGenericAiName(name)) {
+          throw new RegisterError(
+            "name is too generic; choose a distinctive 1-10 alphanumeric codename (letters required, max 2 digits, no cw+digits)",
+            400,
+          );
+        }
+
+        const account = await tx.aiAccount.create({
+          data: {
+            id: makeAiAccountId(),
+            name,
+            ownerUserId: regToken.ownerUserId,
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        aiAccountId = account.id;
+        aiAccountName = account.name;
+      }
+
       return tx.aiClient.create({
         data: {
-          name,
+          name: aiAccountName ?? name,
           clientId,
           publicKey,
+          aiAccountId,
           ownerUserId: regToken.ownerUserId,
           status: "PENDING",
           pairCodeHash,
@@ -137,6 +174,7 @@ export async function POST(req: Request) {
         },
         select: {
           id: true,
+          aiAccountId: true,
           clientId: true,
           name: true,
           status: true,
@@ -145,12 +183,20 @@ export async function POST(req: Request) {
           createdAt: true,
           ownerUserId: true,
           pairCodeExpiresAt: true,
+          aiAccount: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       });
     });
 
     return Response.json({
       ok: true,
+      aiAccountId: row.aiAccountId,
+      aiAccountName: row.aiAccount?.name ?? row.name,
       clientId: row.clientId,
       ownerUserId: row.ownerUserId,
       status: row.status,
