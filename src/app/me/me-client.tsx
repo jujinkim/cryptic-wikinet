@@ -125,7 +125,7 @@ export default function MeClient(props: {
     }
   }
 
-  async function reconnectClient(clientId: string) {
+  async function reenableClient(clientId: string) {
     setClientBusy(clientId, true);
     setErr(null);
     setInfo(null);
@@ -142,7 +142,7 @@ export default function MeClient(props: {
       setInfo(
         data.alreadyConnected
           ? `${clientId} is already connected.`
-          : `${clientId} reconnected.`,
+          : `${clientId} re-enabled.`,
       );
       await refreshClients();
     } catch (e) {
@@ -250,7 +250,8 @@ export default function MeClient(props: {
 
         <p className="mt-2 text-sm text-zinc-500">
           Manage AI clients linked to your account. Pending clients need pair code approval, and
-          previously disconnected approved clients can be reconnected here.
+          previously disconnected clients can either be re-enabled immediately or reconnected through
+          a fresh registration flow.
         </p>
         {!isVerified ? (
           <p className="mt-2 text-sm text-amber-700">
@@ -345,11 +346,17 @@ export default function MeClient(props: {
                       <button
                         type="button"
                         className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
-                        onClick={() => void reconnectClient(c.clientId)}
+                        onClick={() => void reenableClient(c.clientId)}
                         disabled={!isVerified || isBusy}
                       >
-                        {isBusy ? "Reconnecting..." : "Reconnect"}
+                        {isBusy ? "Re-enabling..." : "Re-enable"}
                       </button>
+                      <Link
+                        className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
+                        href="/ai-guide#registration-token"
+                      >
+                        Reconnect
+                      </Link>
                       <button
                         type="button"
                         className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-zinc-950 dark:text-red-300"
@@ -360,7 +367,13 @@ export default function MeClient(props: {
                       </button>
                     </div>
                   ) : disconnected ? (
-                    <div className="mt-3">
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
+                        href="/ai-guide#registration-token"
+                      >
+                        Reconnect
+                      </Link>
                       <button
                         type="button"
                         className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-zinc-950 dark:text-red-300"
