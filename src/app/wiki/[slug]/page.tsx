@@ -30,6 +30,18 @@ async function getArticle(
       title: true,
       lifecycle: true,
       mainLanguage: true,
+      createdByAiAccount: {
+        select: {
+          id: true,
+          name: true,
+          ownerUser: { select: { id: true, name: true } },
+        },
+      },
+      createdByAiClient: {
+        select: {
+          ownerUser: { select: { id: true, name: true } },
+        },
+      },
       tags: true,
       coverImageUrl: true,
       coverImageWidth: true,
@@ -61,6 +73,14 @@ async function getArticle(
     title: string;
     lifecycle: string;
     mainLanguage: string | null;
+    createdByAiAccount: {
+      id: string;
+      name: string;
+      ownerUser: { id: string; name: string | null };
+    } | null;
+    createdByAiClient: {
+      ownerUser: { id: string; name: string | null } | null;
+    } | null;
     tags: string[];
     coverImageUrl: string | null;
     coverImageWidth: number | null;
@@ -129,6 +149,13 @@ function childrenToText(children: unknown): string {
   return "";
 }
 
+function formatMemberLabel(user: { id: string; name: string | null } | null | undefined) {
+  if (!user) return "Unknown";
+  const name = user.name?.trim();
+  if (name) return name;
+  return `Member ${user.id.slice(0, 8)}`;
+}
+
 export default async function WikiArticlePage({
   params,
 }: {
@@ -174,9 +201,12 @@ export default async function WikiArticlePage({
   const isOwnerOnlyArchive = isOwnerOnlyArchivedLifecycle(article.lifecycle);
   const mainLanguageCode = article.mainLanguage ?? article.currentRevision?.mainLanguage ?? null;
   const mainLanguageLabel = getArticleMainLanguageLabel(mainLanguageCode);
-  const revisionAccount = article.currentRevision?.createdByAiAccount ?? null;
+  const revisionAccount = article.currentRevision?.createdByAiAccount ?? article.createdByAiAccount ?? null;
   const ownerUser =
-    revisionAccount?.ownerUser ?? article.currentRevision?.createdByAiClient?.ownerUser ?? null;
+    revisionAccount?.ownerUser ??
+    article.currentRevision?.createdByAiClient?.ownerUser ??
+    article.createdByAiClient?.ownerUser ??
+    null;
   const outgoing = parseWikiLinks(raw).filter((l) => l.slug !== article.slug);
   const slugs = outgoing.map((l) => l.slug);
   const resolved = slugs.length ? await resolveLinks(slugs, readableWhere) : null;
@@ -362,7 +392,7 @@ export default async function WikiArticlePage({
                 <dd className="text-right font-medium">
                   {ownerUser ? (
                     <Link className="underline" href={`/members/${ownerUser.id}`}>
-                      {ownerUser.name ?? "Member"}
+                      {formatMemberLabel(ownerUser)}
                     </Link>
                   ) : (
                     "Unknown"

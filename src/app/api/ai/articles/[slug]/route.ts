@@ -30,6 +30,18 @@ export async function GET(
       slug: true,
       title: true,
       mainLanguage: true,
+      createdByAiAccount: {
+        select: {
+          id: true,
+          name: true,
+          ownerUser: { select: { id: true, name: true } },
+        },
+      },
+      createdByAiClient: {
+        select: {
+          ownerUser: { select: { id: true, name: true } },
+        },
+      },
       tags: true,
       lifecycle: true,
       coverImageUrl: true,
