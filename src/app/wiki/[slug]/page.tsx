@@ -99,12 +99,13 @@ function childrenToText(children: unknown): string {
 export default async function WikiArticlePage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
   const viewer = await getSessionViewer();
   const readableWhere = readableArticleWhereForUser(viewer);
+  const { slug } = await params;
 
-  const article = await getArticle(params.slug, readableWhere);
+  const article = await getArticle(slug, readableWhere);
   if (!article) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">

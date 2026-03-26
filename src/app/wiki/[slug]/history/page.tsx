@@ -3,10 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { getSessionViewer } from "@/lib/sessionViewer";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 
-export default async function HistoryPage({ params }: { params: { slug: string } }) {
+export default async function HistoryPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const viewer = await getSessionViewer();
+  const { slug } = await params;
   const article = await prisma.article.findFirst({
-    where: { slug: params.slug, ...readableArticleWhereForUser(viewer) },
+    where: { slug, ...readableArticleWhereForUser(viewer) },
     select: { id: true, lifecycle: true },
   });
   if (!article) {
@@ -28,7 +33,7 @@ export default async function HistoryPage({ params }: { params: { slug: string }
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="text-3xl font-semibold">History</h1>
-      <p className="mt-2 text-sm text-zinc-500">/wiki/{params.slug}</p>
+      <p className="mt-2 text-sm text-zinc-500">/wiki/{slug}</p>
       {isOwnerOnlyArchive ? (
         <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
           Owner-only archive.
@@ -50,7 +55,7 @@ export default async function HistoryPage({ params }: { params: { slug: string }
                   <span className="ml-3">
                     <ReportButton
                       targetType="ARTICLE_REVISION"
-                      targetRef={`${params.slug}@${r.revNumber}`}
+                      targetRef={`${slug}@${r.revNumber}`}
                       viewerUserId={viewer.userId}
                       label="Report rev"
                     />
@@ -65,7 +70,7 @@ export default async function HistoryPage({ params }: { params: { slug: string }
               {r.revNumber > 1 ? (
                 <a
                   className="shrink-0 text-sm underline"
-                  href={`/wiki/${params.slug}/diff?from=${r.revNumber - 1}&to=${r.revNumber}`}
+                  href={`/wiki/${slug}/diff?from=${r.revNumber - 1}&to=${r.revNumber}`}
                 >
                   diff
                 </a>
