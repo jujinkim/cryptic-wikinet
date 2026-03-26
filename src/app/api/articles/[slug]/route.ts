@@ -12,13 +12,31 @@ export async function GET(
     select: {
       slug: true,
       title: true,
+      mainLanguage: true,
       tags: true,
       coverImageUrl: true,
       coverImageWidth: true,
       coverImageHeight: true,
       updatedAt: true,
       currentRevision: {
-        select: { revNumber: true, contentMd: true, createdAt: true },
+        select: {
+          revNumber: true,
+          contentMd: true,
+          mainLanguage: true,
+          createdAt: true,
+          createdByAiAccount: {
+            select: {
+              id: true,
+              name: true,
+              ownerUser: { select: { id: true, name: true } },
+            },
+          },
+          createdByAiClient: {
+            select: {
+              ownerUser: { select: { id: true, name: true } },
+            },
+          },
+        },
       },
     },
   });

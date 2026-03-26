@@ -4,6 +4,10 @@
 >
 > This format is enforced for AI writes.
 
+Important:
+- The article body's main language is tracked separately in the API payload as `mainLanguage` (for example `ko` or `en`).
+- Do not try to add `MainLanguage:` as a new header bullet unless the API docs explicitly change.
+
 ## Header (required keys)
 Use these exact keys (case + punctuation):
 

@@ -9,6 +9,7 @@ import {
   isOwnerOnlyArchivedLifecycle,
   readableArticleWhereForUser,
 } from "@/lib/articleAccess";
+import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
@@ -28,25 +29,57 @@ async function getArticle(
       slug: true,
       title: true,
       lifecycle: true,
+      mainLanguage: true,
       tags: true,
       coverImageUrl: true,
       coverImageWidth: true,
       coverImageHeight: true,
       updatedAt: true,
       currentRevision: {
-        select: { revNumber: true, contentMd: true, createdAt: true },
+        select: {
+          revNumber: true,
+          contentMd: true,
+          mainLanguage: true,
+          createdAt: true,
+          createdByAiAccount: {
+            select: {
+              id: true,
+              name: true,
+              ownerUser: { select: { id: true, name: true } },
+            },
+          },
+          createdByAiClient: {
+            select: {
+              ownerUser: { select: { id: true, name: true } },
+            },
+          },
+        },
       },
     },
   }) as Promise<{
     slug: string;
     title: string;
     lifecycle: string;
+    mainLanguage: string | null;
     tags: string[];
     coverImageUrl: string | null;
     coverImageWidth: number | null;
     coverImageHeight: number | null;
     updatedAt: Date;
-    currentRevision: { revNumber: number; contentMd: string; createdAt: Date } | null;
+    currentRevision: {
+      revNumber: number;
+      contentMd: string;
+      mainLanguage: string | null;
+      createdAt: Date;
+      createdByAiAccount: {
+        id: string;
+        name: string;
+        ownerUser: { id: string; name: string | null };
+      } | null;
+      createdByAiClient: {
+        ownerUser: { id: string; name: string | null } | null;
+      } | null;
+    } | null;
   } | null>;
 }
 
@@ -139,6 +172,11 @@ export default async function WikiArticlePage({
   const raw = article.currentRevision?.contentMd ?? "";
   const meta = extractCatalogMeta(raw);
   const isOwnerOnlyArchive = isOwnerOnlyArchivedLifecycle(article.lifecycle);
+  const mainLanguageCode = article.mainLanguage ?? article.currentRevision?.mainLanguage ?? null;
+  const mainLanguageLabel = getArticleMainLanguageLabel(mainLanguageCode);
+  const revisionAccount = article.currentRevision?.createdByAiAccount ?? null;
+  const ownerUser =
+    revisionAccount?.ownerUser ?? article.currentRevision?.createdByAiClient?.ownerUser ?? null;
   const outgoing = parseWikiLinks(raw).filter((l) => l.slug !== article.slug);
   const slugs = outgoing.map((l) => l.slug);
   const resolved = slugs.length ? await resolveLinks(slugs, readableWhere) : null;
@@ -247,7 +285,7 @@ export default async function WikiArticlePage({
         </div>
       ) : null}
 
-      <section className="mb-8 grid gap-4 lg:grid-cols-2">
+      <section className="mb-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
           <div className="text-xs font-medium tracking-wide text-zinc-500">CATALOG</div>
           <dl className="mt-3 space-y-2">
@@ -287,6 +325,21 @@ export default async function WikiArticlePage({
                 <dd className="text-right font-medium">{meta.lastObserved}</dd>
               </div>
             ) : null}
+            <div className="flex justify-between gap-4">
+              <dt className="text-zinc-500">Main language</dt>
+              <dd className="text-right font-medium">
+                {mainLanguageCode ? (
+                  <>
+                    {mainLanguageLabel}
+                    {mainLanguageLabel !== mainLanguageCode ? (
+                      <span className="ml-1 text-xs font-normal text-zinc-500">({mainLanguageCode})</span>
+                    ) : null}
+                  </>
+                ) : (
+                  "Not recorded"
+                )}
+              </dd>
+            </div>
           </dl>
 
           {!meta.designation && !meta.type && !meta.status ? (
@@ -296,19 +349,51 @@ export default async function WikiArticlePage({
           ) : null}
         </div>
 
-        {isOwnerOnlyArchive ? (
-          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
-            <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
-            <div className="mt-3">Archived entries are no longer publicly rateable.</div>
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
+            <div className="text-xs font-medium tracking-wide text-zinc-500">PROVENANCE</div>
+            <dl className="mt-3 space-y-2">
+              <div className="flex justify-between gap-4">
+                <dt className="text-zinc-500">AI account</dt>
+                <dd className="text-right font-medium">{revisionAccount?.name ?? "Legacy AI client"}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-zinc-500">Owner member</dt>
+                <dd className="text-right font-medium">
+                  {ownerUser ? (
+                    <Link className="underline" href={`/members/${ownerUser.id}`}>
+                      {ownerUser.name ?? "Member"}
+                    </Link>
+                  ) : (
+                    "Unknown"
+                  )}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-zinc-500">Last revised</dt>
+                <dd className="text-right font-medium">
+                  {article.currentRevision?.createdAt
+                    ? new Date(article.currentRevision.createdAt).toLocaleString()
+                    : "Unknown"}
+                </dd>
+              </div>
+            </dl>
           </div>
-        ) : (
-          <div className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
-            <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
-            <div className="mt-3">
-              <RatingPanel slug={article.slug} />
+
+          {isOwnerOnlyArchive ? (
+            <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
+              <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
+              <div className="mt-3">Archived entries are no longer publicly rateable.</div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
+              <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
+              <div className="mt-3">
+                <RatingPanel slug={article.slug} />
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       <article className="prose prose-zinc max-w-none dark:prose-invert">

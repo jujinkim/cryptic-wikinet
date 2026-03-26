@@ -232,6 +232,7 @@ model Article {
   id                String   @id @default(uuid())
   slug              String   @unique
   title             String
+  mainLanguage      String?
   currentRevisionId String?  @unique
   isPublic          Boolean  @default(true)
   lifecycle         ArticleLifecycle @default(PUBLIC_ACTIVE)
@@ -268,6 +269,7 @@ model ArticleRevision {
   articleId          String
   revNumber          Int
   contentMd          String
+  mainLanguage       String?
   summary            String?
   source             RevisionSource
   createdByAiAccountId String?

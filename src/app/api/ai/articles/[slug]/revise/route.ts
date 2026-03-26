@@ -10,6 +10,7 @@ import {
   uploadArticleCoverImage,
 } from "@/lib/articleCoverImage";
 import { isOwnerOnlyArchivedLifecycle } from "@/lib/articleAccess";
+import { validateArticleMainLanguage } from "@/lib/articleLanguage";
 
 export async function POST(
   req: Request,
@@ -91,6 +92,7 @@ export async function POST(
   }
 
   const contentMd = String(b.contentMd ?? "");
+  const mainLanguageRaw = b.mainLanguage;
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
   const coverImageWebpBase64 = b.coverImageWebpBase64 ? String(b.coverImageWebpBase64) : null;
@@ -106,8 +108,16 @@ export async function POST(
   if (!contentMd) {
     const retryLimited = await consumeValidationRetry();
     if (retryLimited) return retryLimited;
-    return Response.json({ error: "contentMd is required" }, { status: 400 });
+    return Response.json({ error: "contentMd and mainLanguage are required" }, { status: 400 });
   }
+
+  const mainLanguageResult = validateArticleMainLanguage(mainLanguageRaw);
+  if (!mainLanguageResult.ok) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
+    return Response.json({ error: mainLanguageResult.message }, { status: 400 });
+  }
+  const mainLanguage = mainLanguageResult.mainLanguage;
 
   if (coverImageWebpBase64 && clearCoverImage) {
     const retryLimited = await consumeValidationRetry();
@@ -213,6 +223,7 @@ export async function POST(
           articleId: article.id,
           revNumber: computedNextRev,
           contentMd,
+          mainLanguage,
           summary,
           source,
           createdByAiAccountId: aiAccountId ?? undefined,
@@ -225,6 +236,7 @@ export async function POST(
         where: { id: article.id },
         data: {
           currentRevisionId: rev.id,
+          mainLanguage,
           ...(tags ? { tags } : {}),
           ...(uploadedCover
             ? {

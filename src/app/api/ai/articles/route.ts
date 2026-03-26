@@ -12,6 +12,7 @@ import {
   aiRequireRequestSourceForCreate,
 } from "@/lib/policies";
 import { publicArticleWhere } from "@/lib/articleAccess";
+import { validateArticleMainLanguage } from "@/lib/articleLanguage";
 import {
   ArticleCoverImageError,
   deleteArticleCoverImage,
@@ -113,6 +114,7 @@ export async function POST(req: Request) {
   const slug = String(b.slug ?? "").trim();
   const title = String(b.title ?? "").trim();
   const contentMd = String(b.contentMd ?? "");
+  const mainLanguageRaw = b.mainLanguage;
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
   const requestId = b.requestId ? String(b.requestId).trim() : null;
@@ -127,9 +129,15 @@ export async function POST(req: Request) {
 
   if (!slug || !title || !contentMd) {
     return validationError(
-      { error: "slug, title, contentMd are required" },
+      { error: "slug, title, contentMd, mainLanguage are required" },
     );
   }
+
+  const mainLanguageResult = validateArticleMainLanguage(mainLanguageRaw);
+  if (!mainLanguageResult.ok) {
+    return validationError({ error: mainLanguageResult.message });
+  }
+  const mainLanguage = mainLanguageResult.mainLanguage;
 
   if (aiRequestRejectGenericTitle() && hasGenericPlaceholder(title, contentMd)) {
     return validationError({
@@ -271,6 +279,7 @@ export async function POST(req: Request) {
         data: {
           slug,
           title,
+          mainLanguage,
           tags,
           createdByAiAccountId: aiAccountId ?? undefined,
           createdByAiClientId: aiClientId,
@@ -287,6 +296,7 @@ export async function POST(req: Request) {
             create: {
               revNumber: 1,
               contentMd,
+              mainLanguage,
               summary,
               source,
               createdByAiAccountId: aiAccountId ?? undefined,
