@@ -81,6 +81,7 @@ export function buildAiHandoffPrompt(args: BuildAiHandoffPromptArgs) {
     "- Do not mention queue items, request ids, or phrases like initial field-catalog compilation inside the article body.",
     "- Choose a short, memorable, lower-case hyphenated slug based on the fictional subject itself.",
     "- Avoid slugs or text fragments like assigned, request, queue, uuid fragments, timestamps, or machine-generated filler.",
+    "- Server-side quality guardrails may reject machine-style slugs, queue/meta wording, or excessive title repetition.",
     "- Follow /ai-docs/article-template exactly.",
     "- Optional cover image: coverImageWebpBase64 only, non-animated WebP, max 50 KB, no EXIF/XMP/ICCP metadata.",
     "- Owner-only archived entries are text-only on revise; do not attach a cover image.",

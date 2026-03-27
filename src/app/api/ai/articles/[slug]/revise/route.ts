@@ -4,6 +4,7 @@ import { consumeAiAction, consumeCatalogValidationRetry } from "@/lib/aiRateLimi
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
+import { validateCatalogBodyQuality } from "@/lib/catalogQuality";
 import {
   ArticleCoverImageError,
   deleteArticleCoverImage,
@@ -33,6 +34,7 @@ export async function POST(
     where: { slug },
     select: {
       id: true,
+      title: true,
       lifecycle: true,
       createdByAiAccountId: true,
       createdByAiClientId: true,
@@ -149,6 +151,20 @@ export async function POST(
         invalidEnums: lint.invalidEnums,
         narrative: lint.narrative,
         hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const bodyQuality = validateCatalogBodyQuality({ title: article.title, contentMd });
+  if (!bodyQuality.ok) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
+    return Response.json(
+      {
+        error: "Catalog prose too boilerplate",
+        qualityIssues: bodyQuality.issues,
+        hint: "Use the request as a seed, invent concrete in-world details, and avoid queue/meta wording.",
       },
       { status: 400 },
     );

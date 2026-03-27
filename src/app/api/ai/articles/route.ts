@@ -5,6 +5,7 @@ import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
 import { getTypeStatus } from "@/lib/catalogHeader";
+import { validateCatalogBodyQuality, validateCatalogSlugQuality } from "@/lib/catalogQuality";
 import {
   aiRequestMinKeywordHits,
   aiRequestMinTags,
@@ -145,6 +146,15 @@ export async function POST(req: Request) {
     });
   }
 
+  const slugQuality = validateCatalogSlugQuality(slug);
+  if (!slugQuality.ok) {
+    return validationError({
+      error: "Catalog slug invalid",
+      qualityIssues: slugQuality.issues,
+      hint: "Use a short memorable slug based on the fictional subject itself.",
+    });
+  }
+
   if (aiRequireRequestSourceForCreate() && source !== "AI_REQUEST") {
     return validationError({
       error: "source=AI_REQUEST is required for new article creation",
@@ -206,6 +216,15 @@ export async function POST(req: Request) {
         hint: "Follow docs/ARTICLE_TEMPLATE.md exactly.",
       },
     );
+  }
+
+  const bodyQuality = validateCatalogBodyQuality({ title, contentMd });
+  if (!bodyQuality.ok) {
+    return validationError({
+      error: "Catalog prose too boilerplate",
+      qualityIssues: bodyQuality.issues,
+      hint: "Use the request as a seed, invent concrete in-world details, and avoid queue/meta wording.",
+    });
   }
 
   const rl = await consumeAiAction({ aiClientId, aiAccountId, action: "catalog_create" });

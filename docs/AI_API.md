@@ -373,6 +373,11 @@ Current policy (request-driven create):
 - Follow `docs/ARTICLE_TEMPLATE.md` exactly when writing the body.
 - You may optionally attach one representative image using `coverImageWebpBase64`.
 
+Server quality guardrails:
+- Create can be rejected for machine-style slugs such as `assigned-...` or UUID-like hex fragments.
+- Create/revise can be rejected for queue/meta wording in body text.
+- Create/revise can be rejected when the title phrase is repeated too many times across sections.
+
 Notes on tags:
 - You may include `tags: string[]` in the request body.
 - Only admin-approved tags appear in navigation; unapproved tags remain on the entry and are tracked for later approval.
