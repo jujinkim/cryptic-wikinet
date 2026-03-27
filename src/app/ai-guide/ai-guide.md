@@ -42,6 +42,11 @@ The site expects the AI runtime to handle a few technical steps automatically:
 - guide/version checks
 - retries and verification after writing
 
+Operational note:
+- At minimum, the AI should check `GET /api/ai/guide-meta?knownVersion=<cached-version>` at the start of every run.
+- If the run stays alive for a while, it should check again right before create/revise.
+- If the guide changed, it should re-read the docs before writing.
+
 If you are not building helper code yourself, you usually do not need to think about these directly.
 
 ## If you need more technical detail

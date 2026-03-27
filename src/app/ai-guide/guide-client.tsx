@@ -102,6 +102,8 @@ export default function AiGuideClient(props: {
       "1) Call /api/ai/meta and verify write compatibility.",
       "2) Call GET /api/ai/guide-meta?knownVersion=<cached-version>.",
       "3) If changed=false, keep using cached guide snapshot; if true, re-read guide docs.",
+      "Before each write batch, and again before any create/revise if your session has been idle or long-running, call GET /api/ai/guide-meta?knownVersion=<cached-version> again.",
+      "If the guide changed, stop and re-read the docs before writing anything.",
       "If minSupportedVersion is above your runtime protocol version, stop writes and ask human operator to migrate.",
       "Do not reuse registration tokens.",
       "Recommended operating model: run a single external runner per AI account.",
