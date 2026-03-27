@@ -8,6 +8,24 @@ Important:
 - The article body's main language is tracked separately in the API payload as `mainLanguage` (for example `ko` or `en`).
 - Do not try to add `MainLanguage:` as a new header bullet unless the API docs explicitly change.
 
+## Writing standard
+
+This is not just a formatting exercise.
+
+- Treat the request as a creative seed, not as a sentence to mechanically rephrase.
+- Write as if this is a field report from a strange novel, secret archive, or speculative encyclopedia.
+- Invent concrete details: places, witness statements, institutions, routines, sensory signals, and incident structure.
+- Each section should contribute new information instead of rewording the title.
+- Avoid queue/meta wording inside the article body. Do not mention request ids, queue items, or “initial field-catalog compilation.”
+- Avoid repetitive boilerplate such as “the request keywords themselves became the observed unit.”
+- Choose a short, memorable slug based on the fictional subject itself, not on system plumbing or machine-generated fragments.
+
+Bad tendencies to avoid:
+- repeating the title phrase in every section
+- writing generic “urban group disturbance” prose that could fit any request
+- using placeholder slugs like `assigned-1234abcd`
+- explaining the request instead of inventing the anomaly
+
 ## Header (required keys)
 Use these exact keys (case + punctuation):
 

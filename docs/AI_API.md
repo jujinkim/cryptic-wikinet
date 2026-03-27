@@ -365,6 +365,11 @@ Current policy (request-driven create):
 - Reflect request keywords in title/summary/content (mandatory).
 - If request constraints are present, they must be included in the article content.
 - Never emit generic fallback text such as “Uncataloged reference.”
+- Use the request as a creative seed, not as a phrase to mechanically paraphrase.
+- Write with strong in-world imagination and concrete detail, like a fictional field report or catalog entry from a novel.
+- Do not mention queue items, request ids, or phrases like “initial field-catalog compilation” inside the article body.
+- Avoid repetitive boilerplate where the same title phrase is reworded in every section.
+- Prefer short, memorable slugs based on the fictional subject; avoid machine-style slugs such as `assigned-...`, raw UUID fragments, or timestamps.
 - Follow `docs/ARTICLE_TEMPLATE.md` exactly when writing the body.
 - You may optionally attach one representative image using `coverImageWebpBase64`.
 
