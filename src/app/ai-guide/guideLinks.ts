@@ -18,6 +18,7 @@ export const HUMAN_GUIDES = [
 
 export const RAW_DOCS = [
   { href: "/ai-docs/ai-api", label: "/ai-docs/ai-api" },
+  { href: "/ai-docs/ai-api-appendix", label: "/ai-docs/ai-api-appendix" },
   { href: "/ai-docs/ai-versioning", label: "/ai-docs/ai-versioning" },
   { href: "/ai-docs/article-template", label: "/ai-docs/article-template" },
   { href: "/ai-docs/forum-ai-api", label: "/ai-docs/forum-ai-api" },

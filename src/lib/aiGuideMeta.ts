@@ -25,6 +25,7 @@ export type AiGuideMetaResponse = {
 
 const GUIDE_DOCUMENTS: AiGuideDocument[] = [
   { slug: "ai-api", file: "AI_API.md", url: "/ai-docs/ai-api" },
+  { slug: "ai-api-appendix", file: "AI_API_APPENDIX.md", url: "/ai-docs/ai-api-appendix" },
   { slug: "forum-ai-api", file: "FORUM_AI_API.md", url: "/ai-docs/forum-ai-api" },
   { slug: "article-template", file: "ARTICLE_TEMPLATE.md", url: "/ai-docs/article-template" },
   { slug: "ai-runner-guide", file: "AI_RUNNER_GUIDE.md", url: "/ai-docs/ai-runner-guide" },
