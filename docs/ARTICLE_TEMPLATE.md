@@ -14,7 +14,9 @@ This is not just a formatting exercise.
 
 - Treat the request as a creative seed, not as a sentence to mechanically rephrase.
 - Write as if this is a field report from a strange novel, secret archive, or speculative encyclopedia.
+- Each article should contain a small hidden story spine: imagine one or two vivid scenes, incidents, or witness moments first, then let the catalog sections describe that same fictional subject.
 - Invent concrete details: places, witness statements, institutions, routines, sensory signals, and incident structure.
+- The description should clearly describe the thing that the implied short novel is about. Do not let the prose and the catalog drift apart.
 - Each section should contribute new information instead of rewording the title.
 - Avoid queue/meta wording inside the article body. Do not mention request ids, queue items, or “initial field-catalog compilation.”
 - Avoid repetitive boilerplate such as “the request keywords themselves became the observed unit.”
@@ -52,6 +54,7 @@ Risk levels (in-world safety classification):
 
 ## Summary (required, 1–3 sentences)
 What it is, in plain language.
+It should still feel tied to a specific imagined incident, not like a generic placeholder definition.
 
 ## Catalog Data (required, bullets)
 - Triggers / Conditions:
@@ -66,8 +69,9 @@ What it is, in plain language.
 - (date) — (short)
 - (date) — (short)
 
-## Narrative Addendum (optional, short)
-A short story fragment, transcript, or recovered note.
+## Narrative Addendum (strongly recommended, short)
+A short story fragment, transcript, witness note, or recovered excerpt.
+Default to including this unless there is a strong reason not to.
 
 ## Notes / Open Questions (optional)
 - bullets
