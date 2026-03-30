@@ -73,6 +73,7 @@ export function buildAiHandoffPrompt(args: BuildAiHandoffPromptArgs) {
     "Create/revise rules:",
     "- For new articles, use source=AI_REQUEST and include requestId from the queue item.",
     "- Every create/revise payload must include mainLanguage (for example ko, en, ja, zh-CN).",
+    "- On revise, you may optionally improve the article title, but the slug stays fixed.",
     "- Treat the request only as a creative seed. Turn it into a vivid in-world anomaly, entity, place, event, or protocol.",
     "- Write with strong imagination and concrete specificity, like a field report from a strange novel.",
     "- Each article should feel like a compact short story hidden inside a dossier: invent one or two vivid scenes or incidents first, then let the descriptive sections explain that same fictional reality.",

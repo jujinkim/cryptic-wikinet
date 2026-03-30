@@ -13,6 +13,20 @@ import {
 import { isOwnerOnlyArchivedLifecycle } from "@/lib/articleAccess";
 import { validateArticleMainLanguage } from "@/lib/articleLanguage";
 
+const GENERIC_REQUEST_TITLE_RE =
+  /^(uncataloged reference|un cataloged reference|unknown reference|provisional anomaly record|assigned request(?: based)?(?: provisional anomaly record)?|new entry|untitled)$/i;
+
+const GENERIC_REQUEST_CONTENT_RE =
+  /(uncataloged reference|un[-\s]?cataloged reference|unknown reference|this entry does not exist in the catalog|ask an ai agent to create this entry|submit a keyword request|or discuss it in the forum)/i;
+
+function hasGenericPlaceholder(title: string, content: string) {
+  return (
+    GENERIC_REQUEST_TITLE_RE.test(title) ||
+    GENERIC_REQUEST_CONTENT_RE.test(content) ||
+    /This entry does not exist in the catalog/i.test(content)
+  );
+}
+
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ slug: string }> },
@@ -94,6 +108,10 @@ export async function POST(
   }
 
   const contentMd = String(b.contentMd ?? "");
+  const hasTitleField = Object.prototype.hasOwnProperty.call(b, "title");
+  const requestedTitle = hasTitleField
+    ? (typeof b.title === "string" ? b.title.trim() : "")
+    : null;
   const mainLanguageRaw = b.mainLanguage;
   const summary = b.summary ? String(b.summary) : null;
   const source = b.source === "AI_REQUEST" ? "AI_REQUEST" : "AI_AUTONOMOUS";
@@ -113,6 +131,14 @@ export async function POST(
     return Response.json({ error: "contentMd and mainLanguage are required" }, { status: 400 });
   }
 
+  if (hasTitleField && !requestedTitle) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
+    return Response.json({ error: "title cannot be empty when provided" }, { status: 400 });
+  }
+
+  const nextTitle = requestedTitle ?? article.title;
+
   const mainLanguageResult = validateArticleMainLanguage(mainLanguageRaw);
   if (!mainLanguageResult.ok) {
     const retryLimited = await consumeValidationRetry();
@@ -120,6 +146,15 @@ export async function POST(
     return Response.json({ error: mainLanguageResult.message }, { status: 400 });
   }
   const mainLanguage = mainLanguageResult.mainLanguage;
+
+  if (hasGenericPlaceholder(nextTitle, contentMd)) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
+    return Response.json(
+      { error: "Generic placeholder article content is not allowed for catalog writes" },
+      { status: 400 },
+    );
+  }
 
   if (coverImageWebpBase64 && clearCoverImage) {
     const retryLimited = await consumeValidationRetry();
@@ -156,7 +191,7 @@ export async function POST(
     );
   }
 
-  const bodyQuality = validateCatalogBodyQuality({ title: article.title, contentMd });
+  const bodyQuality = validateCatalogBodyQuality({ title: nextTitle, contentMd });
   if (!bodyQuality.ok) {
     const retryLimited = await consumeValidationRetry();
     if (retryLimited) return retryLimited;
@@ -251,6 +286,7 @@ export async function POST(
       await tx.article.update({
         where: { id: article.id },
         data: {
+          title: nextTitle,
           currentRevisionId: rev.id,
           mainLanguage,
           ...(tags ? { tags } : {}),
