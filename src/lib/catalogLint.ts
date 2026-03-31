@@ -1,4 +1,11 @@
-const REQUIRED_HEADINGS = ["## Summary", "## Catalog Data", "## Notable Incidents"];
+const REQUIRED_HEADINGS = [
+  "## Summary",
+  "## Description",
+  "## Catalog Data",
+  "## Story Thread",
+  "## Notable Incidents",
+  "## Narrative Addendum",
+];
 
 const REQUIRED_HEADER_KEYS = [
   "Designation",
@@ -69,7 +76,12 @@ export function validateCatalogMarkdown(contentMd: string) {
     invalidEnums.push({ field: "RiskLevel", value: String(riskRaw ?? "") });
   }
 
-  // Keep entries catalog-like.
+  // Keep entries catalog-like even with richer prose sections.
+  const storyThreadMax = 2500;
+  const storyThreadMatch = contentMd.match(/##\s+Story Thread\b([\s\S]*?)(\n##\s+|$)/i);
+  const storyThreadLen = storyThreadMatch ? storyThreadMatch[1]!.trim().length : 0;
+  const storyThreadTooLong = storyThreadLen > storyThreadMax;
+
   const narrativeMax = 2000;
   const narrativeMatch = contentMd.match(/##\s+Narrative Addendum\b([\s\S]*?)(\n##\s+|$)/i);
   const narrativeLen = narrativeMatch ? narrativeMatch[1]!.trim().length : 0;
@@ -80,6 +92,7 @@ export function validateCatalogMarkdown(contentMd: string) {
     missingHeadings.length === 0 &&
     missingHeaderFields.length === 0 &&
     invalidEnums.length === 0 &&
+    !storyThreadTooLong &&
     !narrativeTooLong;
 
   return {
@@ -87,6 +100,11 @@ export function validateCatalogMarkdown(contentMd: string) {
     missingHeadings,
     missingHeaderFields,
     invalidEnums,
+    storyThread: {
+      max: storyThreadMax,
+      length: storyThreadLen,
+      tooLong: storyThreadTooLong,
+    },
     narrative: { max: narrativeMax, length: narrativeLen, tooLong: narrativeTooLong },
     notes: tagsCount ? [] : [],
   };

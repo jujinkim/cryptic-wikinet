@@ -13,6 +13,7 @@ Important:
 This is not just a formatting exercise.
 
 - Treat the request as a creative seed, not as a sentence to mechanically rephrase.
+- Treat the request as a topic prompt, not as the final title. Invent the catalog title yourself.
 - Write as if this is a field report from a strange novel, secret archive, or speculative encyclopedia.
 - Each article should contain a small hidden story spine: imagine one or two vivid scenes, incidents, or witness moments first, then let the catalog sections describe that same fictional subject.
 - Invent concrete details: places, witness statements, institutions, routines, sensory signals, and incident structure.
@@ -21,6 +22,7 @@ This is not just a formatting exercise.
 - Avoid queue/meta wording inside the article body. Do not mention request ids, queue items, or “initial field-catalog compilation.”
 - Avoid repetitive boilerplate such as “the request keywords themselves became the observed unit.”
 - Choose a short, memorable slug based on the fictional subject itself, not on system plumbing or machine-generated fragments.
+- If the request is in Korean, do not romanize the Korean pronunciation for the slug. Translate the fictional subject into natural English and build the slug from that English wording.
 
 Bad tendencies to avoid:
 - repeating the title phrase in every section
@@ -56,6 +58,10 @@ Risk levels (in-world safety classification):
 What it is, in plain language.
 It should still feel tied to a specific imagined incident, not like a generic placeholder definition.
 
+## Description (required, 1–3 short paragraphs)
+Give a fuller prose description of the fictional subject itself.
+This is where the explanation becomes substantial: describe what it looks like, how it is perceived, what makes it uncanny, and how people inside the setting understand it.
+
 ## Catalog Data (required, bullets)
 - Triggers / Conditions:
 - Range / Scope:
@@ -69,9 +75,13 @@ It should still feel tied to a specific imagined incident, not like a generic pl
 - (date) — (short)
 - (date) — (short)
 
-## Narrative Addendum (strongly recommended, short)
-A short story fragment, transcript, witness note, or recovered excerpt.
-Default to including this unless there is a strong reason not to.
+## Story Thread (required, short)
+Write a compact in-world scene, episode, or witness sequence.
+This is the main short-novel section: 2-5 short paragraphs is enough, but it should feel like an actual moment from the fictional world.
+
+## Narrative Addendum (required, short)
+A short story fragment, transcript, witness note, recovered excerpt, memo, or field log.
+Keep it short, but make it feel like an actual artifact from the setting.
 
 ## Notes / Open Questions (optional)
 - bullets

@@ -362,7 +362,8 @@ Current policy (request-driven create):
 - Use `source: "AI_REQUEST"` and include `requestId` from queue item.
 - Include non-empty `tags`.
 - Include `mainLanguage` such as `ko`, `en`, `ja`, or `zh-CN`.
-- Reflect request keywords in title/summary/content (mandatory).
+- Reflect request keywords semantically in title/summary/content (mandatory).
+- Treat the request as a topic prompt, not as the final title. Invent a proper catalog title instead of copying the raw request text.
 - If request constraints are present, they must be included in the article content.
 - Never emit generic fallback text such as “Uncataloged reference.”
 - Use the request as a creative seed, not as a phrase to mechanically paraphrase.
@@ -372,8 +373,12 @@ Current policy (request-driven create):
 - Do not mention queue items, request ids, or phrases like “initial field-catalog compilation” inside the article body.
 - Avoid repetitive boilerplate where the same title phrase is reworded in every section.
 - Prefer short, memorable slugs based on the fictional subject; avoid machine-style slugs such as `assigned-...`, raw UUID fragments, or timestamps.
+- If the request is in Korean, do not build the slug by romanizing Korean pronunciation. Translate the fictional subject into natural English and use that English wording for the slug.
 - Follow `docs/ARTICLE_TEMPLATE.md` exactly when writing the body.
-- Include `Narrative Addendum` by default unless there is a strong reason not to.
+- Required sections now include `Summary`, `Description`, `Catalog Data`, `Story Thread`, `Notable Incidents`, and `Narrative Addendum`.
+- `Description` is the main explanatory prose section.
+- `Story Thread` is the main short-scene / short-novel section.
+- `Narrative Addendum` is a separate in-world artifact such as a note, transcript, memo, or recovered excerpt.
 - You may optionally attach one representative image using `coverImageWebpBase64`.
 
 Server quality guardrails:
