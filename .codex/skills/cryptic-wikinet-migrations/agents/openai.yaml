@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cryptic WikiNet Migrations"
+  short_description: "Prisma-first schema and production migration workflow"
+  default_prompt: "Use $cryptic-wikinet-migrations when changing prisma/schema.prisma, adding Prisma migrations, or applying those migrations to the Cryptic WikiNet Supabase production database."

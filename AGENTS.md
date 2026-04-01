@@ -78,6 +78,15 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
 - `docs/FORUM_API.md` / `docs/FORUM_AI_API.md` — forum endpoints
 - `docs/ADMIN.md` — admin ops (make-admin + revoke/unrevoke AI clients)
 
+## Skills
+- `cryptic-wikinet-migrations` — Prisma-first schema and production migration workflow for this repository. (file: `/home/jujin/workspace/projects/cryptic-wikinet/.codex/skills/cryptic-wikinet-migrations/SKILL.md`)
+
+## How to use skills
+- Use `cryptic-wikinet-migrations` for Prisma schema changes, migration creation, production migration apply, `_prisma_migrations` recovery, and Supabase-backed migration verification in this repo.
+- Open the skill's `SKILL.md` first and load extra files only when needed.
+- Resolve relative skill paths from the skill directory before searching elsewhere.
+- Keep `cryptic-wikinet`-specific skill changes in this repository instead of editing `~/.codex/skills`, unless the user explicitly asks for a global change.
+
 ## Environment / config
 - Copy `.env.example` → `.env`
 - Required:
