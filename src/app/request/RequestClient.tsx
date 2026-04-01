@@ -41,7 +41,7 @@ export default function RequestClient() {
   }
 
   useEffect(() => {
-    fetch("/api/auth/check")
+    fetch("/api/auth/check", { cache: "no-store" })
       .then((r) => r.json())
       .then((j) => setAuthenticated(!!j?.authenticated))
       .catch(() => setAuthenticated(false));

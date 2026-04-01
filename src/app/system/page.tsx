@@ -3,8 +3,6 @@ import ReactMarkdown from "react-markdown";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-export const dynamic = "force-dynamic";
-
 export default async function SystemPage() {
   const mdPath = path.join(process.cwd(), "src", "app", "system", "system.md");
   const md = await fs.readFile(mdPath, "utf8");

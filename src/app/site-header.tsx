@@ -1,17 +1,8 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-
-import { auth } from "@/auth";
 import BrandMark from "@/app/BrandMark";
 import SiteHeaderAuth from "@/app/site-header-auth";
 
-export default async function SiteHeader() {
-  // Force this server component to be dynamic so auth state isn't cached.
-  cookies();
-
-  const session = await auth();
-  const user = (session?.user ?? null) as { email?: string | null; name?: string | null } | null;
-
+export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-zinc-50/80 backdrop-blur dark:border-white/10 dark:bg-black/70">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-3">
@@ -47,7 +38,7 @@ export default async function SiteHeader() {
           </nav>
         </div>
 
-        <SiteHeaderAuth user={user} />
+        <SiteHeaderAuth />
       </div>
 
       <div className="mx-auto max-w-5xl px-6 pb-3 sm:hidden">

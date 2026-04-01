@@ -16,7 +16,7 @@ export default function RatingPanel({ slug }: { slug: string }) {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/check")
+    fetch("/api/auth/check", { cache: "no-store" })
       .then((r) => r.json())
       .then((j) => {
         setAuth({ loading: false, authenticated: !!j?.authenticated });

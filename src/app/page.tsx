@@ -3,6 +3,8 @@ import Link from "next/link";
 import HomeClient from "@/app/home-client";
 import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const [recentUpdates, recentForum] = await Promise.all([
     getCachedRecentUpdates(),
