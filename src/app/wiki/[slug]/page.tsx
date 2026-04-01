@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 import type React from "react";
 import type { Components } from "react-markdown";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, UserRole } from "@prisma/client";
 
 import {
   isOwnerOnlyArchivedLifecycle,
+  publicArticleWhere,
   readableArticleWhereForUser,
 } from "@/lib/articleAccess";
 import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
@@ -15,10 +17,11 @@ import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
 import { getSessionViewer } from "@/lib/sessionViewer";
 import { getCachedApprovedTagKeys } from "@/lib/tagData";
-import { parseWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
+import { renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
 import ReportButton from "@/app/wiki/[slug]/report-client";
+import WikiRelatedSection from "@/app/wiki/[slug]/WikiRelatedSection";
 
 async function getArticle(
   slug: string,
@@ -104,33 +107,6 @@ async function getArticle(
   } | null>;
 }
 
-async function resolveLinks(slugs: string[], readableWhere: Prisma.ArticleWhereInput) {
-  const rows: Array<{ slug: string; title: string }> = await prisma.article.findMany({
-    where: { slug: { in: slugs }, ...readableWhere },
-    select: { slug: true, title: true },
-  });
-  const existing = new Map(rows.map((r) => [r.slug, r.title] as const));
-  const missing = slugs.filter((s) => !existing.has(s));
-  return { existing, missing };
-}
-
-async function resolveBacklinks(slug: string, readableWhere: Prisma.ArticleWhereInput) {
-  const needle = `[[${slug}]]`;
-  const rows: Array<{ slug: string; title: string }> = await prisma.article.findMany({
-    where: {
-      ...readableWhere,
-      slug: { not: slug },
-      currentRevision: {
-        contentMd: { contains: needle },
-      },
-    },
-    select: { slug: true, title: true },
-    take: 50,
-    orderBy: { updatedAt: "desc" },
-  });
-  return rows;
-}
-
 function childrenToText(children: unknown): string {
   if (children == null) return "";
   if (typeof children === "string" || typeof children === "number") return String(children);
@@ -162,11 +138,20 @@ export default async function WikiArticlePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const viewer = await getSessionViewer();
-  const readableWhere = readableArticleWhereForUser(viewer);
   const { slug } = await params;
+  const viewerPromise = getSessionViewer();
 
-  const article = await getArticle(slug, readableWhere);
+  let article = await getArticle(slug, publicArticleWhere());
+  let viewer: { userId: string | null; role: UserRole | null };
+
+  if (article) {
+    viewer = await viewerPromise;
+  } else {
+    viewer = await viewerPromise;
+    const readableWhere = readableArticleWhereForUser(viewer);
+    article = await getArticle(slug, readableWhere);
+  }
+
   if (!article) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
@@ -208,10 +193,6 @@ export default async function WikiArticlePage({
     article.currentRevision?.createdByAiClient?.ownerUser ??
     article.createdByAiClient?.ownerUser ??
     null;
-  const outgoing = parseWikiLinks(raw).filter((l) => l.slug !== article.slug);
-  const slugs = outgoing.map((l) => l.slug);
-  const resolved = slugs.length ? await resolveLinks(slugs, readableWhere) : null;
-  const backlinks = await resolveBacklinks(article.slug, readableWhere);
   const renderedMd = renderWikiLinksToMarkdown(raw);
 
   type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & {
@@ -423,61 +404,20 @@ export default async function WikiArticlePage({
 
       <article className="prose prose-zinc max-w-none dark:prose-invert">
         <ReactMarkdown components={mdComponents}>{renderedMd}</ReactMarkdown>
-
-        {resolved && (resolved.existing.size > 0 || resolved.missing.length > 0) ? (
-          <div className="not-prose mt-10 rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
-            <div className="text-xs font-medium tracking-wide text-zinc-500">RELATED</div>
-            <div className="mt-3 space-y-3">
-              {resolved.existing.size > 0 ? (
-                <div>
-                  <div className="text-xs text-zinc-500">Known entries (outgoing)</div>
-                  <ul className="mt-2 list-disc pl-5">
-                    {Array.from(resolved.existing.entries()).map(([slug, title]) => (
-                      <li key={slug}>
-                        <Link className="underline" href={`/wiki/${slug}`}>
-                          {title}
-                        </Link>{" "}
-                        <span className="text-xs text-zinc-500">/{slug}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              {resolved.missing.length > 0 ? (
-                <div>
-                  <div className="text-xs text-zinc-500">Uncataloged references (outgoing)</div>
-                  <ul className="mt-2 list-disc pl-5">
-                    {resolved.missing.map((slug) => (
-                      <li key={slug}>
-                        <Link className="underline" href={`/wiki/${slug}`}>
-                          [[{slug}]]
-                        </Link>{" "}
-                        <span className="text-xs text-zinc-500">(not found)</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              {backlinks.length > 0 ? (
-                <div>
-                  <div className="text-xs text-zinc-500">Referenced by (incoming)</div>
-                  <ul className="mt-2 list-disc pl-5">
-                    {backlinks.map((b) => (
-                      <li key={b.slug}>
-                        <Link className="underline" href={`/wiki/${b.slug}`}>
-                          {b.title}
-                        </Link>{" "}
-                        <span className="text-xs text-zinc-500">/{b.slug}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
+        <Suspense
+          fallback={
+            <div className="not-prose mt-10 rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
+              <div className="text-xs font-medium tracking-wide text-zinc-500">RELATED</div>
+              <div className="mt-3 animate-pulse space-y-2">
+                <div className="h-4 w-40 rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-4 w-56 rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-4 w-48 rounded bg-zinc-200 dark:bg-zinc-800" />
+              </div>
             </div>
-          </div>
-        ) : null}
+          }
+        >
+          <WikiRelatedSection slug={article.slug} raw={raw} viewer={viewer} />
+        </Suspense>
       </article>
     </main>
   );

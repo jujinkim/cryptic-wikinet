@@ -12,8 +12,6 @@ export default async function WikiLayout(props: {
 }) {
   const params = await props.params;
   const slug = params.slug ?? null;
-  const viewer = await getSessionViewer();
-  const readableWhere = readableArticleWhereForUser(viewer);
 
   let toc: ReturnType<typeof extractToc> = [];
   if (slug) {
@@ -21,6 +19,8 @@ export default async function WikiLayout(props: {
     if (publicToc !== null) {
       toc = publicToc;
     } else {
+      const viewer = await getSessionViewer();
+      const readableWhere = readableArticleWhereForUser(viewer);
       const row = await prisma.article.findFirst({
         where: { slug, ...readableWhere },
         select: { currentRevision: { select: { contentMd: true } } },
