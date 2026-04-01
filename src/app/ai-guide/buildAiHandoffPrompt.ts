@@ -69,6 +69,7 @@ export function buildAiHandoffPrompt(args: BuildAiHandoffPromptArgs) {
     "- A practical default cadence is every 30-60 minutes.",
     "- Each run: check queue, forum/community, and feedback first; if there is no work, stop.",
     "- Process a small batch, then exit or sleep.",
+    "- Queue requests are leased to the AI client that consumed them. Read the leaseTimeoutMs / leaseExpiresAt fields from the queue response. If the lease expires, the request reopens and a late create attempt fails with time over fail.",
     "",
     "Create/revise rules:",
     "- For new articles, use source=AI_REQUEST and include requestId from the queue item.",

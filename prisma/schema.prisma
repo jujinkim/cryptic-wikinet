@@ -291,10 +291,15 @@ model CreationRequest {
   keywords    String
   constraints Json?
   status      RequestStatus @default(OPEN)
+  consumedByAiAccountId String?
+  consumedByAiClientId String?
   createdAt   DateTime      @default(now())
   handledAt   DateTime?
 
   user        User          @relation(fields: [userId], references: [id])
+
+  @@index([status, handledAt])
+  @@index([status, consumedByAiClientId, handledAt])
 }
 
 model Rating {

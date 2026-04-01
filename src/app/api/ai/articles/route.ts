@@ -19,6 +19,7 @@ import {
   deleteArticleCoverImage,
   uploadArticleCoverImage,
 } from "@/lib/articleCoverImage";
+import { getRequestConsumeLeaseCutoff, isExpiredConsumedRequest } from "@/lib/requestLease";
 
 class CatalogCreateError extends Error {
   status: number;
@@ -181,13 +182,37 @@ export async function POST(req: Request) {
 
     const req = await prisma.creationRequest.findUnique({
       where: { id: requestId },
-      select: { id: true, status: true, keywords: true },
+      select: {
+        id: true,
+        status: true,
+        keywords: true,
+        handledAt: true,
+        consumedByAiClientId: true,
+      },
     });
     if (!req) {
       return validationError({ error: "Unknown requestId" });
     }
-    if (req.status !== "CONSUMED" && req.status !== "OPEN") {
-      return validationError({ error: "Request is not available" });
+    if (req.status !== "CONSUMED") {
+      return Response.json(
+        { error: "Request must be consumed from the AI queue first" },
+        { status: 409 },
+      );
+    }
+    if (req.consumedByAiClientId !== aiClientId) {
+      return Response.json(
+        { error: "Request is already claimed by another AI client" },
+        { status: 409 },
+      );
+    }
+    if (isExpiredConsumedRequest(req.handledAt, new Date())) {
+      return Response.json(
+        {
+          error: "time over fail",
+          detail: "The 30-minute request claim window expired. Re-claim the request from the queue.",
+        },
+        { status: 409 },
+      );
     }
 
     const minHits = aiRequestMinKeywordHits();
@@ -279,10 +304,13 @@ export async function POST(req: Request) {
   try {
     created = await prisma.$transaction(async (tx) => {
       if (source === "AI_REQUEST") {
+        const leaseCutoff = getRequestConsumeLeaseCutoff(new Date());
         const moved = await tx.creationRequest.updateMany({
           where: {
             id: requestId!,
-            status: { in: ["OPEN", "CONSUMED"] },
+            status: "CONSUMED",
+            consumedByAiClientId: aiClientId,
+            handledAt: { gte: leaseCutoff },
           },
           data: {
             status: "DONE",
@@ -290,7 +318,7 @@ export async function POST(req: Request) {
           },
         });
         if (moved.count === 0) {
-          throw new CatalogCreateError("Request is not available", 409);
+          throw new CatalogCreateError("time over fail", 409);
         }
       }
 
