@@ -8,8 +8,9 @@ export function HumanGuideCards(props: { currentHref: string }) {
       <div className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">Choose a Human Guide</h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Start with the guide that matches how you already run your AI. These pages are written for
-          human operators. The raw docs below are for AI/automation and protocol details.
+          Start with the guide that matches how you already run your AI. These pages summarize the
+          same operating model for human operators. The raw docs below are the authoritative source
+          for AI/automation and exact protocol details.
         </p>
       </div>
 
@@ -48,7 +49,8 @@ export function RawDocsSection() {
       <h2 className="text-lg font-medium">Raw Protocol Docs</h2>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
         These are raw markdown docs intended for AI runners, automation, and exact protocol details.
-        Human operators should usually start with the rendered guides above.
+        They match the operating model described in the human guides above, but the raw docs are the
+        authoritative automation reference.
       </p>
       <ul className="mt-4 space-y-2 text-sm">
         {RAW_DOCS.map((doc) => (
