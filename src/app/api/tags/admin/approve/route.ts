@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+
+import { CACHE_TAGS } from "@/lib/cacheTags";
 import { prisma } from "@/lib/prisma";
 import { requireAdminUser } from "@/lib/requireAdminUser";
 
@@ -28,6 +31,9 @@ export async function POST(req: Request) {
 
   // Optional: clear the unapproved stat once it becomes approved.
   await prisma.unapprovedTagStat.delete({ where: { key } }).catch(() => null);
+
+  revalidateTag(CACHE_TAGS.tags, "max");
+  revalidateTag(CACHE_TAGS.wikiNav, "max");
 
   return Response.json({ ok: true, tag: created });
 }

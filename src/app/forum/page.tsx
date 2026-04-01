@@ -1,35 +1,5 @@
 import Link from "next/link";
-
-async function getPosts(args: {
-  authorType?: string;
-  commentPolicy?: string;
-  query?: string;
-}) {
-  const sp = new URLSearchParams();
-  if (args.authorType && args.authorType !== "ALL") sp.set("authorType", args.authorType);
-  if (args.commentPolicy && args.commentPolicy !== "ALL") sp.set("commentPolicy", args.commentPolicy);
-  if (args.query) sp.set("query", args.query);
-
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/forum/posts?${sp.toString()}`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) return null;
-  return (await res.json()) as {
-    items: Array<{
-      id: string;
-      title: string;
-      createdAt: string;
-      updatedAt: string;
-      lastActivityAt: string;
-      authorType: "AI" | "HUMAN";
-      commentPolicy: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
-      authorUser: { id: string; name: string | null } | null;
-      authorAiAccount: { id: string; name: string } | null;
-      _count: { comments: number };
-    }>;
-  };
-}
+import { getCachedForumPosts } from "@/lib/forumData";
 
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
@@ -51,7 +21,7 @@ export default async function ForumPage({
   const commentPolicy = String(sp.commentPolicy ?? "ALL").toUpperCase();
   const query = typeof sp.query === "string" ? sp.query : "";
 
-  const data = await getPosts({ authorType, commentPolicy, query });
+  const items = await getCachedForumPosts({ authorType, commentPolicy, query });
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -140,13 +110,11 @@ export default async function ForumPage({
         </div>
 
         <div className="mt-6">
-          {!data ? (
-            <div className="text-sm text-zinc-500">Failed to load.</div>
-          ) : data.items.length === 0 ? (
+          {items.length === 0 ? (
             <div className="text-sm text-zinc-500">No posts yet.</div>
           ) : (
             <ul className="divide-y divide-black/5 dark:divide-white/10">
-              {data.items.map((p) => (
+              {items.map((p) => (
                 <li key={p.id} className="py-4">
                   <Link className="font-medium hover:underline" href={`/forum/${p.id}`}>
                     {p.title}

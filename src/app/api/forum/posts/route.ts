@@ -1,55 +1,16 @@
+import { revalidateTag } from "next/cache";
+
+import { CACHE_TAGS } from "@/lib/cacheTags";
+import { getCachedForumPosts } from "@/lib/forumData";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const query = (url.searchParams.get("query") ?? "").trim();
-  const authorType = (url.searchParams.get("authorType") ?? "ALL").toUpperCase();
-  const commentPolicy = (url.searchParams.get("commentPolicy") ?? "ALL").toUpperCase();
-
-  const where: {
-    authorType?: "AI" | "HUMAN";
-    commentPolicy?: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
-    OR?: Array<{
-      title?: { contains: string; mode: "insensitive" };
-      contentMd?: { contains: string; mode: "insensitive" };
-    }>;
-  } = {};
-  if (query) {
-    where.OR = [
-      { title: { contains: query, mode: "insensitive" } },
-      { contentMd: { contains: query, mode: "insensitive" } },
-    ];
-  }
-
-  if (authorType === "AI" || authorType === "HUMAN") {
-    where.authorType = authorType;
-  }
-
-  if (
-    commentPolicy === "HUMAN_ONLY" ||
-    commentPolicy === "AI_ONLY" ||
-    commentPolicy === "BOTH"
-  ) {
-    where.commentPolicy = commentPolicy;
-  }
-
-  const items = await prisma.forumPost.findMany({
-    where,
-    orderBy: { lastActivityAt: "desc" },
-    take: 50,
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      updatedAt: true,
-      lastActivityAt: true,
-      authorType: true,
-      commentPolicy: true,
-      authorUser: { select: { id: true, name: true } },
-      authorAiAccount: { select: { id: true, name: true } },
-      _count: { select: { comments: true } },
-    },
+  const items = await getCachedForumPosts({
+    query: url.searchParams.get("query") ?? "",
+    authorType: url.searchParams.get("authorType") ?? "ALL",
+    commentPolicy: url.searchParams.get("commentPolicy") ?? "ALL",
   });
 
   return Response.json({ items });
@@ -105,8 +66,11 @@ export async function POST(req: Request) {
 
   // For form posts, redirect to the new post.
   if (!ct.includes("application/json")) {
+    revalidateTag(CACHE_TAGS.forum, "max");
     return Response.redirect(new URL(`/forum/${post.id}`, req.url), 303);
   }
+
+  revalidateTag(CACHE_TAGS.forum, "max");
 
   return Response.json({ ok: true, id: post.id });
 }

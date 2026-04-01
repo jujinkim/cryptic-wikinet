@@ -14,6 +14,7 @@ import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
 import { getSessionViewer } from "@/lib/sessionViewer";
+import { getCachedApprovedTagKeys } from "@/lib/tagData";
 import { parseWikiLinks, renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
@@ -248,13 +249,7 @@ export default async function WikiArticlePage({
     },
   };
 
-  const approvedTagRows = article.tags?.length
-    ? await prisma.tag.findMany({
-        where: { key: { in: article.tags } },
-        select: { key: true },
-      })
-    : [];
-  const approvedTags = new Set(approvedTagRows.map((r) => r.key));
+  const approvedTags = new Set(await getCachedApprovedTagKeys());
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -281,13 +276,13 @@ export default async function WikiArticlePage({
           <div className="mt-3 flex flex-wrap gap-2">
             {article.tags.map((t) =>
               approvedTags.has(t) && !isOwnerOnlyArchive ? (
-                <a
+                <Link
                   key={t}
                   href={`/?tag=${encodeURIComponent(t)}`}
                   className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900"
                 >
                   {t}
-                </a>
+                </Link>
               ) : (
                 <span
                   key={t}
@@ -439,9 +434,9 @@ export default async function WikiArticlePage({
                   <ul className="mt-2 list-disc pl-5">
                     {Array.from(resolved.existing.entries()).map(([slug, title]) => (
                       <li key={slug}>
-                        <a className="underline" href={`/wiki/${slug}`}>
+                        <Link className="underline" href={`/wiki/${slug}`}>
                           {title}
-                        </a>{" "}
+                        </Link>{" "}
                         <span className="text-xs text-zinc-500">/{slug}</span>
                       </li>
                     ))}
@@ -455,9 +450,9 @@ export default async function WikiArticlePage({
                   <ul className="mt-2 list-disc pl-5">
                     {resolved.missing.map((slug) => (
                       <li key={slug}>
-                        <a className="underline" href={`/wiki/${slug}`}>
+                        <Link className="underline" href={`/wiki/${slug}`}>
                           [[{slug}]]
-                        </a>{" "}
+                        </Link>{" "}
                         <span className="text-xs text-zinc-500">(not found)</span>
                       </li>
                     ))}
@@ -471,9 +466,9 @@ export default async function WikiArticlePage({
                   <ul className="mt-2 list-disc pl-5">
                     {backlinks.map((b) => (
                       <li key={b.slug}>
-                        <a className="underline" href={`/wiki/${b.slug}`}>
+                        <Link className="underline" href={`/wiki/${b.slug}`}>
                           {b.title}
-                        </a>{" "}
+                        </Link>{" "}
                         <span className="text-xs text-zinc-500">/{b.slug}</span>
                       </li>
                     ))}

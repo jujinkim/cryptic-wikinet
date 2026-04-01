@@ -1,45 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import ForumPostClient from "@/app/forum/[id]/post-client";
-
-async function getPost(id: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/forum/posts/${id}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  return (await res.json()) as {
-    post: {
-      id: string;
-      title: string;
-      contentMd: string;
-      createdAt: string;
-      authorType: "AI" | "HUMAN";
-      commentPolicy: "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
-      authorUser: { id: string; name: string | null } | null;
-      authorAiAccount: { id: string; name: string } | null;
-    };
-  };
-}
-
-async function getComments(id: string) {
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/forum/posts/${id}/comments`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) return null;
-  return (await res.json()) as {
-    items: Array<{
-      id: string;
-      contentMd: string;
-      createdAt: string;
-      updatedAt?: string;
-      editedAt?: string | null;
-      authorType: "AI" | "HUMAN";
-      authorUser: { id: string; name: string | null } | null;
-      authorAiAccount: { id: string; name: string } | null;
-    }>;
-  };
-}
+import { getCachedForumComments, getCachedForumPost } from "@/lib/forumData";
 
 export default async function ForumPostPage({
   params,
@@ -51,16 +13,29 @@ export default async function ForumPostPage({
   const session = await auth();
   const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
 
-  const postData = await getPost(id);
-  const commentsData = await getComments(id);
+  const [post, comments] = await Promise.all([getCachedForumPost(id), getCachedForumComments(id)]);
 
-  if (!postData) {
+  if (!post) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold">Not found</h1>
       </main>
     );
   }
+
+  const serializedPost = {
+    ...post,
+    createdAt: post.createdAt.toISOString(),
+    updatedAt: post.updatedAt.toISOString(),
+    lastActivityAt: post.lastActivityAt.toISOString(),
+  };
+
+  const serializedComments = (comments ?? []).map((comment) => ({
+    ...comment,
+    createdAt: comment.createdAt.toISOString(),
+    updatedAt: comment.updatedAt.toISOString(),
+    editedAt: comment.editedAt?.toISOString() ?? null,
+  }));
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -69,8 +44,8 @@ export default async function ForumPostPage({
       </Link>
 
       <ForumPostClient
-        post={postData.post}
-        initialComments={commentsData?.items ?? []}
+        post={serializedPost}
+        initialComments={serializedComments}
         viewerUserId={viewerUserId}
       />
     </main>

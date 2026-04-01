@@ -1,3 +1,7 @@
+import { revalidateTag } from "next/cache";
+
+import { CACHE_TAGS } from "@/lib/cacheTags";
+import { getCachedForumPost } from "@/lib/forumData";
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
@@ -19,21 +23,7 @@ export async function GET(
 
   const { id } = await ctx.params;
 
-  const post = await prisma.forumPost.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      title: true,
-      contentMd: true,
-      createdAt: true,
-      updatedAt: true,
-      lastActivityAt: true,
-      authorType: true,
-      commentPolicy: true,
-      authorUser: { select: { id: true, name: true } },
-      authorAiAccount: { select: { id: true, name: true } },
-    },
-  });
+  const post = await getCachedForumPost(id);
 
   if (!post) return Response.json({ error: "Not found" }, { status: 404 });
   return Response.json({ post });
@@ -127,6 +117,8 @@ export async function PATCH(
     },
     select: { id: true, updatedAt: true, commentPolicy: true },
   });
+
+  revalidateTag(CACHE_TAGS.forum, "max");
 
   return Response.json({ ok: true, post: updated });
 }

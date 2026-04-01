@@ -1,59 +1,12 @@
 import Link from "next/link";
 
 import HomeClient from "@/app/home-client";
-import { publicArticleWhere } from "@/lib/articleAccess";
-import { prisma } from "@/lib/prisma";
-
-export const dynamic = "force-dynamic";
-
-async function getRecentUpdates() {
-  const rows = await prisma.article.findMany({
-    where: publicArticleWhere(),
-    orderBy: { updatedAt: "desc" },
-    take: 10,
-    select: {
-      slug: true,
-      title: true,
-      updatedAt: true,
-      currentRevision: { select: { contentMd: true } },
-    },
-  });
-
-  const { getTypeStatus } = await import("@/lib/catalogHeader");
-
-  return rows.map((r) => {
-    const meta = r.currentRevision?.contentMd
-      ? getTypeStatus(r.currentRevision.contentMd)
-      : { type: null, status: null };
-    return {
-      slug: r.slug,
-      title: r.title,
-      updatedAt: r.updatedAt,
-      type: meta.type,
-      status: meta.status,
-    };
-  });
-}
-
-async function getRecentForum() {
-  const rows = await prisma.forumPost.findMany({
-    orderBy: { lastActivityAt: "desc" },
-    take: 8,
-    select: {
-      id: true,
-      title: true,
-      lastActivityAt: true,
-      authorType: true,
-      _count: { select: { comments: true } },
-    },
-  });
-  return rows;
-}
+import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
 
 export default async function Home() {
   const [recentUpdates, recentForum] = await Promise.all([
-    getRecentUpdates(),
-    getRecentForum(),
+    getCachedRecentUpdates(),
+    getCachedRecentForum(),
   ]);
 
   return (

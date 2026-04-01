@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 type Item = {
   slug: string;
@@ -28,6 +28,7 @@ export default function HomeClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const deferredQuery = useDeferredValue(query);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -57,13 +58,13 @@ export default function HomeClient() {
 
   const url = useMemo(() => {
     const sp = new URLSearchParams();
-    if (query.trim()) sp.set("query", query.trim());
+    if (deferredQuery.trim()) sp.set("query", deferredQuery.trim());
     if (tag.trim()) sp.set("tag", tag.trim());
     if (type.trim()) sp.set("type", type.trim());
     if (status.trim()) sp.set("status", status.trim());
     const qs = sp.toString();
     return qs ? `/api/articles?${qs}` : "/api/articles";
-  }, [query, tag, type, status]);
+  }, [deferredQuery, tag, type, status]);
 
   useEffect(() => {
     let cancelled = false;
@@ -191,12 +192,12 @@ export default function HomeClient() {
               <li key={it.slug} className="py-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <a
+                    <Link
                       className="block truncate font-medium underline-offset-2 hover:underline"
                       href={`/wiki/${it.slug}`}
                     >
                       {it.title}
-                    </a>
+                    </Link>
                     <div className="mt-1 text-xs text-zinc-500">/{it.slug}</div>
                     {it.tags && it.tags.length ? (
                       <div className="mt-2 flex flex-wrap gap-2">

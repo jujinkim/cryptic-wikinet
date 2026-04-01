@@ -1,11 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import { getCachedApprovedTags } from "@/lib/tagData";
 
 export async function GET() {
-  const items = await prisma.tag.findMany({
-    orderBy: { label: "asc" },
-    take: 500,
-    select: { key: true, label: true },
-  });
+  const items = await getCachedApprovedTags(500);
 
   return Response.json({ items });
 }

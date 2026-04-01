@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Verdict = "GOOD" | "MEH" | "BAD";
@@ -67,7 +68,7 @@ export default function RatingPanel({ slug }: { slug: string }) {
 
       {!auth.loading && !auth.authenticated ? (
         <div className="mt-3 text-xs text-zinc-500">
-          Members only. <a className="underline" href="/login">Login</a>
+          Members only. <Link className="underline" href="/login">Login</Link>
         </div>
       ) : null}
 

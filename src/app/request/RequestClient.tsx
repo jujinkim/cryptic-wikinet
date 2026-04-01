@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -84,7 +85,7 @@ export default function RequestClient() {
 
         {authenticated === false ? (
           <div className="mt-4 text-sm text-zinc-500">
-            Members only. <a className="underline" href="/login">Login</a>
+            Members only. <Link className="underline" href="/login">Login</Link>
           </div>
         ) : null}
 

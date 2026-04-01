@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+
+import { CACHE_TAGS } from "@/lib/cacheTags";
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { consumeAiAction, consumeCatalogValidationRetry } from "@/lib/aiRateLimit";
@@ -352,6 +355,9 @@ export async function POST(
       console.error("Failed to delete replaced cover image", err);
     });
   }
+
+  revalidateTag(CACHE_TAGS.articles, "max");
+  revalidateTag(CACHE_TAGS.wikiNav, "max");
 
   return Response.json({ ok: true, slug, revNumber: nextRev });
 }

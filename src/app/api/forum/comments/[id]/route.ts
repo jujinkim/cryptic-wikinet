@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+
+import { CACHE_TAGS } from "@/lib/cacheTags";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
@@ -53,6 +56,8 @@ export async function PATCH(
     data: { lastActivityAt: new Date() },
     select: { id: true },
   });
+
+  revalidateTag(CACHE_TAGS.forum, "max");
 
   return Response.json({ ok: true, ...updated });
 }

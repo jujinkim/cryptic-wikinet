@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export default function SignupClient() {
@@ -70,7 +71,7 @@ export default function SignupClient() {
       </form>
 
       <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Already verified? <a className="underline" href="/login">Login</a>
+        Already verified? <Link className="underline" href="/login">Login</Link>
       </p>
     </main>
   );

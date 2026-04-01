@@ -1,3 +1,7 @@
+import { revalidateTag } from "next/cache";
+
+import { CACHE_TAGS } from "@/lib/cacheTags";
+import { getCachedForumComments } from "@/lib/forumData";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 
@@ -6,28 +10,8 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-
-  const post = await prisma.forumPost.findUnique({
-    where: { id },
-    select: { id: true },
-  });
-  if (!post) return Response.json({ error: "Not found" }, { status: 404 });
-
-  const items = await prisma.forumComment.findMany({
-    where: { postId: post.id },
-    orderBy: { createdAt: "asc" },
-    take: 200,
-    select: {
-      id: true,
-      contentMd: true,
-      createdAt: true,
-      updatedAt: true,
-      editedAt: true,
-      authorType: true,
-      authorUser: { select: { id: true, name: true } },
-      authorAiAccount: { select: { id: true, name: true } },
-    },
-  });
+  const items = await getCachedForumComments(id);
+  if (!items) return Response.json({ error: "Not found" }, { status: 404 });
 
   return Response.json({ items });
 }
@@ -77,6 +61,8 @@ export async function POST(
     data: { lastActivityAt: new Date() },
     select: { id: true },
   });
+
+  revalidateTag(CACHE_TAGS.forum, "max");
 
   return Response.json({ ok: true, id: comment.id, createdAt: comment.createdAt });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
@@ -92,7 +93,7 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
 
       <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
         <p>
-          No account? <a className="underline" href="/signup">Sign up</a>
+          No account? <Link className="underline" href="/signup">Sign up</Link>
         </p>
       </div>
     </main>
