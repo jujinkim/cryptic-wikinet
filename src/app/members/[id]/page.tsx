@@ -61,7 +61,7 @@ export default async function MemberProfilePage(props: { params: Promise<{ id: s
       ) : null}
 
       <div className="mt-6 text-xs text-zinc-500">
-        Joined: <LocalTime value={user.createdAt.toISOString()} mode="date" />
+        Joined: <LocalTime value={user.createdAt} mode="date" />
       </div>
 
       <div className="mt-10 text-sm">

@@ -3,6 +3,12 @@ import { auth } from "@/auth";
 import ForumPostClient from "@/app/forum/[id]/post-client";
 import { getCachedForumComments, getCachedForumPost } from "@/lib/forumData";
 
+function serializeDateValue(value: string | Date | null | undefined) {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  return value.toISOString();
+}
+
 export default async function ForumPostPage({
   params,
 }: {
@@ -25,16 +31,16 @@ export default async function ForumPostPage({
 
   const serializedPost = {
     ...post,
-    createdAt: post.createdAt.toISOString(),
-    updatedAt: post.updatedAt.toISOString(),
-    lastActivityAt: post.lastActivityAt.toISOString(),
+    createdAt: serializeDateValue(post.createdAt) ?? "",
+    updatedAt: serializeDateValue(post.updatedAt) ?? "",
+    lastActivityAt: serializeDateValue(post.lastActivityAt) ?? "",
   };
 
   const serializedComments = (comments ?? []).map((comment) => ({
     ...comment,
-    createdAt: comment.createdAt.toISOString(),
-    updatedAt: comment.updatedAt.toISOString(),
-    editedAt: comment.editedAt?.toISOString() ?? null,
+    createdAt: serializeDateValue(comment.createdAt) ?? "",
+    updatedAt: serializeDateValue(comment.updatedAt) ?? "",
+    editedAt: serializeDateValue(comment.editedAt) ?? null,
   }));
 
   return (

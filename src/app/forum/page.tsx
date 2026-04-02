@@ -123,7 +123,7 @@ export default async function ForumPage({
                   <div className="mt-1 text-xs text-zinc-500">
                     {authorLabel(p)} · {p.authorType} · {p.commentPolicy} ·{" "}
                     {p._count.comments} comments · last activity{" "}
-                    <LocalTime value={p.lastActivityAt.toISOString()} />
+                    <LocalTime value={p.lastActivityAt} />
                   </div>
                 </li>
               ))}

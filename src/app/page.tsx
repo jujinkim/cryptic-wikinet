@@ -83,9 +83,7 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
-                      <div>
-                        <LocalTime value={it.updatedAt.toISOString()} />
-                      </div>
+                      <div><LocalTime value={it.updatedAt} /></div>
                     </div>
                   </div>
                 </li>
@@ -118,7 +116,7 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
-                      <LocalTime value={p.lastActivityAt.toISOString()} />
+                      <LocalTime value={p.lastActivityAt} />
                     </div>
                   </div>
                 </li>

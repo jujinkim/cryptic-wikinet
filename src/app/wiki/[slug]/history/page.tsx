@@ -51,7 +51,7 @@ export default async function HistoryPage({
               <div className="min-w-0">
                 <div className="text-sm text-zinc-500">
                   <span>
-                    rev {r.revNumber} · {r.source} · <LocalTime value={r.createdAt.toISOString()} />
+                    rev {r.revNumber} · {r.source} · <LocalTime value={r.createdAt} />
                   </span>
                   <span className="ml-3">
                     <ReportButton

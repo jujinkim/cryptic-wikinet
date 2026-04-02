@@ -443,7 +443,7 @@ export default async function WikiArticlePage({
               <dt className="text-zinc-500">Last revised</dt>
               <dd className="text-right font-medium">
                 {article.currentRevision?.createdAt
-                  ? <LocalTime value={article.currentRevision.createdAt.toISOString()} />
+                  ? <LocalTime value={article.currentRevision.createdAt} />
                   : "Unknown"}
               </dd>
             </div>
@@ -457,7 +457,7 @@ export default async function WikiArticlePage({
             <div className="text-xs font-medium tracking-wide text-zinc-500">ORIGINAL REQUEST</div>
             <div className="text-right text-xs text-zinc-500">
               <div>
-                Requested <LocalTime value={requestSource.createdAt.toISOString()} />
+                Requested <LocalTime value={requestSource.createdAt} />
               </div>
               <div>
                 Requested by{" "}
