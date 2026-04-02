@@ -1,100 +1,107 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Verdict = "GOOD" | "MEH" | "BAD";
 
-type AuthState =
-  | { loading: true }
-  | { loading: false; authenticated: boolean };
+type RatingCounts = Record<Verdict, number>;
 
-export default function RatingPanel({ slug }: { slug: string }) {
-  const [auth, setAuth] = useState<AuthState>({ loading: true });
-  const [verdict, setVerdict] = useState<Verdict>("GOOD");
-  const [comment, setComment] = useState("");
+const VERDICT_LABELS: Record<Verdict, string> = {
+  GOOD: "Good",
+  MEH: "Meh",
+  BAD: "Bad",
+};
+
+export default function RatingPanel(props: {
+  slug: string;
+  initialCounts: RatingCounts;
+  initialMine: Verdict | null;
+  viewerUserId: string | null;
+}) {
+  const [counts, setCounts] = useState<RatingCounts>(props.initialCounts);
+  const [mine, setMine] = useState<Verdict | null>(props.initialMine);
+  const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/auth/check", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
-        setAuth({ loading: false, authenticated: !!j?.authenticated });
-      })
-      .catch(() => setAuth({ loading: false, authenticated: false }));
-  }, []);
+  const loggedIn = !!props.viewerUserId;
 
-  const disabled = auth.loading || !auth.authenticated;
+  async function applyVerdict(next: Verdict) {
+    if (!loggedIn || busy) return;
+    setBusy(true);
+    setStatus(null);
+
+    try {
+      const res = await fetch(`/api/articles/${props.slug}/rating`, {
+        method: mine === next ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: mine === next ? undefined : JSON.stringify({ verdict: next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(data?.error ?? "Failed to save rating");
+        return;
+      }
+
+      const nextCounts = data?.counts as Partial<RatingCounts> | undefined;
+      const nextMine = (data?.mine ?? null) as Verdict | null;
+
+      if (nextCounts) {
+        setCounts({
+          GOOD: Number(nextCounts.GOOD ?? 0),
+          MEH: Number(nextCounts.MEH ?? 0),
+          BAD: Number(nextCounts.BAD ?? 0),
+        });
+      }
+      setMine(nextMine);
+      setStatus(nextMine ? `Saved: ${VERDICT_LABELS[nextMine]}` : "Rating cleared");
+    } catch {
+      setStatus("Failed to save rating");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <section className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
-      <div className="text-xs font-medium tracking-wide text-zinc-500">FEEDBACK</div>
+    <section className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
+      <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
       <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-        Rate this entry to guide future revisions.
+        One click applies your rating. Click the same choice again to clear it.
       </p>
 
-      <div className="mt-4 flex gap-2">
-        {(["GOOD", "MEH", "BAD"] as const).map((v) => (
-          <button
-            key={v}
-            disabled={disabled}
-            onClick={() => setVerdict(v)}
-            className={
-              "rounded-xl px-3 py-2 text-xs font-medium transition " +
-              (verdict === v
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "border border-black/10 bg-white text-zinc-800 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900") +
-              (disabled ? " opacity-50" : "")
-            }
-          >
-            {v === "GOOD" ? "Good" : v === "MEH" ? "Meh" : "Bad"}
-          </button>
-        ))}
+      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        {(["GOOD", "MEH", "BAD"] as const).map((verdict) => {
+          const active = mine === verdict;
+          return (
+            <button
+              key={verdict}
+              type="button"
+              disabled={!loggedIn || busy}
+              onClick={() => applyVerdict(verdict)}
+              className={
+                "rounded-2xl border px-4 py-3 text-left transition " +
+                (active
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/10 bg-zinc-50 text-zinc-900 hover:bg-zinc-100 dark:border-white/15 dark:bg-black dark:text-zinc-100 dark:hover:bg-zinc-900") +
+                (!loggedIn || busy ? " opacity-60" : "")
+              }
+            >
+              <div className="text-sm font-medium">{VERDICT_LABELS[verdict]}</div>
+              <div className={`mt-1 text-xs ${active ? "text-white/80 dark:text-black/70" : "text-zinc-500"}`}>
+                {counts[verdict]} votes
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      <textarea
-        className={
-          "mt-3 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-black" +
-          (disabled ? " opacity-50" : "")
-        }
-        placeholder={disabled ? "Login required to comment" : "Optional comment"}
-        rows={4}
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        disabled={disabled}
-      />
+      {status ? <div className="mt-3 text-xs text-zinc-500">{status}</div> : null}
 
-      {status ? <div className="mt-2 text-xs text-zinc-500">{status}</div> : null}
-
-      {!auth.loading && !auth.authenticated ? (
+      {!loggedIn ? (
         <div className="mt-3 text-xs text-zinc-500">
-          Members only. <Link className="underline" href="/login">Login</Link>
+          Verified members only. <Link className="underline" href="/login">Login</Link>
         </div>
       ) : null}
-
-      <button
-        className={
-          "mt-3 w-full rounded-xl bg-black px-3 py-2 text-xs font-medium text-white dark:bg-white dark:text-black" +
-          (disabled ? " opacity-50" : "")
-        }
-        disabled={disabled}
-        onClick={async () => {
-          setStatus(null);
-          const res = await fetch(`/api/articles/${slug}/rating`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ verdict, comment: comment.trim() || null }),
-          });
-          const j = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            setStatus(j?.error ?? "Failed");
-            return;
-          }
-          setStatus("Saved.");
-        }}
-      >
-        Submit feedback
-      </button>
     </section>
   );
 }

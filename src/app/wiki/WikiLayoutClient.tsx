@@ -11,6 +11,12 @@ type TagItem = {
   count: number;
 };
 
+type PageTagItem = {
+  key: string;
+  label: string;
+  approved: boolean;
+};
+
 type DocItem = {
   slug: string;
   title: string;
@@ -19,6 +25,7 @@ type DocItem = {
 export default function WikiLayoutClient(props: {
   slug: string | null;
   toc: TocItem[];
+  pageTags: PageTagItem[];
   tags: TagItem[];
   children: React.ReactNode;
 }) {
@@ -112,27 +119,71 @@ export default function WikiLayoutClient(props: {
           </Link>
         </div>
 
+        {props.pageTags.length > 0 ? (
+          <div className="mt-3">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500/80">
+              On This Entry
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {props.pageTags.map((tag) =>
+                tag.approved ? (
+                  <button
+                    key={tag.key}
+                    type="button"
+                    onClick={() => pickTag(tag.key)}
+                    className={
+                      "rounded-full border px-2 py-1 text-[11px] transition " +
+                      (activeTag === tag.key
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                        : "border-black/10 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900")
+                    }
+                  >
+                    {tag.label}
+                  </button>
+                ) : (
+                  <span
+                    key={tag.key}
+                    className="rounded-full border border-black/10 bg-white px-2 py-1 text-[11px] text-zinc-500 dark:border-white/15 dark:bg-black dark:text-zinc-500"
+                    title="Unapproved tag"
+                  >
+                    {tag.label}
+                  </span>
+                ),
+              )}
+            </div>
+          </div>
+        ) : null}
+
         {props.tags.length === 0 ? (
-          <div className="mt-2 text-xs text-zinc-500">No approved tags yet.</div>
+          props.pageTags.length === 0 ? (
+            <div className="mt-2 text-xs text-zinc-500">No tag navigation yet.</div>
+          ) : (
+            <div className="mt-3 text-xs text-zinc-500">No approved tag index yet.</div>
+          )
         ) : (
-          <div className="mt-2 space-y-1">
-            {props.tags.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => pickTag(t.key)}
-                className={
-                  "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-zinc-100 dark:hover:bg-white/5 " +
-                  (activeTag === t.key ? "bg-zinc-100 dark:bg-white/5" : "")
-                }
-              >
-                <span className="truncate">
-                  {t.label}
-                  <span className="ml-2 text-[10px] text-zinc-500/70">{t.count}</span>
-                </span>
-                <span className="text-xs text-zinc-500">▸</span>
-              </button>
-            ))}
+          <div className="mt-4">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500/80">
+              Browse Approved Tags
+            </div>
+            <div className="mt-2 space-y-1">
+              {props.tags.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => pickTag(t.key)}
+                  className={
+                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-zinc-100 dark:hover:bg-white/5 " +
+                    (activeTag === t.key ? "bg-zinc-100 dark:bg-white/5" : "")
+                  }
+                >
+                  <span className="truncate">
+                    {t.label}
+                    <span className="ml-2 text-[10px] text-zinc-500/70">{t.count}</span>
+                  </span>
+                  <span className="text-xs text-zinc-500">▸</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

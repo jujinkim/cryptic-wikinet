@@ -4,12 +4,22 @@ export type TocItem = {
   id: string;
 };
 
-export function slugifyHeading(text: string): string {
+function stripInlineMarkdown(text: string): string {
   return text
-    .toLowerCase()
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/<\/?[^>]+>/g, "")
+    .replace(/[*_~]+/g, "")
+    .trim();
+}
+
+export function slugifyHeading(text: string): string {
+  return stripInlineMarkdown(text)
+    .normalize("NFKC")
+    .toLocaleLowerCase("en-US")
     .trim()
-    .replace(/[`*_~]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/[^\p{Letter}\p{Number}\s-]/gu, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
@@ -32,7 +42,7 @@ export function extractToc(md: string): TocItem[] {
     if (!m) continue;
 
     const level = m[1]!.length;
-    const text = m[2]!.replace(/\s+#+\s*$/, "").trim();
+    const text = stripInlineMarkdown(m[2]!.replace(/\s+#+\s*$/, "").trim());
     const id = slugifyHeading(text);
     if (!id) continue;
 

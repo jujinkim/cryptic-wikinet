@@ -12,6 +12,7 @@ import {
   readableArticleWhereForUser,
 } from "@/lib/articleAccess";
 import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
+import { getArticleFeedbackPage, getArticleRatingState } from "@/lib/articleFeedback";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,7 @@ import { getCachedApprovedTagKeys } from "@/lib/tagData";
 import { renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 
 import RatingPanel from "@/app/wiki/[slug]/rating-panel";
+import FeedbackSection from "@/app/wiki/[slug]/feedback-section";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import WikiRelatedSection from "@/app/wiki/[slug]/WikiRelatedSection";
 
@@ -30,6 +32,7 @@ async function getArticle(
   return prisma.article.findFirst({
     where: { slug, ...readableWhere },
     select: {
+      id: true,
       slug: true,
       title: true,
       lifecycle: true,
@@ -73,6 +76,7 @@ async function getArticle(
       },
     },
   }) as Promise<{
+    id: string;
     slug: string;
     title: string;
     lifecycle: string;
@@ -231,6 +235,20 @@ export default async function WikiArticlePage({
   };
 
   const approvedTags = new Set(await getCachedApprovedTagKeys());
+  const engagement = !isOwnerOnlyArchive
+    ? await Promise.all([
+        getArticleRatingState(article.id, viewer.userId),
+        getArticleFeedbackPage(article.id, 1),
+      ])
+    : null;
+  const ratingState = engagement?.[0] ?? null;
+  const feedbackPage = engagement?.[1] ?? null;
+  const serializedFeedbackItems =
+    feedbackPage?.items.map((item) => ({
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    })) ?? [];
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -355,50 +373,34 @@ export default async function WikiArticlePage({
           ) : null}
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
-            <div className="text-xs font-medium tracking-wide text-zinc-500">PROVENANCE</div>
-            <dl className="mt-3 space-y-2">
-              <div className="flex justify-between gap-4">
-                <dt className="text-zinc-500">AI account</dt>
-                <dd className="text-right font-medium">{revisionAccount?.name ?? "Legacy AI client"}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-zinc-500">Owner member</dt>
-                <dd className="text-right font-medium">
-                  {ownerUser ? (
-                    <Link className="underline" href={`/members/${ownerUser.id}`}>
-                      {formatMemberLabel(ownerUser)}
-                    </Link>
-                  ) : (
-                    "Unknown"
-                  )}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-zinc-500">Last revised</dt>
-                <dd className="text-right font-medium">
-                  {article.currentRevision?.createdAt
-                    ? new Date(article.currentRevision.createdAt).toLocaleString()
-                    : "Unknown"}
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {isOwnerOnlyArchive ? (
-            <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
-              <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
-              <div className="mt-3">Archived entries are no longer publicly rateable.</div>
+        <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
+          <div className="text-xs font-medium tracking-wide text-zinc-500">PROVENANCE</div>
+          <dl className="mt-3 space-y-2">
+            <div className="flex justify-between gap-4">
+              <dt className="text-zinc-500">AI account</dt>
+              <dd className="text-right font-medium">{revisionAccount?.name ?? "Legacy AI client"}</dd>
             </div>
-          ) : (
-            <div className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
-              <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
-              <div className="mt-3">
-                <RatingPanel slug={article.slug} />
-              </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-zinc-500">Owner member</dt>
+              <dd className="text-right font-medium">
+                {ownerUser ? (
+                  <Link className="underline" href={`/members/${ownerUser.id}`}>
+                    {formatMemberLabel(ownerUser)}
+                  </Link>
+                ) : (
+                  "Unknown"
+                )}
+              </dd>
             </div>
-          )}
+            <div className="flex justify-between gap-4">
+              <dt className="text-zinc-500">Last revised</dt>
+              <dd className="text-right font-medium">
+                {article.currentRevision?.createdAt
+                  ? new Date(article.currentRevision.createdAt).toLocaleString()
+                  : "Unknown"}
+              </dd>
+            </div>
+          </dl>
         </div>
       </section>
 
@@ -419,6 +421,39 @@ export default async function WikiArticlePage({
           <WikiRelatedSection slug={article.slug} raw={raw} viewer={viewer} />
         </Suspense>
       </article>
+
+      <section className="mt-12 space-y-6">
+        {isOwnerOnlyArchive ? (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
+            <div className="text-xs font-medium tracking-wide text-zinc-500">RATING</div>
+            <div className="mt-3">Archived entries are no longer publicly rateable.</div>
+          </div>
+        ) : ratingState ? (
+          <RatingPanel
+            slug={article.slug}
+            initialCounts={ratingState.counts}
+            initialMine={ratingState.mine}
+            viewerUserId={viewer.userId}
+          />
+        ) : null}
+
+        {isOwnerOnlyArchive ? (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
+            <div className="text-xs font-medium tracking-wide text-zinc-500">FEEDBACK</div>
+            <div className="mt-3">Archived entries do not accept or display public feedback.</div>
+          </div>
+        ) : feedbackPage ? (
+          <FeedbackSection
+            slug={article.slug}
+            viewerUserId={viewer.userId}
+            initialItems={serializedFeedbackItems}
+            initialPage={feedbackPage.page}
+            initialPageSize={feedbackPage.pageSize}
+            initialTotal={feedbackPage.total}
+            initialTotalPages={feedbackPage.totalPages}
+          />
+        ) : null}
+      </section>
     </main>
   );
 }

@@ -91,6 +91,7 @@ model User {
   accounts         Account[]
   sessions         Session[]
   ratings          Rating[]
+  articleFeedback  ArticleFeedback[]
   creationRequests CreationRequest[]
 
   forumPosts        ForumPost[]
@@ -258,6 +259,7 @@ model Article {
   currentRevision    ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   revisions          ArticleRevision[]
   ratings            Rating[]
+  feedbackEntries    ArticleFeedback[]
 
   @@index([lifecycle, updatedAt])
   @@index([lifecycle, retentionEvaluatedAt, createdAt])
@@ -315,6 +317,21 @@ model Rating {
   user      User          @relation(fields: [userId], references: [id])
 
   @@unique([articleId, userId])
+}
+
+model ArticleFeedback {
+  id        String   @id @default(uuid())
+  articleId String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model Tag {
