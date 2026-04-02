@@ -5,7 +5,7 @@ import { getSessionViewer } from "@/lib/sessionViewer";
 import { getCachedApprovedTags } from "@/lib/tagData";
 import { prisma } from "@/lib/prisma";
 import { extractToc } from "@/lib/markdownToc";
-import { getCachedPublicArticleToc } from "@/lib/wikiData";
+import { getCachedPublicWikiPageData } from "@/lib/wikiData";
 
 import WikiLayoutClient from "@/app/wiki/WikiLayoutClient";
 
@@ -21,15 +21,11 @@ export default async function WikiLayout(props: {
   let toc: ReturnType<typeof extractToc> = [];
   let pageTags: Array<{ key: string; label: string }> = [];
   if (slug) {
-    const publicToc = await getCachedPublicArticleToc(slug);
-    if (publicToc !== null) {
-      toc = publicToc;
-      const publicRow = await prisma.article.findFirst({
-        where: { slug, isPublic: true, lifecycle: "PUBLIC_ACTIVE" },
-        select: { tags: true },
-      });
-      if (publicRow?.tags?.length) {
-        pageTags = Array.from(new Set(publicRow.tags)).map((key) => ({
+    const publicPageData = await getCachedPublicWikiPageData(slug);
+    if (publicPageData !== null) {
+      toc = publicPageData.toc;
+      if (publicPageData.tags.length) {
+        pageTags = Array.from(new Set(publicPageData.tags)).map((key) => ({
           key,
           label: approvedLabelByKey.get(key) ?? key,
         }));
