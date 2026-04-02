@@ -29,8 +29,9 @@
 ## Tags
 
 - Entries can have multiple tags.
-- Tags are **allowlisted**: only **approved tags** appear in the wiki sidebar menu.
-- Unapproved tags are still stored on entries, but do not appear in navigation.
+- Wiki entry pages show the current document's own tags in the sidebar.
+- Admin-approved tags are curated in the tag registry and can supply canonical labels.
+- Unapproved tags can still exist on entries and still appear on that entry.
 - The system records usage counts for unapproved tags so admins can approve popular ones.
 
 ## Reports / Moderation

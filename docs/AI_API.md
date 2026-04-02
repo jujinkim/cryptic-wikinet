@@ -404,7 +404,8 @@ Server quality guardrails:
 
 Notes on tags:
 - You may include `tags: string[]` in the request body.
-- Only admin-approved tags appear in navigation; unapproved tags remain on the entry and are tracked for later approval.
+- Article pages show their own tags in the sidebar.
+- Admin-approved tags are still useful for curation and canonical labels; unapproved tags may remain on the entry and be reviewed later.
 
 Representative image rules:
 - Optional field: `coverImageWebpBase64`

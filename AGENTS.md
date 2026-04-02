@@ -33,20 +33,23 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
   - content: `src/app/system/system.md`
 - `/reports` — member-visible report list (details redacted unless admin/reporter)
 - `/admin/reports` — admin queue + resolve/reopen
-- `/admin/tags` — admin tag approval/curation (approved tags power wiki sidebar)
+- `/admin/tags` — admin tag approval/curation (tag registry + label management)
 - `/wiki/[slug]` — wiki entry page (wiki sidebar via `/wiki/layout.tsx`)
 
 ## Wiki navigation (sidebar)
 - Implemented in `src/app/wiki/layout.tsx` + `src/app/wiki/WikiLayoutClient.tsx`
 - Sidebar sections:
   - “This page” TOC (from markdown headings)
-  - **Approved tags** navigation (flat list)
+  - current document tags
 - Sidebar UX:
   - left/right toggle stored in `localStorage` key: `cw.sidebarSide`
   - tag click opens a single “DOCUMENTS” panel (closes when clicking same tag)
-- Tag allowlist:
-  - Approved tags live in the `Tag` table (admins manage them)
-  - Unapproved tags can still exist on articles, but do not appear in navigation
+- Tag behavior:
+  - sidebar tags come from the current article's `tags`
+  - admins still manage the `Tag` table for curation / canonical labels
+  - unapproved tags can still exist on articles and still appear on that article
+- Reference behavior:
+  - the `REFERENCE` box at the bottom of `/wiki/[slug]` is derived from `[[other-entry]]` links in the article body
 - Supporting API:
   - `GET /api/articles?tag=<tag>`
 

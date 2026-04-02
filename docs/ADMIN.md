@@ -12,8 +12,8 @@ node scripts/make-admin.mjs crypticwikinet@gmail.com
 
 ## Tag approvals
 
-Approved tags appear in the wiki sidebar menu.
-Unapproved tags may still exist on articles and are tracked for later approval.
+The wiki sidebar shows the current article's own tags, not a global approved-tag menu.
+Admin tag approval still matters for curation, canonical labels, and reviewing popular unapproved tags.
 
 Admin UI:
 - `/admin/tags`
