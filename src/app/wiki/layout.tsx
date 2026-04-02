@@ -1,9 +1,11 @@
 import { readableArticleWhereForUser } from "@/lib/articleAccess";
+import { buildRenderedCatalogBody } from "@/lib/catalogBody";
+import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { getSessionViewer } from "@/lib/sessionViewer";
 import { getCachedApprovedTags } from "@/lib/tagData";
 import { prisma } from "@/lib/prisma";
 import { extractToc } from "@/lib/markdownToc";
-import { getCachedPublicArticleToc, getCachedWikiSidebarTags } from "@/lib/wikiData";
+import { getCachedPublicArticleToc } from "@/lib/wikiData";
 
 import WikiLayoutClient from "@/app/wiki/WikiLayoutClient";
 
@@ -17,7 +19,7 @@ export default async function WikiLayout(props: {
   const approvedLabelByKey = new Map(approvedTags.map((tag) => [tag.key, tag.label] as const));
 
   let toc: ReturnType<typeof extractToc> = [];
-  let pageTags: Array<{ key: string; label: string; approved: boolean }> = [];
+  let pageTags: Array<{ key: string; label: string }> = [];
   if (slug) {
     const publicToc = await getCachedPublicArticleToc(slug);
     if (publicToc !== null) {
@@ -30,7 +32,6 @@ export default async function WikiLayout(props: {
         pageTags = Array.from(new Set(publicRow.tags)).map((key) => ({
           key,
           label: approvedLabelByKey.get(key) ?? key,
-          approved: approvedLabelByKey.has(key),
         }));
       }
     } else {
@@ -40,21 +41,24 @@ export default async function WikiLayout(props: {
         where: { slug, ...readableWhere },
         select: { tags: true, currentRevision: { select: { contentMd: true } } },
       });
-      toc = row?.currentRevision?.contentMd ? extractToc(row.currentRevision.contentMd) : [];
+      if (row?.currentRevision?.contentMd) {
+        const contentMd = row.currentRevision.contentMd;
+        const meta = extractCatalogMeta(contentMd);
+        toc = extractToc(buildRenderedCatalogBody(contentMd, meta.discovery));
+      } else {
+        toc = [];
+      }
       if (row?.tags?.length) {
         pageTags = Array.from(new Set(row.tags)).map((key) => ({
           key,
           label: approvedLabelByKey.get(key) ?? key,
-          approved: approvedLabelByKey.has(key),
         }));
       }
     }
   }
 
-  const tree = await getCachedWikiSidebarTags();
-
   return (
-    <WikiLayoutClient slug={slug} toc={toc} pageTags={pageTags} tags={tree}>
+    <WikiLayoutClient slug={slug} toc={toc} pageTags={pageTags}>
       {props.children}
     </WikiLayoutClient>
   );

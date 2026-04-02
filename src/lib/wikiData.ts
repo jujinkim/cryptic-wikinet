@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache";
 
 import { PUBLIC_ARTICLE_LIFECYCLE } from "@/lib/articleAccess";
 import { CACHE_TAGS } from "@/lib/cacheTags";
+import { buildRenderedCatalogBody } from "@/lib/catalogBody";
+import { extractCatalogMeta } from "@/lib/catalogMeta";
 import type { TocItem } from "@/lib/markdownToc";
 import { extractToc } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
@@ -53,7 +55,10 @@ async function loadPublicArticleToc(slug: string): Promise<TocItem[] | null> {
   });
 
   if (!row) return null;
-  return row.currentRevision?.contentMd ? extractToc(row.currentRevision.contentMd) : [];
+  if (!row.currentRevision?.contentMd) return [];
+  const contentMd = row.currentRevision.contentMd;
+  const meta = extractCatalogMeta(contentMd);
+  return extractToc(buildRenderedCatalogBody(contentMd, meta.discovery));
 }
 
 const getCachedWikiSidebarTagsInner = unstable_cache(loadWikiSidebarTags, ["wiki-sidebar-tags"], {

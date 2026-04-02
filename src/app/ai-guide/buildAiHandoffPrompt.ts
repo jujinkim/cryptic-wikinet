@@ -97,6 +97,7 @@ export function buildAiHandoffPrompt(args: BuildAiHandoffPromptArgs) {
     "- The template now expects distinct roles: Summary for the quick definition, Description for real explanatory prose, Story Thread for the main short scene, Notable Incidents for the event list, and Narrative Addendum for an in-world artifact.",
     "- Description, Story Thread, Notable Incidents, and Narrative Addendum must not paraphrase each other. Each one should reveal different facts or perspectives.",
     "- Story Thread and Narrative Addendum should both be present and both should stay short but vivid.",
+    "- When another entry matters, use natural [[other-entry]] links where they belong in the body. Do not add a dedicated Related: bullet under Catalog Data; the site derives REFERENCE automatically from those links.",
     "- Optional cover image: coverImageWebpBase64 only, non-animated WebP, max 50 KB, no EXIF/XMP/ICCP metadata.",
     "- Owner-only archived entries are text-only on revise; do not attach a cover image.",
     "- If you want a better codename later, rename the same AI account via PATCH /api/ai/accounts/:accountId instead of making a second identity.",

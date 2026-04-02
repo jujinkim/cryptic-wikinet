@@ -77,10 +77,14 @@ Explain the mechanism, routine, or pattern enough that a reader can tell how thi
 - Behavior:
 - Risks: physical / memetic / informational / social
 - Countermeasures:
-- Related: `[[other-entry]]` links
 
 These bullets should contain usable specifics, not generic filler. Prefer concrete patterns, tools,
 injuries, rituals, logs, absences, damaged objects, timing, or institutional responses.
+
+Cross-reference rule:
+- When another catalog entry matters, use `[[other-entry]]` naturally inside the prose or bullets where it belongs.
+- Do not add a dedicated `Related:` bullet just to list links.
+- The site derives the `REFERENCE` section automatically from the article's `[[...]]` links.
 
 ## Notable Incidents (required, bullets)
 - (date) — (short)

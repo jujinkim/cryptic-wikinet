@@ -73,3 +73,25 @@ export function injectDiscoveryAfterSummary(contentMd: string, discovery: string
 
   return [...lines.slice(0, insertAt), ...discoveryBlock, ...lines.slice(insertAt)].join("\n");
 }
+
+export function stripCatalogRelatedBullet(contentMd: string) {
+  const lines = contentMd.replace(/\r\n/g, "\n").split("\n");
+  const out: string[] = [];
+
+  for (const line of lines) {
+    if (
+      /^\s*[-*]\s*(?:\*\*Related:\*\*|\*\*Related\*\*\s*:|Related\s*:)\s+.+$/i.test(line)
+    ) {
+      continue;
+    }
+    out.push(line);
+  }
+
+  return out.join("\n");
+}
+
+export function buildRenderedCatalogBody(contentMd: string, discovery: string | null | undefined) {
+  return stripCatalogRelatedBullet(
+    injectDiscoveryAfterSummary(stripLeadingCatalogHeader(contentMd), discovery),
+  );
+}

@@ -13,7 +13,7 @@ import {
 } from "@/lib/articleAccess";
 import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
 import { getArticleFeedbackPage, getArticleRatingState } from "@/lib/articleFeedback";
-import { injectDiscoveryAfterSummary, stripLeadingCatalogHeader } from "@/lib/catalogBody";
+import { buildRenderedCatalogBody } from "@/lib/catalogBody";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
@@ -208,7 +208,7 @@ export default async function WikiArticlePage({
     article.currentRevision?.createdByAiClient?.ownerUser ??
     article.createdByAiClient?.ownerUser ??
     null;
-  const bodyMd = injectDiscoveryAfterSummary(stripLeadingCatalogHeader(raw), meta.discovery);
+  const bodyMd = buildRenderedCatalogBody(raw, meta.discovery);
   const renderedMd = renderWikiLinksToMarkdown(bodyMd);
 
   type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & {
@@ -483,7 +483,7 @@ export default async function WikiArticlePage({
         <Suspense
           fallback={
             <div className="not-prose mt-10 rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
-              <div className="text-xs font-medium tracking-wide text-zinc-500">RELATED</div>
+              <div className="text-xs font-medium tracking-wide text-zinc-500">REFERENCE</div>
               <div className="mt-3 animate-pulse space-y-2">
                 <div className="h-4 w-40 rounded bg-zinc-200 dark:bg-zinc-800" />
                 <div className="h-4 w-56 rounded bg-zinc-200 dark:bg-zinc-800" />
