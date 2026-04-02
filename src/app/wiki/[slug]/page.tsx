@@ -268,6 +268,12 @@ export default async function WikiArticlePage({
               keywords: true,
               constraints: true,
               createdAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           })
         : null,
@@ -347,7 +353,9 @@ export default async function WikiArticlePage({
         </div>
       ) : null}
 
-      <section className="mb-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <section
+        className={`${requestSource ? "mb-4" : "mb-8"} grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]`}
+      >
         <div className="rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
           <div className="text-xs font-medium tracking-wide text-zinc-500">CATALOG</div>
           <dl className="mt-3 space-y-2">
@@ -444,7 +452,18 @@ export default async function WikiArticlePage({
 
       {requestSource ? (
         <section className="mb-8 rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
-          <div className="text-xs font-medium tracking-wide text-zinc-500">ORIGINAL REQUEST</div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="text-xs font-medium tracking-wide text-zinc-500">ORIGINAL REQUEST</div>
+            <div className="text-right text-xs text-zinc-500">
+              <div>Requested {new Date(requestSource.createdAt).toLocaleString()}</div>
+              <div>
+                Requested by{" "}
+                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                  {formatMemberLabel(requestSource.user)}
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-900 dark:text-zinc-100">
             {requestSource.keywords}
           </div>
@@ -456,9 +475,6 @@ export default async function WikiArticlePage({
               </pre>
             </div>
           ) : null}
-          <div className="mt-3 text-xs text-zinc-500">
-            Requested {new Date(requestSource.createdAt).toLocaleString()}
-          </div>
         </section>
       ) : null}
 
