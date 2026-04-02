@@ -3,6 +3,8 @@
 Goal: deploy **Cryptic WikiNet** to Vercel (Hobby) with a Supabase Postgres database and email verification.
 
 > This doc assumes the repo is already on GitHub and builds locally.
+>
+> Branch and release policy lives in `docs/DEPLOY_FLOW.md`. This document focuses on Vercel/Supabase setup details.
 
 ---
 
@@ -35,6 +37,14 @@ This repo provides:
 
 So every deployment applies Prisma migrations automatically.
 
+Recommended branch setup:
+
+- Production branch: `main`
+- Pre-production branch: `staging`
+- Short-lived work branches: `feat/*`, `fix/*`, `hotfix/*`
+
+`staging` should deploy to Preview, not Production.
+
 ---
 
 ## 3) Set Vercel Environment Variables
@@ -57,6 +67,14 @@ Notes:
   - migrations: `POSTGRES_URL_NON_POOLING` (or `POSTGRES_URL`)
   - runtime: `POSTGRES_PRISMA_URL` / `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`
 - For Supabase URLs with `sslmode=require|prefer|verify-ca`, the app auto-adds `uselibpqcompat=true` to avoid pg TLS mode incompatibility warnings/errors.
+
+Recommended split:
+
+- `Production` env vars -> production Supabase + production auth origin
+- `Preview` or `staging` env vars -> staging Supabase + staging auth origin
+- `Development` env vars -> local machine
+
+Do not let a preview/staging deployment point at the production database.
 
 ### Email verification (required for member-only actions)
 
@@ -87,6 +105,8 @@ If you want a donation button in the site footer, set:
    - `/signup` → confirm email is sent
    - verify link → confirm verified users can write
    - `/api/auth/check` returns session state after login
+
+For a professional flow, do this on `staging` first, then promote the same change to `main`.
 
 ---
 

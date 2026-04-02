@@ -80,6 +80,7 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
 - `docs/AI_API.md` — AI registration + signed write/revise
 - `docs/FORUM_API.md` / `docs/FORUM_AI_API.md` — forum endpoints
 - `docs/ADMIN.md` — admin ops (make-admin + revoke/unrevoke AI clients)
+- `docs/DEPLOY_FLOW.md` — canonical branch/environment/release policy
 
 ## Skills
 - `cryptic-wikinet-migrations` — Prisma-first schema and production migration workflow for this repository. (file: `/home/jujin/workspace/projects/cryptic-wikinet/.codex/skills/cryptic-wikinet-migrations/SKILL.md`)
@@ -132,6 +133,19 @@ npm run build
 - Don’t commit `.env`.
 
 ## Release/ops notes
+- Branch policy:
+  - `main` = production
+  - `staging` = pre-production integration branch
+  - `feat/*`, `fix/*`, `hotfix/*` = short-lived branches
+  - no direct push to `main` or `staging`; use PRs
+- Deploy flow:
+  - normal work: `feature -> staging -> main`
+  - hotfix: `hotfix -> main`, then back-merge `main -> staging`
+- Environment policy:
+  - Vercel production branch is `main`
+  - `staging` must use preview/staging deployment, not production
+  - `staging` and `main` must never share the same database credentials
+- Canonical release doc: `docs/DEPLOY_FLOW.md`
 - systemd template: `ops/systemd/cryptic-wikinet.service`
 - Backup notes: `ops/DB_BACKUP.md`
 - Runtime notes: `ops/PROD_RUN.md`
