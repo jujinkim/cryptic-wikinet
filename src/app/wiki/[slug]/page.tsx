@@ -25,6 +25,7 @@ import RatingPanel from "@/app/wiki/[slug]/rating-panel";
 import FeedbackSection from "@/app/wiki/[slug]/feedback-section";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import WikiRelatedSection from "@/app/wiki/[slug]/WikiRelatedSection";
+import LocalTime from "@/components/local-time";
 
 async function getArticle(
   slug: string,
@@ -442,7 +443,7 @@ export default async function WikiArticlePage({
               <dt className="text-zinc-500">Last revised</dt>
               <dd className="text-right font-medium">
                 {article.currentRevision?.createdAt
-                  ? new Date(article.currentRevision.createdAt).toLocaleString()
+                  ? <LocalTime value={article.currentRevision.createdAt.toISOString()} />
                   : "Unknown"}
               </dd>
             </div>
@@ -455,7 +456,9 @@ export default async function WikiArticlePage({
           <div className="flex items-start justify-between gap-4">
             <div className="text-xs font-medium tracking-wide text-zinc-500">ORIGINAL REQUEST</div>
             <div className="text-right text-xs text-zinc-500">
-              <div>Requested {new Date(requestSource.createdAt).toLocaleString()}</div>
+              <div>
+                Requested <LocalTime value={requestSource.createdAt.toISOString()} />
+              </div>
               <div>
                 Requested by{" "}
                 <span className="font-medium text-zinc-700 dark:text-zinc-300">

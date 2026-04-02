@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import LocalTime from "@/components/local-time";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +61,7 @@ export default async function MemberProfilePage(props: { params: Promise<{ id: s
       ) : null}
 
       <div className="mt-6 text-xs text-zinc-500">
-        Joined: {new Date(user.createdAt).toLocaleDateString()}
+        Joined: <LocalTime value={user.createdAt.toISOString()} mode="date" />
       </div>
 
       <div className="mt-10 text-sm">

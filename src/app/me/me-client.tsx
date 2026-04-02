@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import LocalTime from "@/components/local-time";
 
 type MeUser = {
   id: string;
@@ -248,7 +249,7 @@ export default function MeClient(props: {
             <div className="mt-1 text-sm text-zinc-500">{user.email}</div>
             {user.bio ? <div className="mt-3 text-sm">{user.bio}</div> : null}
             <div className="mt-4 text-xs text-zinc-500">
-              Joined: {new Date(user.createdAt).toLocaleString()} · Email verified:{" "}
+              Joined: <LocalTime value={user.createdAt} /> · Email verified:{" "}
               {user.emailVerified ? "yes" : "no"}
             </div>
           </div>
@@ -338,10 +339,15 @@ export default function MeClient(props: {
                       <div className="text-base font-medium">{account.name}</div>
                       <div className="font-mono text-xs text-zinc-500">{account.id}</div>
                       <div className="mt-2 text-xs text-zinc-500">
-                        Created: {new Date(account.createdAt).toLocaleString()}
-                        {account.lastActivityAt
-                          ? ` · Last activity: ${new Date(account.lastActivityAt).toLocaleString()}`
-                          : " · Last activity: none yet"}
+                        Created: <LocalTime value={account.createdAt} />
+                        {account.lastActivityAt ? (
+                          <>
+                            {" · Last activity: "}
+                            <LocalTime value={account.lastActivityAt} />
+                          </>
+                        ) : (
+                          " · Last activity: none yet"
+                        )}
                       </div>
                       <div className="mt-1 text-xs text-zinc-500">
                         Clients: {account.clientCount} · Active: {activeClients} · Pending:{" "}
@@ -383,19 +389,33 @@ export default function MeClient(props: {
                               <div>
                                 <div className="font-mono text-xs text-zinc-500">{client.clientId}</div>
                                 <div className="mt-1 text-xs text-zinc-500">
-                                  Created: {new Date(client.createdAt).toLocaleString()}
-                                  {client.lastActivityAt
-                                    ? ` · Last activity: ${new Date(client.lastActivityAt).toLocaleString()}`
-                                    : " · Last activity: none yet"}
-                                  {client.ownerConfirmedAt
-                                    ? ` · Approved: ${new Date(client.ownerConfirmedAt).toLocaleString()}`
-                                    : ""}
-                                  {client.pairCodeExpiresAt
-                                    ? ` · Pair code expires: ${new Date(client.pairCodeExpiresAt).toLocaleString()}`
-                                    : ""}
-                                  {client.revokedAt
-                                    ? ` · Disabled: ${new Date(client.revokedAt).toLocaleString()}`
-                                    : ""}
+                                  Created: <LocalTime value={client.createdAt} />
+                                  {client.lastActivityAt ? (
+                                    <>
+                                      {" · Last activity: "}
+                                      <LocalTime value={client.lastActivityAt} />
+                                    </>
+                                  ) : (
+                                    " · Last activity: none yet"
+                                  )}
+                                  {client.ownerConfirmedAt ? (
+                                    <>
+                                      {" · Approved: "}
+                                      <LocalTime value={client.ownerConfirmedAt} />
+                                    </>
+                                  ) : null}
+                                  {client.pairCodeExpiresAt ? (
+                                    <>
+                                      {" · Pair code expires: "}
+                                      <LocalTime value={client.pairCodeExpiresAt} />
+                                    </>
+                                  ) : null}
+                                  {client.revokedAt ? (
+                                    <>
+                                      {" · Disabled: "}
+                                      <LocalTime value={client.revokedAt} />
+                                    </>
+                                  ) : null}
                                 </div>
                               </div>
                               <div className="text-xs text-zinc-500">

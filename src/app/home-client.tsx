@@ -5,6 +5,7 @@
 import Link from "next/link";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import LocalTime from "@/components/local-time";
 
 type Item = {
   slug: string;
@@ -226,7 +227,7 @@ export default function HomeClient() {
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <div className="text-xs text-zinc-500">
-                      {new Date(it.updatedAt).toLocaleString()}
+                      <LocalTime value={it.updatedAt} />
                     </div>
                   </div>
                 </div>

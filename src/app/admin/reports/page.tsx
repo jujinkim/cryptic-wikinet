@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import ReportResolveButton from "@/app/admin/reports/client";
+import LocalTime from "@/components/local-time";
 
 export const dynamic = "force-dynamic";
 
@@ -91,7 +92,7 @@ export default async function AdminReportsPage({
           {data.items.map((r) => (
             <li key={r.id} className="rounded-xl border border-black/10 p-4 dark:border-white/15">
               <div className="text-xs text-zinc-500">
-                {new Date(r.createdAt).toLocaleString()} · {r.status}
+                <LocalTime value={r.createdAt} /> · {r.status}
               </div>
               <div className="mt-1 text-sm font-medium">
                 {r.targetType} · {r.targetRef}

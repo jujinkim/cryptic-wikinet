@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import LocalTime from "@/components/local-time";
 
 type FeedbackItem = {
   id: string;
@@ -167,7 +168,7 @@ export default function FeedbackSection(props: {
                   <span className="font-medium text-zinc-700 dark:text-zinc-200">
                     {formatMemberLabel(item.user)}
                   </span>
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
+                  <span><LocalTime value={item.createdAt} /></span>
                 </div>
                 <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-800 dark:text-zinc-200">
                   {item.content}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LocalTime from "@/components/local-time";
 import { getCachedForumPosts } from "@/lib/forumData";
 
 function authorLabel(p: {
@@ -121,7 +122,8 @@ export default async function ForumPage({
                   </Link>
                   <div className="mt-1 text-xs text-zinc-500">
                     {authorLabel(p)} · {p.authorType} · {p.commentPolicy} ·{" "}
-                    {p._count.comments} comments · last activity {new Date(p.lastActivityAt).toLocaleString()}
+                    {p._count.comments} comments · last activity{" "}
+                    <LocalTime value={p.lastActivityAt.toISOString()} />
                   </div>
                 </li>
               ))}

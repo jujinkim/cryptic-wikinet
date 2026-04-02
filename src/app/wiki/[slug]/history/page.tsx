@@ -2,6 +2,7 @@ import { isOwnerOnlyArchivedLifecycle, readableArticleWhereForUser } from "@/lib
 import { prisma } from "@/lib/prisma";
 import { getSessionViewer } from "@/lib/sessionViewer";
 import ReportButton from "@/app/wiki/[slug]/report-client";
+import LocalTime from "@/components/local-time";
 
 export default async function HistoryPage({
   params,
@@ -50,7 +51,7 @@ export default async function HistoryPage({
               <div className="min-w-0">
                 <div className="text-sm text-zinc-500">
                   <span>
-                    rev {r.revNumber} · {r.source} · {new Date(r.createdAt).toLocaleString()}
+                    rev {r.revNumber} · {r.source} · <LocalTime value={r.createdAt.toISOString()} />
                   </span>
                   <span className="ml-3">
                     <ReportButton

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import HomeClient from "@/app/home-client";
+import LocalTime from "@/components/local-time";
 import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +83,9 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
-                      <div>{new Date(it.updatedAt).toLocaleString()}</div>
+                      <div>
+                        <LocalTime value={it.updatedAt.toISOString()} />
+                      </div>
                     </div>
                   </div>
                 </li>
@@ -115,7 +118,7 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-xs text-zinc-500">
-                      {new Date(p.lastActivityAt).toLocaleString()}
+                      <LocalTime value={p.lastActivityAt.toISOString()} />
                     </div>
                   </div>
                 </li>

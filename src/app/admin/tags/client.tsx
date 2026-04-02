@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LocalTime from "@/components/local-time";
 
 type Approved = { key: string; label: string; count: number };
 type Unapproved = { key: string; count: number; lastSeenAt: string };
@@ -34,8 +35,8 @@ export default function TagsAdminClient(props: {
     <main className="mx-auto max-w-4xl px-6 py-16">
       <h1 className="text-3xl font-semibold">Tag admin</h1>
       <p className="mt-2 text-sm text-zinc-500">
-        Approved tags appear in the wiki sidebar menu. Unapproved tags are allowed in articles but
-        are only tracked here.
+        Admin-approved tags are curated here. Unapproved tags can still appear on articles and are
+        tracked here for review.
       </p>
 
       <section className="mt-10">
@@ -72,7 +73,7 @@ export default function TagsAdminClient(props: {
                   <div className="min-w-0">
                     <div className="font-medium">{t.key}</div>
                     <div className="mt-1 text-xs text-zinc-500">
-                      count {t.count} · last seen {new Date(t.lastSeenAt).toLocaleString()}
+                      count {t.count} · last seen <LocalTime value={t.lastSeenAt} />
                     </div>
                   </div>
 

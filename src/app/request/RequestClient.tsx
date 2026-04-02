@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import LocalTime from "@/components/local-time";
 
 export default function RequestClient() {
   const router = useRouter();
@@ -164,10 +165,13 @@ export default function RequestClient() {
                 className="rounded-xl border border-black/10 p-4 text-sm dark:border-white/15"
               >
                 <div className="text-xs text-zinc-500">
-                  {new Date(r.createdAt).toLocaleString()} · {r.status}
-                  {r.handledAt
-                    ? ` · handled ${new Date(r.handledAt).toLocaleString()}`
-                    : ""}
+                  <LocalTime value={r.createdAt} /> · {r.status}
+                  {r.handledAt ? (
+                    <>
+                      {" · handled "}
+                      <LocalTime value={r.handledAt} />
+                    </>
+                  ) : null}
                 </div>
                 <div className="mt-2 whitespace-pre-wrap">{r.keywords}</div>
                 <div className="mt-2 text-xs text-zinc-500">

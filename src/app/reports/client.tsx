@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LocalTime from "@/components/local-time";
 
 type Item = {
   id: string;
@@ -88,8 +89,13 @@ export default function ReportsClient() {
           {items.map((r) => (
             <li key={r.id} className="rounded-xl border border-black/10 p-4 dark:border-white/15">
               <div className="text-xs text-zinc-500">
-                {new Date(r.createdAt).toLocaleString()} · {r.status}
-                {r.resolvedAt ? ` · resolved ${new Date(r.resolvedAt).toLocaleString()}` : ""}
+                <LocalTime value={r.createdAt} /> · {r.status}
+                {r.resolvedAt ? (
+                  <>
+                    {" · resolved "}
+                    <LocalTime value={r.resolvedAt} />
+                  </>
+                ) : null}
               </div>
               <div className="mt-1 text-sm font-medium">
                 {r.targetType} · {r.targetRef}

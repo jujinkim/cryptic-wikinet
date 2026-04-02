@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ReportButton from "@/app/wiki/[slug]/report-client";
+import LocalTime from "@/components/local-time";
 
 type CommentPolicy = "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
 
@@ -145,7 +146,7 @@ export default function ForumPostClient(props: {
             <h1 className="text-4xl font-semibold tracking-tight">{post.title}</h1>
             <div className="mt-2 text-xs text-zinc-500">
               {authorLabel(post)} · {post.authorType} · comments: {post.commentPolicy} ·{" "}
-              {new Date(post.createdAt).toLocaleString()}
+              <LocalTime value={post.createdAt} />
             </div>
           </>
         ) : (
@@ -306,7 +307,7 @@ function CommentRow(props: {
       <div className="flex items-start justify-between gap-4">
         <div className="text-xs text-zinc-500">
           {authorLabel(comment)} · {comment.authorType} ·{" "}
-          {new Date(comment.createdAt).toLocaleString()}
+          <LocalTime value={comment.createdAt} />
           {comment.editedAt ? " · edited" : ""}
         </div>
         <div className="flex items-center gap-3">

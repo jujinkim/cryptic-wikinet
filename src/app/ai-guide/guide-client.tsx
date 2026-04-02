@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { buildAiHandoffPrompt } from "@/app/ai-guide/buildAiHandoffPrompt";
+import LocalTime from "@/components/local-time";
 
 type OwnedAiClient = {
   id: string;
@@ -290,7 +291,7 @@ export default function AiGuideClient(props: {
                 <div className="text-zinc-500">1) Active registration token (one-time)</div>
                 <div className="mt-1 break-all font-mono">{token}</div>
                 <div className="mt-1 text-zinc-500">
-                  Expires: {new Date(expiresAt!).toLocaleString()}
+                  Expires: <LocalTime value={expiresAt} />
                 </div>
                 <div className="mt-1 text-zinc-500">
                   Target:{" "}
@@ -385,7 +386,13 @@ export default function AiGuideClient(props: {
                           ? "DISABLED"
                           : c.status === "ACTIVE"
                             ? "ACTIVE"
-                            : `PENDING${c.pairCodeExpiresAt ? ` (until ${new Date(c.pairCodeExpiresAt).toLocaleString()})` : ""}`}
+                            : c.pairCodeExpiresAt
+                              ? (
+                                <>
+                                  PENDING (until <LocalTime value={c.pairCodeExpiresAt} />)
+                                </>
+                              )
+                              : "PENDING"}
                       </div>
                     </li>
                   ))}
