@@ -1,10 +1,10 @@
-import type { RatingVerdict } from "@prisma/client";
-
 import { prisma } from "@/lib/prisma";
 
 export const ARTICLE_FEEDBACK_PAGE_SIZE = 10;
 
-export type RatingCounts = Record<RatingVerdict, number>;
+export type BinaryRatingVerdict = "GOOD" | "BAD";
+
+export type RatingCounts = Record<BinaryRatingVerdict, number>;
 
 export type ArticleFeedbackItem = {
   id: string;
@@ -21,7 +21,7 @@ export async function getArticleRatingState(articleId: string, userId: string | 
   const [countsRaw, mine] = await Promise.all([
     prisma.rating.groupBy({
       by: ["verdict"],
-      where: { articleId },
+      where: { articleId, verdict: { in: ["GOOD", "BAD"] } },
       _count: { _all: true },
     }),
     userId
@@ -34,17 +34,18 @@ export async function getArticleRatingState(articleId: string, userId: string | 
 
   const counts: RatingCounts = {
     GOOD: 0,
-    MEH: 0,
     BAD: 0,
   };
 
   for (const row of countsRaw) {
-    counts[row.verdict] = row._count._all;
+    if (row.verdict === "GOOD" || row.verdict === "BAD") {
+      counts[row.verdict] = row._count._all;
+    }
   }
 
   return {
     counts,
-    mine: mine?.verdict ?? null,
+    mine: mine?.verdict === "GOOD" || mine?.verdict === "BAD" ? mine.verdict : null,
   };
 }
 

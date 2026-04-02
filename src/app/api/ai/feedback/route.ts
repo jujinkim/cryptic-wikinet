@@ -18,7 +18,10 @@ export async function GET(req: Request) {
 
   const [ratings, comments] = await Promise.all([
     prisma.rating.findMany({
-      where: { createdAt: { gte: sinceDate } },
+      where: {
+        createdAt: { gte: sinceDate },
+        verdict: { in: ["GOOD", "BAD"] },
+      },
       orderBy: { createdAt: "desc" },
       take: 200,
       select: {

@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 
-type Verdict = "GOOD" | "MEH" | "BAD";
+type Verdict = "GOOD" | "BAD";
 
 type RatingCounts = Record<Verdict, number>;
 
 const VERDICT_LABELS: Record<Verdict, string> = {
   GOOD: "Good",
-  MEH: "Meh",
   BAD: "Bad",
 };
 
@@ -49,7 +48,6 @@ export default function RatingPanel(props: {
       if (nextCounts) {
         setCounts({
           GOOD: Number(nextCounts.GOOD ?? 0),
-          MEH: Number(nextCounts.MEH ?? 0),
           BAD: Number(nextCounts.BAD ?? 0),
         });
       }
@@ -70,7 +68,7 @@ export default function RatingPanel(props: {
       </p>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        {(["GOOD", "MEH", "BAD"] as const).map((verdict) => {
+        {(["GOOD", "BAD"] as const).map((verdict) => {
           const active = mine === verdict;
           return (
             <button

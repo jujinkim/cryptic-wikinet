@@ -54,7 +54,7 @@ export async function POST(
 
   const verdict = String(body.verdict ?? "");
 
-  if (!["GOOD", "MEH", "BAD"].includes(verdict)) {
+  if (!["GOOD", "BAD"].includes(verdict)) {
     return Response.json({ error: "Invalid verdict" }, { status: 400 });
   }
 
@@ -62,7 +62,7 @@ export async function POST(
   if (!articleId) return Response.json({ error: "Not found" }, { status: 404 });
 
   const userId = gate.userId;
-  const v = verdict as "GOOD" | "MEH" | "BAD";
+  const v = verdict as "GOOD" | "BAD";
 
   const rating = await prisma.rating.upsert({
     where: { articleId_userId: { articleId, userId } },
