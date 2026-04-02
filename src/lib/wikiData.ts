@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
-import { PUBLIC_ARTICLE_LIFECYCLE } from "@/lib/articleAccess";
+import { publicArticleWhere, PUBLIC_ARTICLE_LIFECYCLE } from "@/lib/articleAccess";
 import { CACHE_TAGS } from "@/lib/cacheTags";
 import { buildRenderedCatalogBody } from "@/lib/catalogBody";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
@@ -61,6 +61,36 @@ async function loadPublicArticleToc(slug: string): Promise<TocItem[] | null> {
   return extractToc(buildRenderedCatalogBody(contentMd, meta.discovery));
 }
 
+async function loadPublicWikiPageData(slug: string): Promise<{
+  toc: TocItem[];
+  tags: string[];
+} | null> {
+  const row = await prisma.article.findFirst({
+    where: {
+      slug,
+      ...publicArticleWhere(),
+    },
+    select: {
+      tags: true,
+      currentRevision: {
+        select: {
+          contentMd: true,
+        },
+      },
+    },
+  });
+
+  if (!row) return null;
+
+  const contentMd = row.currentRevision?.contentMd ?? "";
+  const meta = extractCatalogMeta(contentMd);
+
+  return {
+    toc: contentMd ? extractToc(buildRenderedCatalogBody(contentMd, meta.discovery)) : [],
+    tags: row.tags ?? [],
+  };
+}
+
 const getCachedWikiSidebarTagsInner = unstable_cache(loadWikiSidebarTags, ["wiki-sidebar-tags"], {
   revalidate: 300,
   tags: [CACHE_TAGS.wikiNav, CACHE_TAGS.tags, CACHE_TAGS.articles],
@@ -72,6 +102,13 @@ export async function getCachedWikiSidebarTags() {
 
 export async function getCachedPublicArticleToc(slug: string) {
   return unstable_cache(async () => loadPublicArticleToc(slug), [`wiki-public-toc:${slug}`], {
+    revalidate: 300,
+    tags: [CACHE_TAGS.articles],
+  })();
+}
+
+export async function getCachedPublicWikiPageData(slug: string) {
+  return unstable_cache(async () => loadPublicWikiPageData(slug), [`wiki-public-page:${slug}`], {
     revalidate: 300,
     tags: [CACHE_TAGS.articles],
   })();
