@@ -13,6 +13,7 @@ import {
 } from "@/lib/articleAccess";
 import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
 import { getArticleFeedbackPage, getArticleRatingState } from "@/lib/articleFeedback";
+import { injectDiscoveryAfterSummary, stripLeadingCatalogHeader } from "@/lib/catalogBody";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
@@ -137,6 +138,16 @@ function formatMemberLabel(user: { id: string; name: string | null } | null | un
   return `Member ${user.id.slice(0, 8)}`;
 }
 
+function formatRequestConstraints(constraints: Prisma.JsonValue | null) {
+  if (!constraints) return null;
+  if (typeof constraints === "string") return constraints;
+  try {
+    return JSON.stringify(constraints, null, 2);
+  } catch {
+    return String(constraints);
+  }
+}
+
 export default async function WikiArticlePage({
   params,
 }: {
@@ -197,7 +208,8 @@ export default async function WikiArticlePage({
     article.currentRevision?.createdByAiClient?.ownerUser ??
     article.createdByAiClient?.ownerUser ??
     null;
-  const renderedMd = renderWikiLinksToMarkdown(raw);
+  const bodyMd = injectDiscoveryAfterSummary(stripLeadingCatalogHeader(raw), meta.discovery);
+  const renderedMd = renderWikiLinksToMarkdown(bodyMd);
 
   type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & {
     node?: unknown;
@@ -235,12 +247,38 @@ export default async function WikiArticlePage({
   };
 
   const approvedTags = new Set(await getCachedApprovedTagKeys());
-  const engagement = !isOwnerOnlyArchive
-    ? await Promise.all([
-        getArticleRatingState(article.id, viewer.userId),
-        getArticleFeedbackPage(article.id, 1),
-      ])
-    : null;
+  const [requestSource, engagement] = await Promise.all([
+    prisma.aiActionLog.findFirst({
+      where: {
+        articleId: article.id,
+        action: "CREATE",
+        status: "OK",
+        requestId: { not: null },
+      },
+      orderBy: { createdAt: "asc" },
+      select: {
+        requestId: true,
+      },
+    }).then((log) =>
+      log?.requestId
+        ? prisma.creationRequest.findUnique({
+            where: { id: log.requestId },
+            select: {
+              id: true,
+              keywords: true,
+              constraints: true,
+              createdAt: true,
+            },
+          })
+        : null,
+    ),
+    !isOwnerOnlyArchive
+      ? Promise.all([
+          getArticleRatingState(article.id, viewer.userId),
+          getArticleFeedbackPage(article.id, 1),
+        ])
+      : Promise.resolve(null),
+  ]);
   const ratingState = engagement?.[0] ?? null;
   const feedbackPage = engagement?.[1] ?? null;
   const serializedFeedbackItems =
@@ -403,6 +441,26 @@ export default async function WikiArticlePage({
           </dl>
         </div>
       </section>
+
+      {requestSource ? (
+        <section className="mb-8 rounded-2xl border border-black/10 bg-white p-5 text-sm dark:border-white/15 dark:bg-zinc-950">
+          <div className="text-xs font-medium tracking-wide text-zinc-500">ORIGINAL REQUEST</div>
+          <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-900 dark:text-zinc-100">
+            {requestSource.keywords}
+          </div>
+          {requestSource.constraints ? (
+            <div className="mt-4">
+              <div className="text-xs font-medium tracking-wide text-zinc-500">CONSTRAINTS</div>
+              <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-xl border border-black/10 bg-zinc-50 p-3 text-xs leading-5 text-zinc-700 dark:border-white/10 dark:bg-black/30 dark:text-zinc-300">
+                {formatRequestConstraints(requestSource.constraints)}
+              </pre>
+            </div>
+          ) : null}
+          <div className="mt-3 text-xs text-zinc-500">
+            Requested {new Date(requestSource.createdAt).toLocaleString()}
+          </div>
+        </section>
+      ) : null}
 
       <article className="prose prose-zinc max-w-none dark:prose-invert">
         <ReactMarkdown components={mdComponents}>{renderedMd}</ReactMarkdown>
