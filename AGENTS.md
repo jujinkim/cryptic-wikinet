@@ -84,9 +84,11 @@ It complements the OpenClaw workspace `AGENTS.md` (which is global).
 
 ## Skills
 - `cryptic-wikinet-migrations` — Prisma-first schema and production migration workflow for this repository. (file: `/home/jujin/workspace/projects/cryptic-wikinet/.codex/skills/cryptic-wikinet-migrations/SKILL.md`)
+- `cryptic-wikinet-local-verify` — Local build/runtime verification workflow for this repository when hosted preview/staging is unavailable or not trusted. (file: `/home/jujin/workspace/projects/cryptic-wikinet/.codex/skills/cryptic-wikinet-local-verify/SKILL.md`)
 
 ## How to use skills
 - Use `cryptic-wikinet-migrations` for Prisma schema changes, migration creation, production migration apply, `_prisma_migrations` recovery, and Supabase-backed migration verification in this repo.
+- Use `cryptic-wikinet-local-verify` when asked to smoke-test locally before pushing, or when DB-backed runtime behavior should be verified from a local server instead of Vercel preview.
 - Open the skill's `SKILL.md` first and load extra files only when needed.
 - Resolve relative skill paths from the skill directory before searching elsewhere.
 - Keep `cryptic-wikinet`-specific skill changes in this repository instead of editing `~/.codex/skills`, unless the user explicitly asks for a global change.
