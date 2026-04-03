@@ -1,97 +1,69 @@
 # Cryptic WikiNet — Deploy Flow
 
-This document defines the recommended branch and environment flow for professional operation.
+This document defines the current release process and the future target process.
 
-It is the default policy for this repository unless a later ops document overrides it explicitly.
+The important distinction is:
+- `current mode` = what the project can actually support today
+- `target mode` = the more professional staged flow to adopt once a hosted staging DB exists
 
-## Target model
+## Current mode
 
-- `main` = production
-- `staging` = pre-production integration branch
-- `feat/*`, `fix/*`, `hotfix/*` = short-lived working branches
+Today, this repository operates as:
+- `main` = the only hosted deployment branch
+- no hosted staging DB/environment
+- local verification acts as the staging step
 
-The goal is:
-- individual work is verified before release
-- integrated changes are tested together before production
-- production never receives unreviewed direct pushes
+This is the active policy right now.
 
-## Branch rules
+## Current branch rules
 
 ### `main`
 
 - Production branch
-- Protected
-- No direct pushes
-- Deploys to production only
+- The only branch relied on for hosted deployment
+- Normal work may happen directly on `main`
 
-### `staging`
+### short-lived branches
 
-- Pre-production integration branch
-- Protected
-- No direct pushes
-- Used to validate the next production candidate
+- Optional for risky refactors, experiments, or rollback-heavy work
+- Not required for every small change while the project is still in `main + local verification` mode
 
-### `feat/*` and `fix/*`
+## Current release flow
 
-- Short-lived branches for feature and bug work
-- Open PRs into `staging`
-- Delete after merge
+1. Make the change locally
+2. Run:
+   - `npm run lint`
+   - `npm run build`
+   - `npm run dev`
+3. Click through the changed flows locally
+4. Push to `main`
+5. Let Vercel deploy `main` to production
 
-### `hotfix/*`
+For changes that affect auth, SSR, DB-backed pages, or critical write paths, treat the local click-through as mandatory.
 
-- Short-lived urgent production fix branches
-- Open PR into `main` first
-- After release, back-merge `main` into `staging`
-
-## Release flow
-
-### Normal work
-
-1. Branch from `staging` or `main` into `feat/*`
-2. Open PR into `staging`
-3. Verify preview deployment + staging database behavior
-4. Merge into `staging`
-5. When the release candidate is stable, open PR `staging -> main`
-6. Merge into `main`
-7. Production deploy runs from `main`
-
-### Hotfix work
-
-1. Branch from `main` into `hotfix/*`
-2. Open PR into `main`
-3. Merge and deploy to production
-4. Open PR `main -> staging` immediately after, or merge `main` back into `staging`
-
-## Environment mapping
+## Current environment mapping
 
 ### Vercel
 
 - `main` uses the Production environment
-- `staging` gets a Preview deployment
-- If available, assign a fixed staging domain to the `staging` branch
-- If available, use a custom Vercel environment named `staging`
+- Non-`main` deployments are optional and not relied on for DB-backed verification
+- If non-`main` branches are deployed, treat them as convenience builds only
 
-Recommended minimum:
-- Production branch = `main`
-- `staging` branch gets a stable preview URL/domain
-- Production env vars point to production services
-- Staging/Preview env vars point to staging services
+### Database
 
-### Supabase
+- Production points at the production database
+- There is currently no hosted staging database
+- Do not point preview or convenience builds at the production DB unless you intentionally accept the risk
 
-Use one of these:
-- a persistent staging branch/environment
-- a separate staging project
+## Current environment variable policy
 
-Rules:
-- `main` must point to production DB credentials only
-- `staging` must point to staging DB credentials only
-- preview/staging must never share the production database
+Hosted production must have:
+- `DATABASE_URL`
+- `DATABASE_POOL_URL`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
 
-## Environment variable policy
-
-At minimum, keep these isolated between production and staging:
-
+If a future staging environment is added, these must split by environment:
 - `DATABASE_URL`
 - `DATABASE_POOL_URL`
 - `NEXTAUTH_URL`
@@ -100,39 +72,42 @@ At minimum, keep these isolated between production and staging:
 - `GOOGLE_CLIENT_SECRET`
 - SMTP variables
 
-If a variable changes runtime behavior or external integration, assume it must be split by environment.
+## Current migration policy
 
-## Migration policy
+- Production deploys currently run Prisma migrations from `main`
+- Schema changes must be validated locally before pushing
+- Do not ship a migration you have not run locally
 
-- Run Prisma migrations on staging before production
-- Validate login, article reads, writes, reports, and AI API health on staging
-- Only after staging passes should the same migration reach `main`
-- Never test a risky migration first against production
+## Current required checks
 
-## Required checks
-
-At minimum, require these before merge into `staging` and `main`:
-
+Before pushing production code:
 - `npm run lint`
 - `npm run build`
-- any future automated test suite
+- `npm run dev`
+- local manual verification of the changed flows
 
 Recommended:
-- PR review required even for 1-person development
-- merge only through PR
-- delete short-lived branches after merge
+- use a short-lived branch for risky work
+- keep commits small enough to revert cleanly
 
 ## Rollback policy
 
 If production breaks:
 
-1. Revert the bad change on `main`
-2. Redeploy production
-3. Backport the revert or fix into `staging`
-4. Do not leave `staging` diverged from `main` after a hotfix
+1. Fix forward quickly if the issue is small and well-understood
+2. Otherwise revert the bad change on `main`
+3. Redeploy production
 
-## Practical note
+## Future target mode
 
-For a 1-person project, this is intentionally stricter than the minimum needed.
+Once a real hosted staging DB/environment exists, move to:
+- `main` = production
+- `staging` = pre-production integration branch
+- `feat/*`, `fix/*`, `hotfix/*` = short-lived branches
 
-That is the point: it creates habits that scale when more developers and operators are added later.
+Target release flow:
+1. `feature/fix -> staging`
+2. Validate staging with staging DB
+3. `staging -> main`
+
+Until that infrastructure exists, do not pretend the repo already has safe staged deployment.

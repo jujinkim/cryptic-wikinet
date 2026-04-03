@@ -5,6 +5,8 @@ Goal: deploy **Cryptic WikiNet** to Vercel (Hobby) with a Supabase Postgres data
 > This doc assumes the repo is already on GitHub and builds locally.
 >
 > Branch and release policy lives in `docs/DEPLOY_FLOW.md`. This document focuses on Vercel/Supabase setup details.
+>
+> Current reality for this repository: production is hosted on Vercel, but there is no hosted staging DB yet. That means the practical flow today is `local verification -> main deploy`.
 
 ---
 
@@ -37,13 +39,12 @@ This repo provides:
 
 So every deployment applies Prisma migrations automatically.
 
-Recommended branch setup:
+Current recommended branch setup:
 
 - Production branch: `main`
-- Pre-production branch: `staging`
-- Short-lived work branches: `feat/*`, `fix/*`, `hotfix/*`
+- Other branches: optional convenience branches only
 
-`staging` should deploy to Preview, not Production.
+Because this repo currently has no hosted staging DB, non-`main` Vercel deployments are not treated as trustworthy staging environments.
 
 ---
 
@@ -68,13 +69,14 @@ Notes:
   - runtime: `POSTGRES_PRISMA_URL` / `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`
 - For Supabase URLs with `sslmode=require|prefer|verify-ca`, the app auto-adds `uselibpqcompat=true` to avoid pg TLS mode incompatibility warnings/errors.
 
-Recommended split:
+Recommended split today:
 
 - `Production` env vars -> production Supabase + production auth origin
-- `Preview` or `staging` env vars -> staging Supabase + staging auth origin
 - `Development` env vars -> local machine
 
-Do not let a preview/staging deployment point at the production database.
+If you later add a real staging DB, then split `Preview/staging` separately.
+
+For now, do not treat Preview as a real staging environment unless it has its own safe DB credentials.
 
 ### Email verification (required for member-only actions)
 
@@ -106,7 +108,15 @@ If you want a donation button in the site footer, set:
    - verify link → confirm verified users can write
    - `/api/auth/check` returns session state after login
 
-For a professional flow, do this on `staging` first, then promote the same change to `main`.
+Current practical flow:
+- verify locally first
+- then deploy `main`
+
+Local verification before pushing should include:
+- `npm run lint`
+- `npm run build`
+- `npm run dev`
+- clicking through the changed flows
 
 ---
 
@@ -128,6 +138,7 @@ Then set:
 ### Prisma connection errors on Vercel
 - Make sure `DATABASE_POOL_URL` points to the pooler port (often `6543`).
 - If you see prepared-statement issues with transaction pooling, switch the pooler mode or use the direct URL temporarily.
+- If Vercel says `Missing DB URL for migrations`, remember that this app's build runs `prisma migrate deploy`, so hosted deployments need a migration-safe `DATABASE_URL` or `POSTGRES_URL_NON_POOLING`.
 
 ### Emails not arriving
 - Check SMTP credentials

@@ -133,18 +133,23 @@ npm run build
 - Don’t commit `.env`.
 
 ## Release/ops notes
-- Branch policy:
+- Current operating mode:
+  - `main` is the only hosted deployment branch
+  - there is currently no hosted staging DB/environment
+  - deployment verification happens locally before pushing to `main`
+- Local pre-push verification:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run dev`
+  - click through the changed user flows before shipping
+- Branch policy for now:
+  - small/routine work can happen directly on `main`
+  - use a short-lived branch only for risky refactors, experiments, or rollback-heavy work
+- Future target model:
+  - when a real staging environment exists, move to `feature -> staging -> main`
+- Vercel policy for now:
   - `main` = production
-  - `staging` = pre-production integration branch
-  - `feat/*`, `fix/*`, `hotfix/*` = short-lived branches
-  - no direct push to `main` or `staging`; use PRs
-- Deploy flow:
-  - normal work: `feature -> staging -> main`
-  - hotfix: `hotfix -> main`, then back-merge `main -> staging`
-- Environment policy:
-  - Vercel production branch is `main`
-  - `staging` must use preview/staging deployment, not production
-  - `staging` and `main` must never share the same database credentials
+  - non-`main` hosted deployments are optional and not relied on for DB-backed verification
 - Canonical release doc: `docs/DEPLOY_FLOW.md`
 - systemd template: `ops/systemd/cryptic-wikinet.service`
 - Backup notes: `ops/DB_BACKUP.md`
