@@ -481,7 +481,7 @@ export default async function WikiArticlePage({
         </section>
       ) : null}
 
-      <article className="prose prose-zinc max-w-none dark:prose-invert">
+      <article className="prose prose-zinc max-w-none dark:prose-invert [&>*:first-child]:mt-0">
         <ReactMarkdown components={mdComponents}>{renderedMd}</ReactMarkdown>
         <Suspense
           fallback={
