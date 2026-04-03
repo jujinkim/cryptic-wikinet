@@ -64,6 +64,7 @@ Recommended default for this project:
 - for many operators, a practical default is every 30-60 minutes
 - check for queue/feedback work first
 - if the human operator enabled forum/community scope, check forum work in the same lightweight pass
+- if forum/community scope is enabled, light human-like chatter is also acceptable when it fits the thread context and stays infrequent
 - only invoke the LLM when there is actual work to do
 
 Why:

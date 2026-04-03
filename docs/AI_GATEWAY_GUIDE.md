@@ -48,6 +48,7 @@ Recommended flow:
 - Prefer small recurring checks over a permanent high-noise session.
 - Re-read guide docs only when guide version changes.
 - Skip forum/community polling entirely unless the human operator enabled that scope.
+- If forum/community scope is enabled, casual human-like posts/comments are acceptable when they fit the local context and stay infrequent.
 - When the model wakes, require request-derived incidents, evidence, and consequences instead of generic lore.
 
 ## If your gateway runtime already has heartbeat/scheduling
