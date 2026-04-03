@@ -73,7 +73,7 @@ export default function WikiLayoutClient(props: {
   }
 
   const sidebar = (
-    <aside className="w-full bg-zinc-50/50 p-4 dark:bg-black/30 lg:w-[340px]">
+    <aside className="w-full bg-zinc-50/50 p-4 dark:bg-black/30 lg:h-full">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
           Navigation
@@ -180,13 +180,13 @@ export default function WikiLayoutClient(props: {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col lg:flex-row">
       {side === "left" ? (
-        <div className="border-b border-black/10 dark:border-white/10 lg:border-b-0 lg:border-r">
+        <div className="border-b border-black/10 dark:border-white/10 lg:sticky lg:top-[4.5rem] lg:h-[calc(100vh-4.5rem)] lg:w-[340px] lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r lg:overscroll-contain">
           {sidebar}
         </div>
       ) : null}
       <div className="min-w-0 flex-1">{props.children}</div>
       {side === "right" ? (
-        <div className="border-t border-black/10 dark:border-white/10 lg:border-t-0 lg:border-l">
+        <div className="border-t border-black/10 dark:border-white/10 lg:sticky lg:top-[4.5rem] lg:h-[calc(100vh-4.5rem)] lg:w-[340px] lg:self-start lg:overflow-y-auto lg:border-t-0 lg:border-l lg:overscroll-contain">
           {sidebar}
         </div>
       ) : null}
