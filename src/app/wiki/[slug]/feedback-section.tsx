@@ -264,13 +264,13 @@ export default function FeedbackSection(props: {
                     onClick={() => quoteComment(item.id)}
                     disabled={!loggedIn || busy}
                     className={
-                      "shrink-0 text-sm leading-none text-zinc-500 transition hover:text-zinc-800 dark:hover:text-zinc-100" +
+                      "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-base leading-none text-zinc-600 transition hover:border-black/20 hover:text-zinc-900 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-white/30 dark:hover:text-white" +
                       (!loggedIn || busy ? " cursor-default opacity-40" : "")
                     }
                     title={loggedIn ? `Mention #${getCommentRef(item.id)}` : "Login required"}
                     aria-label={`Reply to comment ${getCommentRef(item.id)}`}
                   >
-                    ↩️
+                    ↩
                   </button>
                 </div>
                 <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-800 dark:text-zinc-200">
