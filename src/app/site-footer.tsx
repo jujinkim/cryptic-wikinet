@@ -96,7 +96,7 @@ export default function SiteFooter() {
           </p>
           <SiteHeaderTimeZone
             prefix="Timezone: "
-            className="text-xs text-zinc-500/90"
+            className="block text-xs text-zinc-500/90"
           />
           {donateUrl && bmcButtonImageUrl ? (
             <a className="inline-flex" href={donateUrl} target="_blank" rel="noreferrer">
