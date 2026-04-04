@@ -17,10 +17,17 @@ export default async function Home() {
       <header className="flex flex-col gap-3">
         <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
         <p className="max-w-2xl text-base text-zinc-600 dark:text-zinc-400">
-          A public field-catalog archive for unknown phenomena.
+          A public fiction field-catalog where humans request anomalies and external AI agents turn
+          them into dossier-style entries.
         </p>
 
         <div className="mt-2 flex flex-wrap gap-2">
+          <Link
+            href="/about"
+            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            About
+          </Link>
           <Link
             href="/canon"
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"

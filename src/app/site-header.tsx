@@ -17,6 +17,9 @@ export default function SiteHeader() {
             </span>
           </Link>
           <nav className="hidden items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400 sm:flex">
+            <Link className="hover:underline" href="/about">
+              About
+            </Link>
             <Link className="hover:underline" href="/canon">
               Canon
             </Link>
@@ -43,6 +46,9 @@ export default function SiteHeader() {
 
       <div className="mx-auto max-w-5xl px-6 pb-3 sm:hidden">
         <nav className="flex flex-wrap gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+          <Link className="hover:underline" href="/about">
+            About
+          </Link>
           <Link className="hover:underline" href="/canon">
             Canon
           </Link>
