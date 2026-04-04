@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import LocalTime from "@/components/local-time";
@@ -42,6 +42,51 @@ function authorLabel(p: {
   return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }
 
+function getCommentRef(id: string) {
+  return id.slice(0, 8).toLowerCase();
+}
+
+function renderCommentMarkdown(
+  contentMd: string,
+  commentRefToId: Map<string, string>,
+) {
+  const mentionRe =
+    />>(?:comment:)?([0-9a-f]{8}|[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\b/gi;
+
+  const prepared = contentMd.replace(mentionRe, (raw, capturedRef: string) => {
+    const ref = String(capturedRef ?? "").toLowerCase();
+    const targetId = commentRefToId.get(ref);
+    if (!targetId) {
+      return raw.replace(/>/g, "\\>");
+    }
+    return `[\\${raw.slice(0, 1)}\\${raw.slice(1, 2)}${raw.slice(2)}](#comment-${targetId})`;
+  });
+
+  return (
+    <ReactMarkdown
+      components={{
+        a: ({ href, children }) => {
+          const isCommentRef = typeof href === "string" && href.startsWith("#comment-");
+          return (
+            <a
+              href={href}
+              className={
+                isCommentRef
+                  ? "rounded bg-black/5 px-1.5 py-0.5 font-mono text-[12px] text-zinc-700 hover:underline dark:bg-white/10 dark:text-zinc-200"
+                  : undefined
+              }
+            >
+              {children}
+            </a>
+          );
+        },
+      }}
+    >
+      {prepared}
+    </ReactMarkdown>
+  );
+}
+
 export default function ForumPostClient(props: {
   post: PostShape;
   initialComments: CommentItem[];
@@ -63,10 +108,20 @@ export default function ForumPostClient(props: {
   const [newComment, setNewComment] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
   const [commentErr, setCommentErr] = useState<string | null>(null);
+  const commentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const humanCommentsAllowed = post.commentPolicy !== "AI_ONLY";
+  const canWriteComment = !!viewerUserId && humanCommentsAllowed;
 
   const sorted = useMemo(() => comments, [comments]);
+  const commentRefToId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of comments) {
+      map.set(getCommentRef(item.id), item.id);
+      map.set(item.id.toLowerCase(), item.id);
+    }
+    return map;
+  }, [comments]);
 
   async function savePostEdits() {
     setPostBusy(true);
@@ -120,6 +175,19 @@ export default function ForumPostClient(props: {
     } finally {
       setCommentBusy(false);
     }
+  }
+
+  function quoteComment(id: string) {
+    if (!canWriteComment || commentBusy) return;
+
+    const nextRef = `>>${getCommentRef(id)} `;
+    setNewComment((current) => {
+      const trimmed = current.trimEnd();
+      if (!trimmed) return nextRef;
+      if (trimmed.endsWith(nextRef.trim())) return `${trimmed} `;
+      return `${trimmed}\n${nextRef}`;
+    });
+    commentTextareaRef.current?.focus();
   }
 
   async function saveComment(commentId: string, contentMd: string) {
@@ -234,6 +302,9 @@ export default function ForumPostClient(props: {
                 comment={c}
                 viewerUserId={viewerUserId}
                 onSave={saveComment}
+                onQuote={quoteComment}
+                canQuote={canWriteComment && !commentBusy}
+                commentRefToId={commentRefToId}
               />
             ))}
           </ul>
@@ -241,6 +312,9 @@ export default function ForumPostClient(props: {
 
         <div className="mt-8 rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-zinc-950">
           <div className="text-sm font-medium">Add a comment</div>
+          <div className="mt-1 text-xs text-zinc-500">
+            Mention another comment with <span className="font-mono">&gt;&gt;a1b2c3d4</span>.
+          </div>
           {!viewerUserId ? (
             <div className="mt-1 text-sm text-zinc-500">Login required.</div>
           ) : !humanCommentsAllowed ? (
@@ -248,10 +322,11 @@ export default function ForumPostClient(props: {
           ) : (
             <>
               <textarea
+                ref={commentTextareaRef}
                 className="mt-3 h-28 w-full rounded-lg border border-black/10 bg-white px-3 py-2 font-mono text-xs dark:border-white/15 dark:bg-zinc-950"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Markdown"
+                placeholder="Markdown. Example: >>a1b2c3d4"
               />
               <div className="mt-2 flex items-center gap-3">
                 <button
@@ -277,6 +352,9 @@ function CommentRow(props: {
   comment: CommentItem;
   viewerUserId: string | null;
   onSave: (commentId: string, contentMd: string) => Promise<void>;
+  onQuote: (commentId: string) => void;
+  canQuote: boolean;
+  commentRefToId: Map<string, string>;
 }) {
   const { comment, viewerUserId } = props;
   const canEdit =
@@ -303,14 +381,40 @@ function CommentRow(props: {
   }
 
   return (
-    <li className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-zinc-950">
+    <li
+      id={`comment-${comment.id}`}
+      className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-zinc-950"
+    >
       <div className="flex items-start justify-between gap-4">
-        <div className="text-xs text-zinc-500">
-          {authorLabel(comment)} · {comment.authorType} ·{" "}
-          <LocalTime value={comment.createdAt} />
-          {comment.editedAt ? " · edited" : ""}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+          <span className="font-medium text-zinc-700 dark:text-zinc-200">
+            {authorLabel(comment)}
+          </span>
+          <span>{comment.authorType}</span>
+          <span><LocalTime value={comment.createdAt} /></span>
+          {comment.editedAt ? <span>edited</span> : null}
+          <a
+            href={`#comment-${comment.id}`}
+            className="font-mono text-[11px] text-zinc-500 hover:underline"
+            title={comment.id}
+          >
+            #{getCommentRef(comment.id)}
+          </a>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => props.onQuote(comment.id)}
+            disabled={!props.canQuote}
+            className={
+              "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-base leading-none text-zinc-600 transition hover:border-black/20 hover:text-zinc-900 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-white/30 dark:hover:text-white" +
+              (!props.canQuote ? " cursor-default opacity-40" : "")
+            }
+            title={props.canQuote ? `Mention #${getCommentRef(comment.id)}` : "Login required"}
+            aria-label={`Reply to comment ${getCommentRef(comment.id)}`}
+          >
+            ↩
+          </button>
           {canEdit && !editing ? (
             <button
               className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/15"
@@ -329,7 +433,7 @@ function CommentRow(props: {
 
       {!editing ? (
         <div className="prose prose-zinc mt-2 max-w-none text-sm dark:prose-invert">
-          <ReactMarkdown>{comment.contentMd}</ReactMarkdown>
+          {renderCommentMarkdown(comment.contentMd, props.commentRefToId)}
         </div>
       ) : (
         <div className="mt-3">
