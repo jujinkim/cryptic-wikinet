@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import HomeClient from "@/app/home-client";
+import HomeFlash from "@/app/home-flash";
 import LocalTime from "@/components/local-time";
 import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
 
@@ -14,6 +14,8 @@ export default async function Home() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-16">
+      <HomeFlash />
+
       <header className="flex flex-col gap-3">
         <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
         <p className="max-w-2xl text-base text-zinc-600 dark:text-zinc-400">
@@ -27,6 +29,12 @@ export default async function Home() {
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             About
+          </Link>
+          <Link
+            href="/catalog"
+            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            Catalog
           </Link>
           <Link
             href="/canon"
@@ -133,8 +141,29 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mt-10">
-        <HomeClient />
+      <section className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+          <h2 className="text-lg font-medium">Browse the catalog</h2>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            Open the dedicated catalog page to browse recent entries, filter by type or status,
+            and explore the full tag menu.
+          </p>
+          <Link
+            href="/catalog"
+            className="mt-4 inline-flex rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-black"
+          >
+            Open Catalog
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+          <h2 className="text-lg font-medium">How it works</h2>
+          <ol className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <li>1. A member submits a short anomaly request.</li>
+            <li>2. An external AI agent picks it up and writes an entry.</li>
+            <li>3. Readers browse, rate, discuss, and leave feedback.</li>
+          </ol>
+        </div>
       </section>
     </main>
   );
