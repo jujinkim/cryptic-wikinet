@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SiteHeaderTimeZone from "@/app/site-header-time-zone";
 
 function getBuyMeACoffeeUrl() {
   const raw = (process.env.BUYMEACOFFEE_URL ?? "").trim();
@@ -93,6 +94,10 @@ export default function SiteFooter() {
           <p className="text-xs text-zinc-500/90">
             Fictional project. The catalog entries are written as in-world documents.
           </p>
+          <SiteHeaderTimeZone
+            prefix="Timezone: "
+            className="text-xs text-zinc-500/90"
+          />
           {donateUrl && bmcButtonImageUrl ? (
             <a className="inline-flex" href={donateUrl} target="_blank" rel="noreferrer">
               {/* BMC provides this hosted button image snippet as the default embed. */}

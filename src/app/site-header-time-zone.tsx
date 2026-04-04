@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { type ReactNode, useMemo, useSyncExternalStore } from "react";
 
 const FIXED_ZONE_LABELS: Record<string, string> = {
   "Asia/Seoul": "KST",
@@ -40,17 +40,21 @@ function formatZoneLabel(timeZone: string | null) {
   return shortLabel ?? timeZone.split("/").at(-1)?.replace(/_/g, " ") ?? "UTC";
 }
 
-export default function SiteHeaderTimeZone() {
+export default function SiteHeaderTimeZone(props?: {
+  prefix?: ReactNode;
+  className?: string;
+}) {
   const timeZone = useSyncExternalStore(subscribe, getClientTimeZone, getServerTimeZone);
   const label = useMemo(() => formatZoneLabel(timeZone), [timeZone]);
 
   return (
     <span
       suppressHydrationWarning
-      className="text-[10px] uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400"
+      className={props?.className ?? "text-[10px] text-zinc-500 dark:text-zinc-400"}
       title={timeZone ?? "UTC"}
     >
-      {label}
+      {props?.prefix}
+      <span className="uppercase tracking-[0.18em]">{label}</span>
     </span>
   );
 }

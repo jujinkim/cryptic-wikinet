@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import SiteHeaderTimeZone from "@/app/site-header-time-zone";
 
 type HeaderUser = {
   id?: string | null;
@@ -58,7 +57,6 @@ export default function SiteHeaderAuth() {
       <div className="flex items-center gap-3 text-sm">
         <span className="h-4 w-12 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
         <span className="h-4 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-        <SiteHeaderTimeZone />
       </div>
     );
   }
@@ -67,7 +65,6 @@ export default function SiteHeaderAuth() {
     return (
       <div className="flex items-center gap-3 text-sm">
         <div className="text-xs text-zinc-500">Session unavailable</div>
-        <SiteHeaderTimeZone />
       </div>
     );
   }
@@ -83,7 +80,6 @@ export default function SiteHeaderAuth() {
         <Link className="underline" href="/signup">
           Sign up
         </Link>
-        <SiteHeaderTimeZone />
       </div>
     );
   }
@@ -103,7 +99,6 @@ export default function SiteHeaderAuth() {
       >
         Logout
       </button>
-      <SiteHeaderTimeZone />
     </div>
   );
 }
