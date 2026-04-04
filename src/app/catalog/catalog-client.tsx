@@ -85,10 +85,30 @@ export default function CatalogClient(props: {
   const [type, setType] = useState(props.initialType);
   const [status, setStatus] = useState(props.initialStatus);
   const [items, setItems] = useState(props.initialItems);
+  const [approvedTags, setApprovedTags] = useState<ApprovedTag[]>(props.approvedTags);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query);
   const firstLoadRef = useRef(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/tags")
+      .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
+      .then(({ ok, j }) => {
+        if (cancelled || !ok) return;
+        const nextItems = Array.isArray(j.items) ? (j.items as ApprovedTag[]) : [];
+        setApprovedTags(nextItems);
+      })
+      .catch(() => {
+        // ignore
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const apiUrl = useMemo(
     () =>
@@ -212,7 +232,7 @@ export default function CatalogClient(props: {
             <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Tags</div>
             <div className="max-h-72 overflow-y-auto pr-1">
               <div className="flex flex-wrap gap-2">
-                {props.approvedTags.map((item) => (
+                {approvedTags.map((item) => (
                   <button
                     key={item.key}
                     type="button"
