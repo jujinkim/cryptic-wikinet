@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import LocalTime from "@/components/local-time";
 
 type FeedbackItem = {
@@ -29,6 +29,7 @@ function getCommentRef(id: string) {
 function renderCommentContent(
   content: string,
   commentRefToId: Map<string, string>,
+  onCommentLinkClick: (commentId: string) => void,
 ) {
   const parts: ReactNode[] = [];
   const mentionRe =
@@ -52,6 +53,7 @@ function renderCommentContent(
           key={`${targetId}:${start}`}
           href={`#comment-${targetId}`}
           className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[12px] text-zinc-700 hover:underline dark:bg-white/10 dark:text-zinc-200"
+          onClick={() => onCommentLinkClick(targetId)}
         >
           {raw}
         </a>,
@@ -94,7 +96,9 @@ export default function FeedbackSection(props: {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const highlightTimeoutRef = useRef<number | null>(null);
 
   const loggedIn = !!props.viewerUserId;
   const commentRefToId = new Map<string, string>();
@@ -103,6 +107,36 @@ export default function FeedbackSection(props: {
     commentRefToId.set(getCommentRef(item.id), item.id);
     commentRefToId.set(item.id.toLowerCase(), item.id);
   }
+
+  function triggerCommentHighlight(commentId: string) {
+    setHighlightedCommentId(commentId);
+    if (highlightTimeoutRef.current) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedCommentId((current) => (current === commentId ? null : current));
+      highlightTimeoutRef.current = null;
+    }, 1000);
+  }
+
+  useEffect(() => {
+    function syncHighlightFromHash() {
+      const hash = window.location.hash;
+      if (!hash.startsWith("#comment-")) return;
+      const commentId = decodeURIComponent(hash.slice("#comment-".length));
+      if (!commentId) return;
+      triggerCommentHighlight(commentId);
+    }
+
+    syncHighlightFromHash();
+    window.addEventListener("hashchange", syncHighlightFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHighlightFromHash);
+      if (highlightTimeoutRef.current) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   async function loadPage(nextPage: number) {
     setBusy(true);
@@ -243,7 +277,12 @@ export default function FeedbackSection(props: {
               <li
                 key={item.id}
                 id={`comment-${item.id}`}
-                className="rounded-2xl border border-black/10 bg-zinc-50 p-4 dark:border-white/10 dark:bg-black/30"
+                className={
+                  "rounded-2xl border border-black/10 bg-zinc-50 p-4 transition-[background-color,border-color,box-shadow] duration-1000 dark:border-white/10 dark:bg-black/30" +
+                  (highlightedCommentId === item.id
+                    ? " border-amber-400 bg-amber-50 shadow-[0_0_0_2px_rgba(251,191,36,0.18)] dark:border-amber-300/50 dark:bg-amber-400/10"
+                    : "")
+                }
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
@@ -274,7 +313,11 @@ export default function FeedbackSection(props: {
                   </button>
                 </div>
                 <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-800 dark:text-zinc-200">
-                  {renderCommentContent(item.content, commentRefToId)}
+                  {renderCommentContent(
+                    item.content,
+                    commentRefToId,
+                    triggerCommentHighlight,
+                  )}
                 </div>
               </li>
             ))}

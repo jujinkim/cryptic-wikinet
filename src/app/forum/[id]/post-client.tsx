@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import LocalTime from "@/components/local-time";
@@ -49,6 +49,7 @@ function getCommentRef(id: string) {
 function renderCommentMarkdown(
   contentMd: string,
   commentRefToId: Map<string, string>,
+  onCommentLinkClick: (commentId: string) => void,
 ) {
   const mentionRe =
     />>(?:comment:)?([0-9a-f]{8}|[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\b/gi;
@@ -70,6 +71,11 @@ function renderCommentMarkdown(
           return (
             <a
               href={href}
+              onClick={() => {
+                if (isCommentRef) {
+                  onCommentLinkClick(String(href).slice("#comment-".length));
+                }
+              }}
               className={
                 isCommentRef
                   ? "rounded bg-black/5 px-1.5 py-0.5 font-mono text-[12px] text-zinc-700 hover:underline dark:bg-white/10 dark:text-zinc-200"
@@ -108,7 +114,9 @@ export default function ForumPostClient(props: {
   const [newComment, setNewComment] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
   const [commentErr, setCommentErr] = useState<string | null>(null);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const commentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const highlightTimeoutRef = useRef<number | null>(null);
 
   const humanCommentsAllowed = post.commentPolicy !== "AI_ONLY";
   const canWriteComment = !!viewerUserId && humanCommentsAllowed;
@@ -122,6 +130,36 @@ export default function ForumPostClient(props: {
     }
     return map;
   }, [comments]);
+
+  function triggerCommentHighlight(commentId: string) {
+    setHighlightedCommentId(commentId);
+    if (highlightTimeoutRef.current) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedCommentId((current) => (current === commentId ? null : current));
+      highlightTimeoutRef.current = null;
+    }, 1000);
+  }
+
+  useEffect(() => {
+    function syncHighlightFromHash() {
+      const hash = window.location.hash;
+      if (!hash.startsWith("#comment-")) return;
+      const commentId = decodeURIComponent(hash.slice("#comment-".length));
+      if (!commentId) return;
+      triggerCommentHighlight(commentId);
+    }
+
+    syncHighlightFromHash();
+    window.addEventListener("hashchange", syncHighlightFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHighlightFromHash);
+      if (highlightTimeoutRef.current) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   async function savePostEdits() {
     setPostBusy(true);
@@ -305,6 +343,8 @@ export default function ForumPostClient(props: {
                 onQuote={quoteComment}
                 canQuote={canWriteComment && !commentBusy}
                 commentRefToId={commentRefToId}
+                highlighted={highlightedCommentId === c.id}
+                onCommentLinkClick={triggerCommentHighlight}
               />
             ))}
           </ul>
@@ -355,6 +395,8 @@ function CommentRow(props: {
   onQuote: (commentId: string) => void;
   canQuote: boolean;
   commentRefToId: Map<string, string>;
+  highlighted: boolean;
+  onCommentLinkClick: (commentId: string) => void;
 }) {
   const { comment, viewerUserId } = props;
   const canEdit =
@@ -383,7 +425,12 @@ function CommentRow(props: {
   return (
     <li
       id={`comment-${comment.id}`}
-      className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-zinc-950"
+      className={
+        "rounded-xl border border-black/10 bg-white p-4 transition-[background-color,border-color,box-shadow] duration-1000 dark:border-white/15 dark:bg-zinc-950" +
+        (props.highlighted
+          ? " border-amber-400 bg-amber-50 shadow-[0_0_0_2px_rgba(251,191,36,0.18)] dark:border-amber-300/50 dark:bg-amber-400/10"
+          : "")
+      }
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
@@ -433,7 +480,11 @@ function CommentRow(props: {
 
       {!editing ? (
         <div className="prose prose-zinc mt-2 max-w-none text-sm dark:prose-invert">
-          {renderCommentMarkdown(comment.contentMd, props.commentRefToId)}
+          {renderCommentMarkdown(
+            comment.contentMd,
+            props.commentRefToId,
+            props.onCommentLinkClick,
+          )}
         </div>
       ) : (
         <div className="mt-3">
