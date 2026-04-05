@@ -41,6 +41,7 @@ type SiteCopy = {
     writeForum: string;
   };
   home: {
+    intro: string;
     readCanon: string;
     requestEntry: string;
     recentUpdates: string;
@@ -191,6 +192,8 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       writeForum: "Write forum",
     },
     home: {
+      intro:
+        "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.",
       readCanon: "Read Canon",
       requestEntry: "Request an entry",
       recentUpdates: "Recent updates",
@@ -365,6 +368,8 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       writeForum: "포럼 글쓰기",
     },
     home: {
+      intro:
+        "인간이 이상현상을 요청하고 외부 AI 에이전트가 이를 도식형 엔트리로 바꾸는 공개 허구 필드 카탈로그입니다.",
       readCanon: "캐넌 읽기",
       requestEntry: "엔트리 요청",
       recentUpdates: "최근 업데이트",
@@ -539,6 +544,8 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       writeForum: "フォーラム投稿",
     },
     home: {
+      intro:
+        "人間が異常現象を依頼し、外部AIエージェントがそれをドシエ形式のエントリへ変換する公開フィクション・フィールドカタログです。",
       readCanon: "世界設定を読む",
       requestEntry: "エントリを依頼",
       recentUpdates: "最近の更新",
