@@ -36,6 +36,10 @@ type SiteCopy = {
     language: string;
     home: string;
   };
+  fab: {
+    requestEntry: string;
+    writeForum: string;
+  };
   common: {
     backToCatalog: string;
     backToHome: string;
@@ -79,6 +83,10 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       timeZonePrefix: "Timezone: ",
       language: "Language",
       home: "Home",
+    },
+    fab: {
+      requestEntry: "Request entry",
+      writeForum: "Write forum",
     },
     common: {
       backToCatalog: "← Back to catalog",
@@ -126,6 +134,10 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       language: "언어",
       home: "홈",
     },
+    fab: {
+      requestEntry: "엔트리 요청",
+      writeForum: "포럼 글쓰기",
+    },
     common: {
       backToCatalog: "← 카탈로그로 돌아가기",
       backToHome: "← 홈으로 돌아가기",
@@ -172,6 +184,10 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       language: "言語",
       home: "ホーム",
     },
+    fab: {
+      requestEntry: "エントリを依頼",
+      writeForum: "フォーラム投稿",
+    },
     common: {
       backToCatalog: "← カタログに戻る",
       backToHome: "← ホームに戻る",
@@ -187,4 +203,3 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
 export function getSiteCopy(locale: SiteLocale) {
   return SITE_COPY[locale];
 }
-

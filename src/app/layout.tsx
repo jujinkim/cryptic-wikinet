@@ -3,9 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import SiteFooter from "@/app/site-footer";
+import SiteActionFab from "@/app/site-action-fab";
 import SiteFlash from "@/app/site-flash";
 import SiteHeader from "@/app/site-header";
-import SiteLocaleFab from "@/app/site-locale-fab";
+import SiteLocalePrompt from "@/app/site-locale-prompt";
 import LocaleDocumentLang from "@/components/locale-document-lang";
 
 const geistSans = Geist({
@@ -43,7 +44,8 @@ export default function RootLayout({
         <LocaleDocumentLang />
         <SiteHeader />
         <SiteFlash />
-        <SiteLocaleFab />
+        <SiteLocalePrompt />
+        <SiteActionFab />
         <div className="flex-1">{children}</div>
         <SiteFooter />
       </body>

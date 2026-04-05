@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import BrandMark from "@/app/BrandMark";
 import SiteHeaderAuth from "@/app/site-header-auth";
+import SiteHeaderLocale from "@/app/site-header-locale";
 import SiteHeaderSearch from "@/app/site-header-search";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
@@ -49,7 +50,8 @@ export default function SiteHeader() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <SiteHeaderLocale />
             <SiteHeaderAuth />
           </div>
         </div>

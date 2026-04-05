@@ -94,14 +94,12 @@ function getPromptCopy(locale: SiteLocale, targetLabel: string, fullyTranslated:
   };
 }
 
-export default function SiteLocaleFab() {
+export default function SiteLocalePrompt() {
   const pathname = usePathname();
   const currentLocale = getLocaleFromPathname(pathname);
   const copy = getSiteCopy(currentLocale);
   const links = getLanguageLinks(pathname);
   const fullyTranslated = isLocalizedStaticPath(pathname);
-
-  const [openPathname, setOpenPathname] = useState<string | null>(null);
   const [dismissedPrompt, setDismissedPrompt] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(LOCALE_PROMPT_DISMISS_KEY) === "1";
@@ -114,76 +112,37 @@ export default function SiteLocaleFab() {
       : links.find((item) => item.locale === suggestedLocale && item.locale !== DEFAULT_SITE_LOCALE) ??
         null;
 
-  if (!links) return null;
+  if (!recommendedLink) return null;
 
-  const isOpen = openPathname === (pathname ?? null);
-  const promptCopy = recommendedLink
-    ? getPromptCopy(currentLocale, copy.languages[recommendedLink.locale], fullyTranslated)
-    : null;
+  const promptCopy = getPromptCopy(
+    currentLocale,
+    copy.languages[recommendedLink.locale],
+    fullyTranslated,
+  );
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[70] flex flex-col items-end gap-3">
-      {recommendedLink && promptCopy ? (
-        <div className="pointer-events-auto max-w-sm rounded-2xl border border-black/10 bg-white p-4 text-sm shadow-lg dark:border-white/15 dark:bg-zinc-950">
-          <div className="font-medium text-zinc-950 dark:text-zinc-50">{promptCopy.title}</div>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{promptCopy.body}</p>
-          <div className="mt-3 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-black"
-              onClick={() => {
-                window.localStorage.setItem(LOCALE_PROMPT_DISMISS_KEY, "1");
-                setDismissedPrompt(true);
-              }}
-            >
-              {promptCopy.decline}
-            </button>
-            <Link
-              href={recommendedLink.href}
-              className="rounded-xl bg-black px-3 py-1.5 text-xs font-medium text-white dark:bg-white dark:text-black"
-            >
-              {promptCopy.accept}
-            </Link>
-          </div>
+    <div className="pointer-events-none fixed bottom-32 right-4 z-[70] max-w-sm">
+      <div className="pointer-events-auto rounded-2xl border border-black/10 bg-white p-4 text-sm shadow-lg dark:border-white/15 dark:bg-zinc-950">
+        <div className="font-medium text-zinc-950 dark:text-zinc-50">{promptCopy.title}</div>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{promptCopy.body}</p>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-black"
+            onClick={() => {
+              window.localStorage.setItem(LOCALE_PROMPT_DISMISS_KEY, "1");
+              setDismissedPrompt(true);
+            }}
+          >
+            {promptCopy.decline}
+          </button>
+          <Link
+            href={recommendedLink.href}
+            className="rounded-xl bg-black px-3 py-1.5 text-xs font-medium text-white dark:bg-white dark:text-black"
+          >
+            {promptCopy.accept}
+          </Link>
         </div>
-      ) : null}
-
-      <div className="pointer-events-auto flex flex-col items-end gap-2">
-        {isOpen ? (
-          <div className="rounded-2xl border border-black/10 bg-white p-2 shadow-lg dark:border-white/15 dark:bg-zinc-950">
-            <div className="mb-1 px-2 pt-1 text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500">
-              {copy.footer.language}
-            </div>
-            <div className="flex flex-col gap-1">
-              {links.map((item) => {
-                const active = item.locale === currentLocale;
-                return (
-                  <Link
-                    key={item.locale}
-                    href={item.href}
-                    className={`rounded-xl px-3 py-2 text-sm transition ${
-                      active
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
-                    }`}
-                  >
-                    {copy.languages[item.locale]}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          aria-label={copy.footer.language}
-          className="flex h-14 min-w-14 items-center justify-center rounded-full border border-black/10 bg-black px-4 text-xs font-medium uppercase tracking-[0.18em] text-white shadow-lg dark:border-white/15 dark:bg-white dark:text-black"
-          onClick={() => setOpenPathname(isOpen ? null : (pathname ?? null))}
-        >
-          {isOpen ? "Close" : currentLocale}
-        </button>
       </div>
     </div>
   );
