@@ -4,12 +4,13 @@ import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { getSiteCopy } from "@/lib/site-copy";
-import { getLocaleFromPathname } from "@/lib/site-locale";
+import { getLocaleFromPathname, stripLocalePrefix, withSiteLocale } from "@/lib/site-locale";
 
 type SearchScope = "catalog" | "forum";
 
 function inferScope(pathname: string) {
-  return pathname.startsWith("/forum") ? "forum" : "catalog";
+  const normalized = stripLocalePrefix(pathname).pathname;
+  return normalized.startsWith("/forum") ? "forum" : "catalog";
 }
 
 export default function SiteHeaderSearch() {
@@ -30,7 +31,7 @@ export default function SiteHeaderSearch() {
   function submitSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = query.trim();
-    const basePath = scope === "forum" ? "/forum" : "/catalog";
+    const basePath = withSiteLocale(scope === "forum" ? "/forum" : "/catalog", locale);
     const nextHref = trimmed ? `${basePath}?query=${encodeURIComponent(trimmed)}` : basePath;
     startTransition(() => {
       router.push(nextHref);

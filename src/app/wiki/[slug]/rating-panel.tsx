@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type Verdict = "GOOD" | "BAD";
 
@@ -18,6 +20,8 @@ export default function RatingPanel(props: {
   initialMine: Verdict | null;
   viewerUserId: string | null;
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
   const [counts, setCounts] = useState<RatingCounts>(props.initialCounts);
   const [mine, setMine] = useState<Verdict | null>(props.initialMine);
   const [busy, setBusy] = useState(false);
@@ -97,7 +101,7 @@ export default function RatingPanel(props: {
 
       {!loggedIn ? (
         <div className="mt-3 text-xs text-zinc-500">
-          Verified members only. <Link className="underline" href="/login">Login</Link>
+          Verified members only. <Link className="underline" href={withSiteLocale("/login", locale)}>Login</Link>
         </div>
       ) : null}
     </section>

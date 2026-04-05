@@ -2,10 +2,13 @@ import Link from "next/link";
 
 import LocalTime from "@/components/local-time";
 import { prisma } from "@/lib/prisma";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function MemberProfilePage(props: { params: Promise<{ id: string }> }) {
+  const locale = await getRequestSiteLocale();
   const { id } = await props.params;
 
   if (!id) {
@@ -65,7 +68,7 @@ export default async function MemberProfilePage(props: { params: Promise<{ id: s
       </div>
 
       <div className="mt-10 text-sm">
-        <Link className="underline" href="/">
+        <Link className="underline" href={withSiteLocale("/", locale)}>
           ← Home
         </Link>
       </div>

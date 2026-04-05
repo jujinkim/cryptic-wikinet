@@ -3,10 +3,13 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import MeClient from "@/app/me/me-client";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function MePage() {
+  const locale = await getRequestSiteLocale();
   const session = await auth();
   const userId = (session?.user as unknown as { id?: string } | null)?.id;
 
@@ -16,7 +19,7 @@ export default async function MePage() {
         <h1 className="text-3xl font-semibold">Login required</h1>
         <p className="mt-2 text-sm text-zinc-500">You need to login to view your profile.</p>
         <div className="mt-6">
-          <Link className="underline" href="/login">
+          <Link className="underline" href={withSiteLocale("/login", locale)}>
             Go to /login
           </Link>
         </div>

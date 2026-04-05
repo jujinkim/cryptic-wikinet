@@ -2,6 +2,8 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import ForumPostClient from "@/app/forum/[id]/post-client";
 import { getCachedForumComments, getCachedForumPost } from "@/lib/forumData";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 function serializeDateValue(value: string | Date | null | undefined) {
   if (!value) return null;
@@ -14,6 +16,7 @@ export default async function ForumPostPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = await getRequestSiteLocale();
   const { id } = await params;
 
   const session = await auth();
@@ -45,7 +48,7 @@ export default async function ForumPostPage({
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      <Link className="text-sm underline" href="/forum">
+      <Link className="text-sm underline" href={withSiteLocale("/forum", locale)}>
         ← Back
       </Link>
 

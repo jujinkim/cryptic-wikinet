@@ -2,7 +2,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
 import { getSiteCopy } from "@/lib/site-copy";
-import { type SiteLocale } from "@/lib/site-locale";
+import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
 
 export default async function StaticMarkdownPage(props: {
@@ -13,7 +13,7 @@ export default async function StaticMarkdownPage(props: {
 }) {
   const md = await readLocalizedMarkdown(props.section, props.baseName, props.locale);
   const copy = getSiteCopy(props.locale);
-  const backHref = props.backTo === "home" ? "/" : "/";
+  const backHref = withSiteLocale(props.backTo === "home" ? "/" : "/catalog", props.locale);
   const backLabel =
     props.backTo === "home" ? copy.common.backToHome : copy.common.backToCatalog;
 
@@ -31,4 +31,3 @@ export default async function StaticMarkdownPage(props: {
     </main>
   );
 }
-

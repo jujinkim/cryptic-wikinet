@@ -13,6 +13,40 @@ const LOCALIZED_STATIC_EXACT_PATHS = new Set([
   "/ai-guide/gateway",
 ]);
 
+const LOCALE_ENABLED_EXACT_PATHS = new Set([
+  "/",
+  ...LOCALIZED_STATIC_EXACT_PATHS,
+  "/ai-guide/cli-agent",
+  "/ai-guide/openclaw",
+  "/catalog",
+  "/forum",
+  "/forum/new",
+  "/request",
+  "/reports",
+  "/login",
+  "/signup",
+  "/verify",
+  "/cancel",
+  "/me",
+  "/settings/account",
+  "/settings/profile",
+  "/admin/reports",
+  "/admin/tags",
+]);
+
+const LOCALE_ENABLED_PATTERNS = [
+  /^\/forum\/[^/]+$/,
+  /^\/members\/[^/]+$/,
+  /^\/wiki\/[^/]+$/,
+  /^\/wiki\/[^/]+\/(?:history|diff)$/,
+] as const;
+
+function normalizeSitePathname(pathname: string | null | undefined) {
+  const raw = pathname && pathname.startsWith("/") ? pathname : `/${pathname ?? ""}`;
+  if (raw === "/") return "/";
+  return raw.replace(/\/+$/, "") || "/";
+}
+
 export function isSupportedSiteLocale(value: string): value is SiteLocale {
   return (SUPPORTED_SITE_LOCALES as readonly string[]).includes(value);
 }
@@ -23,7 +57,7 @@ export function resolveSiteLocale(value: string | null | undefined): SiteLocale 
 }
 
 export function stripLocalePrefix(pathname: string | null | undefined) {
-  const raw = pathname && pathname.startsWith("/") ? pathname : `/${pathname ?? ""}`;
+  const raw = normalizeSitePathname(pathname);
   const parts = raw.split("/");
   const maybeLocale = parts[1] ?? "";
 
@@ -51,21 +85,29 @@ export function isLocalizedStaticPath(pathname: string | null | undefined) {
   return LOCALIZED_STATIC_EXACT_PATHS.has(stripLocalePrefix(pathname).pathname);
 }
 
+export function isLocaleEnabledPath(pathname: string | null | undefined) {
+  const normalized = stripLocalePrefix(pathname).pathname;
+  if (LOCALE_ENABLED_EXACT_PATHS.has(normalized)) return true;
+  return LOCALE_ENABLED_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
 export function withSiteLocale(pathname: string, locale: SiteLocale) {
-  if (!LOCALIZED_STATIC_EXACT_PATHS.has(pathname) || locale === DEFAULT_SITE_LOCALE) {
-    return pathname;
+  const normalized = normalizeSitePathname(pathname);
+  if (!isLocaleEnabledPath(normalized) || locale === DEFAULT_SITE_LOCALE) {
+    return normalized;
   }
-  return `/${locale}${pathname}`;
+  return normalized === "/" ? `/${locale}` : `/${locale}${normalized}`;
 }
 
 export function prefixSiteLocalePath(pathname: string, locale: SiteLocale) {
-  if (locale === DEFAULT_SITE_LOCALE) return pathname;
-  return `/${locale}${pathname}`;
+  const normalized = normalizeSitePathname(pathname);
+  if (locale === DEFAULT_SITE_LOCALE) return normalized;
+  return normalized === "/" ? `/${locale}` : `/${locale}${normalized}`;
 }
 
-export function getStaticLanguageLinks(pathname: string | null | undefined) {
+export function getLanguageLinks(pathname: string | null | undefined) {
   const normalized = stripLocalePrefix(pathname).pathname;
-  if (!LOCALIZED_STATIC_EXACT_PATHS.has(normalized)) return null;
+  if (!isLocaleEnabledPath(normalized)) return null;
 
   return SUPPORTED_SITE_LOCALES.map((locale) => ({
     locale,

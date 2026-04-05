@@ -5,6 +5,8 @@ import "./globals.css";
 import SiteFooter from "@/app/site-footer";
 import SiteFlash from "@/app/site-flash";
 import SiteHeader from "@/app/site-header";
+import SiteLocaleFab from "@/app/site-locale-fab";
+import LocaleDocumentLang from "@/components/locale-document-lang";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,8 +40,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50`}
       >
+        <LocaleDocumentLang />
         <SiteHeader />
         <SiteFlash />
+        <SiteLocaleFab />
         <div className="flex-1">{children}</div>
         <SiteFooter />
       </body>

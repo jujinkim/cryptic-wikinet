@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
+
 export const dynamic = "force-dynamic";
 
 export default async function CliAgentGuidePage() {
-  redirect("/ai-guide/ai-cli");
+  redirect(withSiteLocale("/ai-guide/ai-cli", await getRequestSiteLocale()));
 }

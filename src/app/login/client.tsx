@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 function prettyAuthError(code: string) {
   switch (code) {
@@ -24,6 +27,10 @@ function getInitialError(): string | null {
 }
 
 export default function LoginClient(props: { allowGoogle: boolean }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const homeHref = withSiteLocale("/", locale);
+  const signupHref = withSiteLocale("/signup", locale);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(() => getInitialError());
@@ -38,7 +45,7 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
       {props.allowGoogle ? (
         <button
           className="mt-6 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onClick={() => signIn("google", { callbackUrl: homeHref })}
         >
           Continue with Google
         </button>
@@ -66,7 +73,7 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
             );
             return;
           }
-          window.location.href = "/";
+          window.location.href = homeHref;
         }}
       >
         <input
@@ -93,7 +100,7 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
 
       <div className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
         <p>
-          No account? <Link className="underline" href="/signup">Sign up</Link>
+          No account? <Link className="underline" href={signupHref}>Sign up</Link>
         </p>
       </div>
     </main>

@@ -2,14 +2,24 @@ import Link from "next/link";
 
 import LocalTime from "@/components/local-time";
 import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const locale = await getRequestSiteLocale();
   const [recentUpdates, recentForum] = await Promise.all([
     getCachedRecentUpdates(),
     getCachedRecentForum(),
   ]);
+  const homeHref = withSiteLocale("/", locale);
+  const aboutHref = withSiteLocale("/about", locale);
+  const catalogHref = withSiteLocale("/catalog", locale);
+  const canonHref = withSiteLocale("/canon", locale);
+  const requestHref = withSiteLocale("/request", locale);
+  const forumHref = withSiteLocale("/forum", locale);
+  const systemHref = withSiteLocale("/system", locale);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-16">
@@ -22,37 +32,37 @@ export default async function Home() {
 
         <div className="mt-2 flex flex-wrap gap-2">
           <Link
-            href="/about"
+            href={aboutHref}
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             About
           </Link>
           <Link
-            href="/catalog"
+            href={catalogHref}
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             Catalog
           </Link>
           <Link
-            href="/canon"
+            href={canonHref}
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             Read Canon
           </Link>
           <Link
-            href="/request"
+            href={requestHref}
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             Request an entry
           </Link>
           <Link
-            href="/forum"
+            href={forumHref}
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             Forum
           </Link>
           <Link
-            href="/system"
+            href={systemHref}
             className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             System
@@ -64,7 +74,7 @@ export default async function Home() {
         <div className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-lg font-medium">Recent updates</h2>
-            <Link className="text-xs underline text-zinc-500" href="/">
+            <Link className="text-xs underline text-zinc-500" href={homeHref}>
               refresh
             </Link>
           </div>
@@ -77,7 +87,10 @@ export default async function Home() {
                 <li key={it.slug} className="py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <Link className="font-medium hover:underline" href={`/wiki/${it.slug}`}>
+                      <Link
+                        className="font-medium hover:underline"
+                        href={withSiteLocale(`/wiki/${it.slug}`, locale)}
+                      >
                         {it.title}
                       </Link>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
@@ -107,7 +120,7 @@ export default async function Home() {
         <div className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-lg font-medium">Recent forum</h2>
-            <Link className="text-xs underline text-zinc-500" href="/forum">
+            <Link className="text-xs underline text-zinc-500" href={forumHref}>
               view all
             </Link>
           </div>
@@ -120,7 +133,10 @@ export default async function Home() {
                 <li key={p.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <Link className="font-medium hover:underline" href={`/forum/${p.id}`}>
+                      <Link
+                        className="font-medium hover:underline"
+                        href={withSiteLocale(`/forum/${p.id}`, locale)}
+                      >
                         {p.title}
                       </Link>
                       <div className="mt-1 text-xs text-zinc-500">
@@ -146,7 +162,7 @@ export default async function Home() {
             and explore the full tag menu.
           </p>
           <Link
-            href="/catalog"
+            href={catalogHref}
             className="mt-4 inline-flex rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-black"
           >
             Open Catalog

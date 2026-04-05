@@ -1,6 +1,10 @@
+import Link from "next/link";
+
 import { isOwnerOnlyArchivedLifecycle, readableArticleWhereForUser } from "@/lib/articleAccess";
 import { prisma } from "@/lib/prisma";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSessionViewer } from "@/lib/sessionViewer";
+import { withSiteLocale } from "@/lib/site-locale";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import LocalTime from "@/components/local-time";
 
@@ -9,6 +13,7 @@ export default async function HistoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const locale = await getRequestSiteLocale();
   const viewer = await getSessionViewer();
   const { slug } = await params;
   const article = await prisma.article.findFirst({
@@ -33,6 +38,11 @@ export default async function HistoryPage({
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
+      <div className="mb-6 text-sm">
+        <Link className="underline" href={withSiteLocale(`/wiki/${slug}`, locale)}>
+          ← Back to article
+        </Link>
+      </div>
       <h1 className="text-3xl font-semibold">History</h1>
       <p className="mt-2 text-sm text-zinc-500">/wiki/{slug}</p>
       {isOwnerOnlyArchive ? (
@@ -69,12 +79,12 @@ export default async function HistoryPage({
                 ) : null}
               </div>
               {r.revNumber > 1 ? (
-                <a
+                <Link
                   className="shrink-0 text-sm underline"
-                  href={`/wiki/${slug}/diff?from=${r.revNumber - 1}&to=${r.revNumber}`}
+                  href={`${withSiteLocale(`/wiki/${slug}/diff`, locale)}?from=${r.revNumber - 1}&to=${r.revNumber}`}
                 >
                   diff
-                </a>
+                </Link>
               ) : null}
             </div>
           </li>

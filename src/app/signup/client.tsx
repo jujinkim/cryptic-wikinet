@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 export default function SignupClient() {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const homeHref = withSiteLocale("/", locale);
+  const loginHref = withSiteLocale("/login", locale);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -42,7 +49,7 @@ export default function SignupClient() {
               ? "회원가입 완료. 메일 인증이 필요해. 인증 메일 전송에 실패했으면 프로필 설정에서 재발송해줘."
               : "회원가입 완료. 메일 인증이 필요해.";
           globalThis.sessionStorage?.setItem("cw.toast", toastMsg);
-          window.location.href = "/";
+          window.location.href = homeHref;
         }}
       >
         <input
@@ -71,7 +78,7 @@ export default function SignupClient() {
       </form>
 
       <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Already verified? <Link className="underline" href="/login">Login</Link>
+        Already verified? <Link className="underline" href={loginHref}>Login</Link>
       </p>
     </main>
   );

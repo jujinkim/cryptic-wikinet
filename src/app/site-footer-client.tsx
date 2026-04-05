@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import SiteHeaderTimeZone from "@/app/site-header-time-zone";
-import SiteLanguageSwitcher from "@/app/site-language-switcher";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
@@ -16,6 +15,11 @@ export default function SiteFooterClient(props: {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const copy = getSiteCopy(locale);
+  const homeHref = withSiteLocale("/", locale);
+  const catalogHref = withSiteLocale("/catalog", locale);
+  const requestHref = withSiteLocale("/request", locale);
+  const forumHref = withSiteLocale("/forum", locale);
+  const reportsHref = withSiteLocale("/reports", locale);
 
   return (
     <footer className="mt-16 border-t border-black/10 px-6 py-10 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
@@ -31,12 +35,12 @@ export default function SiteFooterClient(props: {
           </div>
           <ul className="space-y-1 text-sm">
             <li>
-              <Link className="hover:underline" href="/">
+              <Link className="hover:underline" href={homeHref}>
                 {copy.footer.home}
               </Link>
             </li>
             <li>
-              <Link className="hover:underline" href="/catalog">
+              <Link className="hover:underline" href={catalogHref}>
                 {copy.nav.catalog}
               </Link>
             </li>
@@ -56,12 +60,12 @@ export default function SiteFooterClient(props: {
               </Link>
             </li>
             <li>
-              <Link className="hover:underline" href="/request">
+              <Link className="hover:underline" href={requestHref}>
                 {copy.nav.request}
               </Link>
             </li>
             <li>
-              <Link className="hover:underline" href="/forum">
+              <Link className="hover:underline" href={forumHref}>
                 {copy.nav.forum}
               </Link>
             </li>
@@ -71,7 +75,7 @@ export default function SiteFooterClient(props: {
               </Link>
             </li>
             <li>
-              <Link className="hover:underline" href="/reports">
+              <Link className="hover:underline" href={reportsHref}>
                 {copy.nav.reports}
               </Link>
             </li>
@@ -87,7 +91,6 @@ export default function SiteFooterClient(props: {
             prefix={copy.footer.timeZonePrefix}
             className="block text-xs text-zinc-500/90"
           />
-          <SiteLanguageSwitcher className="flex items-center gap-2 text-xs" />
           {props.donateUrl && props.bmcButtonImageUrl ? (
             <a className="inline-flex" href={props.donateUrl} target="_blank" rel="noreferrer">
               {/* BMC provides this hosted button image snippet as the default embed. */}
@@ -105,4 +108,3 @@ export default function SiteFooterClient(props: {
     </footer>
   );
 }
-

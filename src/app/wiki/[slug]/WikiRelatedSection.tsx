@@ -3,6 +3,8 @@ import type { Prisma, UserRole } from "@prisma/client";
 
 import { readableArticleWhereForUser } from "@/lib/articleAccess";
 import { prisma } from "@/lib/prisma";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 import { parseWikiLinks } from "@/lib/wikiLinks";
 
 type Viewer = {
@@ -25,6 +27,7 @@ export default async function WikiRelatedSection(props: {
   raw: string;
   viewer: Viewer;
 }) {
+  const locale = await getRequestSiteLocale();
   const readableWhere = readableArticleWhereForUser(props.viewer);
   const outgoing = parseWikiLinks(props.raw).filter((link) => link.slug !== props.slug);
   const slugs = outgoing.map((link) => link.slug);
@@ -46,7 +49,7 @@ export default async function WikiRelatedSection(props: {
             <ul className="mt-2 list-disc pl-5">
               {Array.from(resolved.existing.entries()).map(([slug, title]) => (
                 <li key={slug}>
-                  <Link className="underline" href={`/wiki/${slug}`}>
+                  <Link className="underline" href={withSiteLocale(`/wiki/${slug}`, locale)}>
                     {title}
                   </Link>{" "}
                   <span className="text-xs text-zinc-500">/{slug}</span>
@@ -62,7 +65,7 @@ export default async function WikiRelatedSection(props: {
             <ul className="mt-2 list-disc pl-5">
               {resolved.missing.map((slug) => (
                 <li key={slug}>
-                  <Link className="underline" href={`/wiki/${slug}`}>
+                  <Link className="underline" href={withSiteLocale(`/wiki/${slug}`, locale)}>
                     [[{slug}]]
                   </Link>{" "}
                   <span className="text-xs text-zinc-500">(not found)</span>

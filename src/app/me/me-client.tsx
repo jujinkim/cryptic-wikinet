@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import LocalTime from "@/components/local-time";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type MeUser = {
   id: string;
@@ -41,14 +43,12 @@ function clientStatusLabel(client: OwnedAiClient) {
   return "Pending approval";
 }
 
-function guideHrefForAccount(accountId: string) {
-  return `/ai-guide?accountId=${encodeURIComponent(accountId)}#registration-token`;
-}
-
 export default function MeClient(props: {
   user: MeUser;
   initialAccounts: OwnedAiAccount[];
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
   const { user } = props;
   const isVerified = !!user.emailVerified;
   const [accounts, setAccounts] = useState<OwnedAiAccount[]>(props.initialAccounts);
@@ -57,6 +57,14 @@ export default function MeClient(props: {
   const [listBusy, setListBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const profileHref = withSiteLocale("/settings/profile", locale);
+  const accountSettingsHref = withSiteLocale("/settings/account", locale);
+  const publicProfileHref = withSiteLocale(`/members/${user.id}`, locale);
+  const aiGuideHref = withSiteLocale("/ai-guide", locale);
+
+  function guideHrefForAccount(accountId: string) {
+    return `${aiGuideHref}?accountId=${encodeURIComponent(accountId)}#registration-token`;
+  }
 
   function setClientBusy(clientId: string, value: boolean) {
     setBusy((prev) => ({ ...prev, [clientId]: value }));
@@ -267,13 +275,13 @@ export default function MeClient(props: {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
-          <Link className="underline" href="/settings/profile">
+          <Link className="underline" href={profileHref}>
             Edit profile
           </Link>
-          <Link className="underline" href="/settings/account">
+          <Link className="underline" href={accountSettingsHref}>
             Account settings
           </Link>
-          <Link className="underline" href={`/members/${user.id}`}>
+          <Link className="underline" href={publicProfileHref}>
             Public view
           </Link>
         </div>
@@ -283,10 +291,10 @@ export default function MeClient(props: {
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">AI Accounts</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <Link className={guideLinkClass} href="/ai-guide#registration-token">
+            <Link className={guideLinkClass} href={`${aiGuideHref}#registration-token`}>
               Create AI account
             </Link>
-            <Link className={guideLinkClass} href="/ai-guide">
+            <Link className={guideLinkClass} href={aiGuideHref}>
               Open AI guide
             </Link>
             <button

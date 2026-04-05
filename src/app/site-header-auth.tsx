@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { getSiteCopy } from "@/lib/site-copy";
-import { getLocaleFromPathname } from "@/lib/site-locale";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type HeaderUser = {
   id?: string | null;
@@ -24,6 +24,10 @@ export default function SiteHeaderAuth() {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const copy = getSiteCopy(locale);
+  const homeHref = withSiteLocale("/", locale);
+  const loginHref = withSiteLocale("/login", locale);
+  const signupHref = withSiteLocale("/signup", locale);
+  const meHref = withSiteLocale("/me", locale);
   const [auth, setAuth] = useState<HeaderAuthState>({ status: "loading", user: null });
 
   useEffect(() => {
@@ -81,10 +85,10 @@ export default function SiteHeaderAuth() {
   if (!user) {
     return (
       <div className="flex items-center gap-3 text-sm">
-        <Link className="underline" href="/login">
+        <Link className="underline" href={loginHref}>
           {copy.auth.login}
         </Link>
-        <Link className="underline" href="/signup">
+        <Link className="underline" href={signupHref}>
           {copy.auth.signUp}
         </Link>
       </div>
@@ -96,12 +100,12 @@ export default function SiteHeaderAuth() {
       <span className="hidden text-xs text-zinc-500 sm:inline">
         {user.name ?? user.email ?? copy.auth.member}
       </span>
-      <Link className="underline" href="/me">
+      <Link className="underline" href={meHref}>
         {copy.auth.me}
       </Link>
       <button
         className="underline"
-        onClick={() => signOut({ callbackUrl: "/" })}
+        onClick={() => signOut({ callbackUrl: homeHref })}
         type="button"
       >
         {copy.auth.logout}

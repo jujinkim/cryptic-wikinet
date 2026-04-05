@@ -235,7 +235,7 @@ export default function AiGuideClient(props: {
 
       {!props.isLoggedIn ? (
         <p className="mt-4 text-sm">
-          <Link className="underline" href="/login">
+          <Link className="underline" href={withSiteLocale("/login", props.locale)}>
             {siteCopy.auth.login}
           </Link>{" "}
           {copy.loginTail}
@@ -243,7 +243,7 @@ export default function AiGuideClient(props: {
       ) : !props.isVerified ? (
         <p className="mt-4 text-sm">
           {copy.verifyLead}
-          <Link className="underline" href="/settings/profile">
+          <Link className="underline" href={withSiteLocale("/settings/profile", props.locale)}>
             /settings/profile
           </Link>{" "}
           {copy.verifyTail}

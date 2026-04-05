@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
-import { type SiteLocale } from "@/lib/site-locale";
+import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 import AiGuideClient from "@/app/ai-guide/guide-client";
 import { HumanGuideCards, RawDocsSection } from "@/app/ai-guide/GuideSections";
 import { getAiGuideCopy } from "@/app/ai-guide/guide-copy";
@@ -72,7 +72,7 @@ export async function renderAiGuidePage(
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
       <div className="mb-6 text-sm">
-        <Link className="underline" href="/">
+        <Link className="underline" href={withSiteLocale("/", locale)}>
           {copy.backToHome}
         </Link>
       </div>

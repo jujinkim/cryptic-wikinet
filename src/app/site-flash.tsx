@@ -2,36 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { DEFAULT_SITE_LOCALE, isSupportedSiteLocale, type SiteLocale } from "@/lib/site-locale";
-import { getSiteCopy } from "@/lib/site-copy";
-
-function buildLocaleFallbackMessage(fromLocale: SiteLocale) {
-  const copy = getSiteCopy(DEFAULT_SITE_LOCALE);
-  return `This page is not available in ${copy.languages[fromLocale]} yet. Showing English instead.`;
-}
-
-function readQueryToast() {
-  if (typeof window === "undefined") return null;
-  const url = new URL(window.location.href);
-  const flash = url.searchParams.get("flash");
-  const fromLocale = url.searchParams.get("fromLocale");
-
-  if (flash !== "missing-locale-page" || !fromLocale || !isSupportedSiteLocale(fromLocale)) {
-    return null;
-  }
-
-  url.searchParams.delete("flash");
-  url.searchParams.delete("fromLocale");
-  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  return buildLocaleFallbackMessage(fromLocale);
-}
-
 export default function SiteFlash() {
   const [toast, setToast] = useState<string | null>(null);
 
   const initialToast = useMemo(() => {
     if (typeof window === "undefined") return null;
-    return globalThis.sessionStorage?.getItem("cw.toast") ?? readQueryToast();
+    return globalThis.sessionStorage?.getItem("cw.toast");
   }, []);
 
   useEffect(() => {
@@ -60,4 +36,3 @@ export default function SiteFlash() {
     </div>
   );
 }
-

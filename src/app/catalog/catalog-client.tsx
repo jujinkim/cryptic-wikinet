@@ -3,8 +3,10 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import LocalTime from "@/components/local-time";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type CatalogItem = {
   slug: string;
@@ -24,19 +26,22 @@ const TYPE_OPTIONS = ["entity", "phenomenon", "object", "place", "protocol", "ev
 const STATUS_OPTIONS = ["unverified", "recurring", "contained", "dormant", "unknown"] as const;
 const RECENT_LIMIT = 50;
 
-function buildCatalogHref(filters: {
-  query?: string;
-  tag?: string;
-  type?: string;
-  status?: string;
-}) {
+function buildCatalogHref(
+  basePath: string,
+  filters: {
+    query?: string;
+    tag?: string;
+    type?: string;
+    status?: string;
+  },
+) {
   const sp = new URLSearchParams();
   if (filters.query?.trim()) sp.set("query", filters.query.trim());
   if (filters.tag?.trim()) sp.set("tag", filters.tag.trim());
   if (filters.type?.trim()) sp.set("type", filters.type.trim());
   if (filters.status?.trim()) sp.set("status", filters.status.trim());
   const qs = sp.toString();
-  return qs ? `/catalog?${qs}` : "/catalog";
+  return qs ? `${basePath}?${qs}` : basePath;
 }
 
 function buildArticlesApiUrl(filters: {
@@ -80,6 +85,9 @@ export default function CatalogClient(props: {
   initialType: string;
   initialStatus: string;
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const catalogHref = withSiteLocale("/catalog", locale);
   const [query, setQuery] = useState(props.initialQuery);
   const [tag, setTag] = useState(props.initialTag);
   const [type, setType] = useState(props.initialType);
@@ -121,16 +129,12 @@ export default function CatalogClient(props: {
     [deferredQuery, tag, type, status],
   );
 
-  const browserUrl = useMemo(
-    () =>
-      buildCatalogHref({
-        query: deferredQuery,
-        tag,
-        type,
-        status,
-      }),
-    [deferredQuery, tag, type, status],
-  );
+  const browserUrl = buildCatalogHref(catalogHref, {
+    query: deferredQuery,
+    tag,
+    type,
+    status,
+  });
 
   useEffect(() => {
     globalThis.history.replaceState({}, "", browserUrl);
@@ -298,7 +302,7 @@ export default function CatalogClient(props: {
                     <div className="min-w-0">
                       <Link
                         className="block truncate font-medium underline-offset-2 hover:underline"
-                        href={`/wiki/${item.slug}`}
+                        href={withSiteLocale(`/wiki/${item.slug}`, locale)}
                       >
                         {item.title}
                       </Link>

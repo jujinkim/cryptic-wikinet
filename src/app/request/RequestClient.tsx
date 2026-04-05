@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import LocalTime from "@/components/local-time";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 export default function RequestClient() {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const requestHref = withSiteLocale("/request", locale);
+  const loginHref = withSiteLocale("/login", locale);
   const sp = useSearchParams();
 
   const statusFilter = String(sp.get("status") ?? "ALL").toUpperCase();
@@ -86,7 +91,7 @@ export default function RequestClient() {
 
         {authenticated === false ? (
           <div className="mt-4 text-sm text-zinc-500">
-            Members only. <Link className="underline" href="/login">Login</Link>
+            Members only. <Link className="underline" href={loginHref}>Login</Link>
           </div>
         ) : null}
 
@@ -140,8 +145,8 @@ export default function RequestClient() {
               value={statusFilter}
               onChange={(e) => {
                 const v = e.target.value;
-                if (v === "ALL") router.push("/request");
-                else router.push(`/request?status=${encodeURIComponent(v)}`);
+                if (v === "ALL") router.push(requestHref);
+                else router.push(`${requestHref}?status=${encodeURIComponent(v)}`);
               }}
             >
               <option value="ALL">ALL</option>

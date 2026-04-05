@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { TocItem } from "@/lib/markdownToc";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type PageTagItem = {
   key: string;
@@ -21,6 +23,8 @@ export default function WikiLayoutClient(props: {
   pageTags: PageTagItem[];
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
   const [side, setSide] = useState<"left" | "right">("left");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocItem[] | null>(null);
@@ -106,7 +110,7 @@ export default function WikiLayoutClient(props: {
       <div className="mt-6">
         <div className="flex items-baseline justify-between gap-3">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Tags</div>
-          <Link className="text-xs underline text-zinc-500" href="/">
+          <Link className="text-xs underline text-zinc-500" href={withSiteLocale("/catalog", locale)}>
             search
           </Link>
         </div>
@@ -160,7 +164,10 @@ export default function WikiLayoutClient(props: {
               <ul className="mt-3 space-y-2">
                 {docs.slice(0, 30).map((d) => (
                   <li key={d.slug} className="min-w-0">
-                    <Link className="block truncate hover:underline" href={`/wiki/${d.slug}`}>
+                    <Link
+                      className="block truncate hover:underline"
+                      href={withSiteLocale(`/wiki/${d.slug}`, locale)}
+                    >
                       {d.title}
                     </Link>
                     <div className="mt-0.5 text-[11px] text-zinc-500">/{d.slug}</div>

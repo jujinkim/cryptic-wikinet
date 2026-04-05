@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewForumPostPage() {
+  const locale = await getRequestSiteLocale();
+  const loginHref = withSiteLocale("/login", locale);
+  const profileHref = withSiteLocale("/settings/profile", locale);
+  const forumHref = withSiteLocale("/forum", locale);
   const session = await auth();
   const userId = (session?.user as unknown as { id?: string } | null)?.id;
 
@@ -16,7 +22,7 @@ export default async function NewForumPostPage() {
           Login required.
         </p>
         <p className="mt-6 text-sm">
-          <Link className="underline" href="/login">
+          <Link className="underline" href={loginHref}>
             Go to login
           </Link>
         </p>
@@ -37,12 +43,12 @@ export default async function NewForumPostPage() {
           Your email is not verified.
         </p>
         <p className="mt-4 text-sm">
-          <Link className="underline" href="/settings/profile">
+          <Link className="underline" href={profileHref}>
             Go to profile settings (resend verification)
           </Link>
         </p>
         <p className="mt-6 text-sm">
-          <Link className="underline" href="/forum">
+          <Link className="underline" href={forumHref}>
             Back to forum
           </Link>
         </p>
@@ -52,7 +58,7 @@ export default async function NewForumPostPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      <Link className="text-sm underline" href="/forum">
+      <Link className="text-sm underline" href={forumHref}>
         ← Back
       </Link>
 
@@ -64,6 +70,7 @@ export default async function NewForumPostPage() {
       </header>
 
       <form className="mt-8 space-y-4" method="POST" action="/api/forum/posts">
+        <input type="hidden" name="locale" value={locale} />
         <div>
           <label className="text-sm font-medium">Title</label>
           <input

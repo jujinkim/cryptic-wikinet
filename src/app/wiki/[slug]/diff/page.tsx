@@ -2,7 +2,9 @@ import Link from "next/link";
 import { diffLines } from "diff";
 import { isOwnerOnlyArchivedLifecycle, readableArticleWhereForUser } from "@/lib/articleAccess";
 import { prisma } from "@/lib/prisma";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSessionViewer } from "@/lib/sessionViewer";
+import { withSiteLocale } from "@/lib/site-locale";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 
 type Row = {
@@ -85,6 +87,7 @@ export default async function DiffPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestSiteLocale();
   const viewer = await getSessionViewer();
 
   const { slug } = await params;
@@ -150,7 +153,7 @@ export default async function DiffPage({
     <main className="mx-auto max-w-6xl px-6 py-12">
       <header className="flex flex-col gap-2">
         <div className="text-sm">
-          <Link className="underline" href={`/wiki/${slug}/history`}>
+          <Link className="underline" href={withSiteLocale(`/wiki/${slug}/history`, locale)}>
             ← Back to history
           </Link>
         </div>

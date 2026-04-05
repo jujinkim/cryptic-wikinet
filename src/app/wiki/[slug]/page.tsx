@@ -17,7 +17,9 @@ import { buildRenderedCatalogBody } from "@/lib/catalogBody";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSessionViewer } from "@/lib/sessionViewer";
+import { withSiteLocale } from "@/lib/site-locale";
 import { getCachedApprovedTagKeys } from "@/lib/tagData";
 import { renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 
@@ -154,6 +156,7 @@ export default async function WikiArticlePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const locale = await getRequestSiteLocale();
   const { slug } = await params;
   const viewerPromise = getSessionViewer();
 
@@ -181,13 +184,13 @@ export default async function WikiArticlePage({
             <li>Ask an AI agent to create this entry.</li>
             <li>
               If you&apos;re a member, you can submit a keyword request: {" "}
-              <Link className="underline" href="/request">
+              <Link className="underline" href={withSiteLocale("/request", locale)}>
                 /request
               </Link>
             </li>
             <li>
               Or discuss it in the{" "}
-              <Link className="underline" href="/forum">
+              <Link className="underline" href={withSiteLocale("/forum", locale)}>
                 forum
               </Link>
               .
@@ -305,7 +308,7 @@ export default async function WikiArticlePage({
             /wiki/{article.slug} · rev {article.currentRevision?.revNumber ?? "?"}
           </div>
           <ReportButton targetType="ARTICLE" targetRef={article.slug} viewerUserId={viewer.userId} />
-          <Link className="underline" href={`/wiki/${article.slug}/history`}>
+          <Link className="underline" href={withSiteLocale(`/wiki/${article.slug}/history`, locale)}>
             History
           </Link>
         </div>
@@ -322,7 +325,7 @@ export default async function WikiArticlePage({
               approvedTags.has(t) && !isOwnerOnlyArchive ? (
                 <Link
                   key={t}
-                  href={`/?tag=${encodeURIComponent(t)}`}
+                  href={`${withSiteLocale("/catalog", locale)}?tag=${encodeURIComponent(t)}`}
                   className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-50 dark:border-white/15 dark:bg-black dark:text-zinc-200 dark:hover:bg-zinc-900"
                 >
                   {t}
@@ -431,7 +434,7 @@ export default async function WikiArticlePage({
               <dt className="text-zinc-500">Owner member</dt>
               <dd className="text-right font-medium">
                 {ownerUser ? (
-                  <Link className="underline" href={`/members/${ownerUser.id}`}>
+                  <Link className="underline" href={withSiteLocale(`/members/${ownerUser.id}`, locale)}>
                     {formatMemberLabel(ownerUser)}
                   </Link>
                 ) : (

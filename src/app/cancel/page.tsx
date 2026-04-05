@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function CancelSignupPage(props: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestSiteLocale();
   const sp = (await props.searchParams) ?? {};
   const email = typeof sp.email === "string" ? sp.email : "";
   const token = typeof sp.token === "string" ? sp.token : "";
@@ -20,10 +23,10 @@ export default async function CancelSignupPage(props: {
           처리됐어. (미인증 계정이면 삭제됨)
         </p>
         <div className="mt-6 flex gap-3 text-sm">
-          <Link className="underline" href="/signup">
+          <Link className="underline" href={withSiteLocale("/signup", locale)}>
             Sign up
           </Link>
-          <Link className="underline" href="/login">
+          <Link className="underline" href={withSiteLocale("/login", locale)}>
             Login
           </Link>
         </div>
@@ -39,7 +42,7 @@ export default async function CancelSignupPage(props: {
           링크가 유효하지 않거나 만료됐어.
         </p>
         <div className="mt-6 flex gap-3 text-sm">
-          <Link className="underline" href="/login">
+          <Link className="underline" href={withSiteLocale("/login", locale)}>
             Go to login
           </Link>
         </div>
@@ -73,6 +76,7 @@ export default async function CancelSignupPage(props: {
       <form className="mt-6" method="POST" action="/api/auth/cancel">
         <input type="hidden" name="email" value={email} />
         <input type="hidden" name="token" value={token} />
+        <input type="hidden" name="locale" value={locale} />
         <button className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white dark:bg-white dark:text-black">
           Delete signup
         </button>
@@ -83,7 +87,7 @@ export default async function CancelSignupPage(props: {
       </p>
 
       <div className="mt-6 text-sm">
-        <Link className="underline" href="/verify">
+        <Link className="underline" href={withSiteLocale("/verify", locale)}>
           Go to verify page
         </Link>
       </div>

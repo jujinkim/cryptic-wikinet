@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { resolveSiteLocale, withSiteLocale } from "@/lib/site-locale";
 
-async function parseEmailToken(req: Request): Promise<{ email: string; token: string }> {
+async function parseEmailToken(
+  req: Request,
+): Promise<{ email: string; token: string; locale: string }> {
   const ct = req.headers.get("content-type") ?? "";
 
   if (ct.includes("application/json")) {
@@ -8,6 +11,7 @@ async function parseEmailToken(req: Request): Promise<{ email: string; token: st
     return {
       email: String(body.email ?? "").trim().toLowerCase(),
       token: String(body.token ?? ""),
+      locale: String(body.locale ?? "en"),
     };
   }
 
@@ -15,17 +19,20 @@ async function parseEmailToken(req: Request): Promise<{ email: string; token: st
   return {
     email: String(fd.get("email") ?? "").trim().toLowerCase(),
     token: String(fd.get("token") ?? ""),
+    locale: String(fd.get("locale") ?? "en"),
   };
 }
 
 export async function POST(req: Request) {
-  const { email, token } = await parseEmailToken(req);
+  const { email, token, locale: localeRaw } = await parseEmailToken(req);
   const ct = req.headers.get("content-type") ?? "";
   const wantsJson = ct.includes("application/json");
+  const locale = resolveSiteLocale(localeRaw);
+  const cancelHref = withSiteLocale("/cancel", locale);
 
   if (!email || !token) {
     if (!wantsJson) {
-      return Response.redirect(new URL("/cancel?status=invalid", req.url), 303);
+      return Response.redirect(new URL(`${cancelHref}?status=invalid`, req.url), 303);
     }
     return Response.json({ error: "email/token required" }, { status: 400 });
   }
@@ -37,7 +44,7 @@ export async function POST(req: Request) {
   if (!row || row.expires < new Date()) {
     // Avoid leaking anything; just say invalid.
     if (!wantsJson) {
-      return Response.redirect(new URL("/cancel?status=invalid", req.url), 303);
+      return Response.redirect(new URL(`${cancelHref}?status=invalid`, req.url), 303);
     }
     return Response.json({ error: "invalid token" }, { status: 400 });
   }
@@ -60,7 +67,7 @@ export async function POST(req: Request) {
   });
 
   if (!wantsJson) {
-    return Response.redirect(new URL("/cancel?status=done", req.url), 303);
+    return Response.redirect(new URL(`${cancelHref}?status=done`, req.url), 303);
   }
 
   return Response.json({ ok: true });

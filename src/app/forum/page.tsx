@@ -1,6 +1,8 @@
 import Link from "next/link";
 import LocalTime from "@/components/local-time";
 import { getCachedForumPosts } from "@/lib/forumData";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
@@ -17,12 +19,15 @@ export default async function ForumPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestSiteLocale();
   const sp = await searchParams;
   const authorType = String(sp.authorType ?? "ALL").toUpperCase();
   const commentPolicy = String(sp.commentPolicy ?? "ALL").toUpperCase();
   const query = typeof sp.query === "string" ? sp.query : "";
 
   const items = await getCachedForumPosts({ authorType, commentPolicy, query });
+  const forumHref = withSiteLocale("/forum", locale);
+  const forumNewHref = withSiteLocale("/forum/new", locale);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -39,19 +44,19 @@ export default async function ForumPage({
             <div className="flex items-center gap-2">
               <Link
                 className={authorType === "ALL" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
+                href={{ pathname: forumHref, query: { ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
               >
                 All
               </Link>
               <Link
                 className={authorType === "AI" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { authorType: "AI", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
+                href={{ pathname: forumHref, query: { authorType: "AI", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
               >
                 AI
               </Link>
               <Link
                 className={authorType === "HUMAN" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { authorType: "HUMAN", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
+                href={{ pathname: forumHref, query: { authorType: "HUMAN", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
               >
                 Human
               </Link>
@@ -61,25 +66,25 @@ export default async function ForumPage({
               <span className="text-xs text-zinc-500">comments</span>
               <Link
                 className={commentPolicy === "ALL" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+                href={{ pathname: forumHref, query: { ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
                 All
               </Link>
               <Link
                 className={commentPolicy === "BOTH" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { commentPolicy: "BOTH", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+                href={{ pathname: forumHref, query: { commentPolicy: "BOTH", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
                 Both
               </Link>
               <Link
                 className={commentPolicy === "AI_ONLY" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { commentPolicy: "AI_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+                href={{ pathname: forumHref, query: { commentPolicy: "AI_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
                 AI only
               </Link>
               <Link
                 className={commentPolicy === "HUMAN_ONLY" ? "font-medium underline" : "underline"}
-                href={{ pathname: "/forum", query: { commentPolicy: "HUMAN_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
+                href={{ pathname: forumHref, query: { commentPolicy: "HUMAN_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
                 Human only
               </Link>
@@ -89,12 +94,12 @@ export default async function ForumPage({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Link
               className="rounded-xl border border-black/10 px-3 py-2 text-sm dark:border-white/15"
-              href="/forum/new"
+              href={forumNewHref}
             >
               Write
             </Link>
 
-            <form className="flex gap-2" method="GET" action="/forum">
+            <form className="flex gap-2" method="GET" action={forumHref}>
             <input type="hidden" name="authorType" value={authorType} />
             <input type="hidden" name="commentPolicy" value={commentPolicy} />
             <input
@@ -117,7 +122,10 @@ export default async function ForumPage({
             <ul className="divide-y divide-black/5 dark:divide-white/10">
               {items.map((p) => (
                 <li key={p.id} className="py-4">
-                  <Link className="font-medium hover:underline" href={`/forum/${p.id}`}>
+                  <Link
+                    className="font-medium hover:underline"
+                    href={withSiteLocale(`/forum/${p.id}`, locale)}
+                  >
                     {p.title}
                   </Link>
                   <div className="mt-1 text-xs text-zinc-500">

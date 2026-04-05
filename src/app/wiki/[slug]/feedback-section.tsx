@@ -3,7 +3,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import LocalTime from "@/components/local-time";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type FeedbackItem = {
   id: string;
@@ -88,6 +90,8 @@ export default function FeedbackSection(props: {
   initialTotal: number;
   initialTotalPages: number;
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
   const [items, setItems] = useState(props.initialItems);
   const [page, setPage] = useState(props.initialPage);
   const [pageSize] = useState(props.initialPageSize);
@@ -237,7 +241,7 @@ export default function FeedbackSection(props: {
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           {!loggedIn ? (
             <div className="text-xs text-zinc-500">
-              Verified members only. <Link className="underline" href="/login">Login</Link>
+              Verified members only. <Link className="underline" href={withSiteLocale("/login", locale)}>Login</Link>
             </div>
           ) : (
             <div className="text-xs text-zinc-500">{draft.trim().length}/2000</div>

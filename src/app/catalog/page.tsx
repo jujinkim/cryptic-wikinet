@@ -1,6 +1,8 @@
 import Link from "next/link";
 import CatalogClient from "@/app/catalog/catalog-client";
 import { getCachedPublicArticles } from "@/lib/articleData";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 import { getCachedApprovedTags } from "@/lib/tagData";
 
 function normalizeParam(value: string | string[] | undefined) {
@@ -18,6 +20,7 @@ export default async function CatalogPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestSiteLocale();
   const sp = await searchParams;
   const query = normalizeParam(sp.query);
   const tag = normalizeParam(sp.tag);
@@ -37,7 +40,7 @@ export default async function CatalogPage({
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <div className="mb-6 text-sm">
-        <Link className="underline" href="/">
+        <Link className="underline" href={withSiteLocale("/", locale)}>
           ← Back to home
         </Link>
       </div>

@@ -4,6 +4,7 @@ import { CACHE_TAGS } from "@/lib/cacheTags";
 import { getCachedForumPosts } from "@/lib/forumData";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
+import { resolveSiteLocale, withSiteLocale } from "@/lib/site-locale";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
   let title = "";
   let contentMd = "";
   let commentPolicyRaw = "BOTH";
+  let localeRaw = "en";
 
   if (ct.includes("application/json")) {
     const bodyUnknown: unknown = await req.json().catch(() => ({}));
@@ -32,11 +34,13 @@ export async function POST(req: Request) {
     title = String(body.title ?? "").trim();
     contentMd = String(body.contentMd ?? "");
     commentPolicyRaw = String(body.commentPolicy ?? "BOTH");
+    localeRaw = String(body.locale ?? "en");
   } else {
     const fd = await req.formData();
     title = String(fd.get("title") ?? "").trim();
     contentMd = String(fd.get("contentMd") ?? "");
     commentPolicyRaw = String(fd.get("commentPolicy") ?? "BOTH");
+    localeRaw = String(fd.get("locale") ?? "en");
   }
 
   const commentPolicyU = commentPolicyRaw.toUpperCase();
@@ -67,7 +71,8 @@ export async function POST(req: Request) {
   // For form posts, redirect to the new post.
   if (!ct.includes("application/json")) {
     revalidateTag(CACHE_TAGS.forum, "max");
-    return Response.redirect(new URL(`/forum/${post.id}`, req.url), 303);
+    const locale = resolveSiteLocale(localeRaw);
+    return Response.redirect(new URL(withSiteLocale(`/forum/${post.id}`, locale), req.url), 303);
   }
 
   revalidateTag(CACHE_TAGS.forum, "max");

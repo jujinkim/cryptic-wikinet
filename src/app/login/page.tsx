@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import LoginClient from "@/app/login/client";
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
@@ -12,9 +14,10 @@ function isIpHost(hostname: string) {
 }
 
 export default async function LoginPage() {
+  const locale = await getRequestSiteLocale();
   const session = await auth();
   if (session?.user) {
-    redirect("/");
+    redirect(withSiteLocale("/", locale));
   }
 
   const nextAuthUrl = process.env.NEXTAUTH_URL ?? "";

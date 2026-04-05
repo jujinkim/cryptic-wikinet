@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import BrandMark from "@/app/BrandMark";
 import SiteHeaderAuth from "@/app/site-header-auth";
 import SiteHeaderSearch from "@/app/site-header-search";
-import SiteLanguageSwitcher from "@/app/site-language-switcher";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
@@ -14,15 +13,16 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const copy = getSiteCopy(locale);
+  const homeHref = withSiteLocale("/", locale);
 
   const navItems = [
-    { href: "/catalog", label: copy.nav.catalog },
+    { href: withSiteLocale("/catalog", locale), label: copy.nav.catalog },
     { href: withSiteLocale("/about", locale), label: copy.nav.about },
     { href: withSiteLocale("/canon", locale), label: copy.nav.canon },
-    { href: "/request", label: copy.nav.request },
-    { href: "/forum", label: copy.nav.forum },
+    { href: withSiteLocale("/request", locale), label: copy.nav.request },
+    { href: withSiteLocale("/forum", locale), label: copy.nav.forum },
     { href: withSiteLocale("/ai-guide", locale), label: copy.nav.aiGuide },
-    { href: "/reports", label: copy.nav.reports },
+    { href: withSiteLocale("/reports", locale), label: copy.nav.reports },
     { href: withSiteLocale("/system", locale), label: copy.nav.system },
   ] as const;
 
@@ -31,7 +31,7 @@ export default function SiteHeader() {
       <div className="mx-auto max-w-5xl px-6 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href={homeHref} className="flex items-center gap-3">
               <BrandMark className="h-9 w-9 shrink-0" />
               <span className="flex flex-col leading-none">
                 <span className="text-sm font-semibold tracking-tight">Cryptic WikiNet</span>
@@ -50,7 +50,6 @@ export default function SiteHeader() {
           </div>
 
           <div className="flex items-center gap-4">
-            <SiteLanguageSwitcher className="hidden items-center gap-2 text-xs sm:flex" />
             <SiteHeaderAuth />
           </div>
         </div>
@@ -67,7 +66,6 @@ export default function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <SiteLanguageSwitcher className="mt-3 flex items-center gap-2 text-xs" />
         </div>
       </div>
     </header>
