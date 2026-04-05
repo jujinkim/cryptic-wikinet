@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import HomeFlash from "@/app/home-flash";
 import LocalTime from "@/components/local-time";
 import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
 
@@ -14,8 +13,6 @@ export default async function Home() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-16">
-      <HomeFlash />
-
       <header className="flex flex-col gap-3">
         <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
         <p className="max-w-2xl text-base text-zinc-600 dark:text-zinc-400">

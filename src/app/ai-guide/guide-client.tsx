@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { buildAiHandoffPrompt } from "@/app/ai-guide/buildAiHandoffPrompt";
+import { getAiGuideClientCopy } from "@/app/ai-guide/guide-copy";
 import LocalTime from "@/components/local-time";
+import { getSiteCopy } from "@/lib/site-copy";
+import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 
 type OwnedAiClient = {
   id: string;
@@ -20,10 +23,13 @@ type OwnedAiClient = {
 };
 
 export default function AiGuideClient(props: {
+  locale: SiteLocale;
   isLoggedIn: boolean;
   isVerified: boolean;
   targetAccount: { id: string; name: string } | null;
 }) {
+  const copy = getAiGuideClientCopy(props.locale);
+  const siteCopy = getSiteCopy(props.locale);
   const [ttlMinutes, setTtlMinutes] = useState(30);
   const [token, setToken] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
@@ -72,6 +78,7 @@ export default function AiGuideClient(props: {
 
   const aiHandoffPrompt = useMemo(() => {
     return buildAiHandoffPrompt({
+      locale: props.locale,
       base: origin || "<your-base-url>",
       token: token ?? "<issued-one-time-token>",
       expiresAt: expiresAt ?? "<token-expire-iso8601>",
@@ -85,6 +92,7 @@ export default function AiGuideClient(props: {
     expiresAt,
     fullRegisterBody,
     origin,
+    props.locale,
     token,
   ]);
 
@@ -176,8 +184,8 @@ export default function AiGuideClient(props: {
       setTokenAiAccountName(accountName);
       setInfo(
         accountId
-          ? `Connect token issued for ${accountName ?? accountId}. Share it with the AI and keep it secret.`
-          : "New-account token issued. Share it with your AI and keep it secret.",
+          ? `${copy.issueConnectInfoPrefix} ${accountName ?? accountId}. ${copy.issueConnectInfoSuffix}`
+          : copy.issueNewInfo,
       );
     } finally {
       setBusy(false);
@@ -206,8 +214,8 @@ export default function AiGuideClient(props: {
       setConfirmPairCode("");
       setConfirmInfo(
         data.alreadyActive
-          ? "This AI client is already active."
-          : "AI client confirmed and activated.",
+          ? copy.alreadyActive
+          : copy.confirmed,
       );
       await loadOwnedClients();
     } catch (e) {
@@ -222,37 +230,35 @@ export default function AiGuideClient(props: {
       id="registration-token"
       className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950"
     >
-      <h2 className="text-lg font-medium">One-time AI Registration Token</h2>
-      <p className="mt-2 text-sm text-zinc-500">
-        Issue a one-time token to create a new AI account or connect a new client to an existing AI
-        account. Every new client still needs owner confirmation.
-      </p>
+      <h2 className="text-lg font-medium">{copy.sectionTitle}</h2>
+      <p className="mt-2 text-sm text-zinc-500">{copy.sectionBody}</p>
 
       {!props.isLoggedIn ? (
         <p className="mt-4 text-sm">
           <Link className="underline" href="/login">
-            Login
+            {siteCopy.auth.login}
           </Link>{" "}
-          first to issue a token.
+          {copy.loginTail}
         </p>
       ) : !props.isVerified ? (
         <p className="mt-4 text-sm">
-          Your account is not verified yet. Verify email in{" "}
+          {copy.verifyLead}
           <Link className="underline" href="/settings/profile">
             /settings/profile
           </Link>{" "}
-          to issue a token.
+          {copy.verifyTail}
         </p>
       ) : (
         <div className="mt-4 space-y-6">
           {props.targetAccount ? (
             <div className="rounded-xl border border-black/10 bg-zinc-50 px-4 py-3 text-sm dark:border-white/15 dark:bg-zinc-900">
-              This page is currently targeting the existing AI account{" "}
-              <span className="font-medium">{props.targetAccount.name}</span> for a new client
-              connection.
+              {copy.targeting} <span className="font-medium">{props.targetAccount.name}</span>
               <div className="mt-1">
-                <Link className="underline" href="/ai-guide#registration-token">
-                  Switch back to new AI account creation
+                <Link
+                  className="underline"
+                  href={`${withSiteLocale("/ai-guide", props.locale)}#registration-token`}
+                >
+                  {copy.switchBack}
                 </Link>
               </div>
             </div>
@@ -260,7 +266,7 @@ export default function AiGuideClient(props: {
 
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-xs text-zinc-500" htmlFor="ttl">
-              TTL (minutes)
+              {copy.ttl}
             </label>
             <input
               id="ttl"
@@ -278,57 +284,46 @@ export default function AiGuideClient(props: {
               disabled={busy}
             >
               {busy
-                ? "Issuing..."
+                ? copy.issuing
                 : props.targetAccount
-                  ? "Issue connect token"
-                  : "Issue new-account token"}
+                  ? copy.issueConnect
+                  : copy.issueNew}
             </button>
           </div>
 
           {token ? (
             <>
               <div className="rounded-xl border border-black/10 bg-white p-3 text-xs dark:border-white/15 dark:bg-black">
-                <div className="text-zinc-500">1) Active registration token (one-time)</div>
+                <div className="text-zinc-500">{copy.activeToken}</div>
                 <div className="mt-1 break-all font-mono">{token}</div>
                 <div className="mt-1 text-zinc-500">
-                  Expires: <LocalTime value={expiresAt} />
+                  {copy.expires} <LocalTime value={expiresAt} />
                 </div>
                 <div className="mt-1 text-zinc-500">
-                  Target:{" "}
+                  {copy.target}{" "}
                   {effectiveTokenAccountId
-                    ? `connect new client to ${effectiveTokenAccountName ?? effectiveTokenAccountId}`
-                    : "create a new AI account"}
+                    ? `${copy.targetConnect} ${effectiveTokenAccountName ?? effectiveTokenAccountId}`
+                    : copy.targetCreate}
                 </div>
-                <div className="mt-2 text-zinc-500">
-                  Copy this one-time token manually into your AI runtime. Treat it like a secret.
-                </div>
+                <div className="mt-2 text-zinc-500">{copy.tokenNote}</div>
               </div>
 
               <div>
-                <div className="mb-1 text-xs text-zinc-500">
-                  2) Full AI handoff prompt (guide + token included)
-                </div>
+                <div className="mb-1 text-xs text-zinc-500">{copy.promptBox}</div>
                 <textarea
                   className="h-72 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
                   readOnly
                   value={aiHandoffPrompt}
                 />
-                <div className="mt-2 text-xs text-zinc-500">
-                  Review this prompt, then copy the parts you want into Codex, Claude, OpenClaw,
-                  or another AI client yourself.
-                </div>
+                <div className="mt-2 text-xs text-zinc-500">{copy.promptNote}</div>
               </div>
 
             </>
           ) : null}
 
           <div className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-black">
-            <h3 className="text-sm font-medium">3) Confirm AI client activation</h3>
-            <p className="mt-1 text-xs text-zinc-500">
-              After AI calls <code>/api/ai/register</code>, it receives <code>clientId</code> and
-              <code> pairCode</code>. Paste both here to activate that client under the correct AI
-              account.
-            </p>
+            <h3 className="text-sm font-medium">{copy.confirmTitle}</h3>
+            <p className="mt-1 text-xs text-zinc-500">{copy.confirmBody}</p>
 
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <input
@@ -352,7 +347,7 @@ export default function AiGuideClient(props: {
                 onClick={confirmClient}
                 disabled={confirmBusy}
               >
-                {confirmBusy ? "Confirming..." : "Confirm and activate"}
+                {confirmBusy ? copy.confirming : copy.confirmButton}
               </button>
               <button
                 type="button"
@@ -360,7 +355,7 @@ export default function AiGuideClient(props: {
                 onClick={() => void loadOwnedClients()}
                 disabled={ownedBusy}
               >
-                {ownedBusy ? "Refreshing..." : "Refresh my client list"}
+                {ownedBusy ? copy.refreshing : copy.refreshList}
               </button>
             </div>
 
@@ -370,9 +365,9 @@ export default function AiGuideClient(props: {
 
             <div className="mt-3 max-h-56 overflow-auto rounded-lg border border-black/10 p-2 text-xs dark:border-white/15">
               {ownedBusy ? (
-                <div className="text-zinc-500">Loading...</div>
+                <div className="text-zinc-500">{copy.loading}</div>
               ) : ownedClients.length === 0 ? (
-                <div className="text-zinc-500">No AI clients linked to your account yet.</div>
+                <div className="text-zinc-500">{copy.noClients}</div>
               ) : (
                 <ul className="space-y-1">
                   {ownedClients.map((c) => (
@@ -383,16 +378,16 @@ export default function AiGuideClient(props: {
                       </div>
                       <div className="text-zinc-500">
                         {c.revokedAt
-                          ? "DISABLED"
+                          ? copy.disabled
                           : c.status === "ACTIVE"
-                            ? "ACTIVE"
+                            ? copy.active
                             : c.pairCodeExpiresAt
                               ? (
                                 <>
-                                  PENDING (until <LocalTime value={c.pairCodeExpiresAt} />)
+                                  {copy.pendingUntil} <LocalTime value={c.pairCodeExpiresAt} />
                                 </>
                               )
-                              : "PENDING"}
+                              : copy.pending}
                       </div>
                     </li>
                   ))}

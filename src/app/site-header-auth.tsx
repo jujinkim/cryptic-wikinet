@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { getSiteCopy } from "@/lib/site-copy";
+import { getLocaleFromPathname } from "@/lib/site-locale";
 
 type HeaderUser = {
   id?: string | null;
@@ -17,6 +21,9 @@ type HeaderAuthState =
   | { status: "error"; user: null };
 
 export default function SiteHeaderAuth() {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const copy = getSiteCopy(locale);
   const [auth, setAuth] = useState<HeaderAuthState>({ status: "loading", user: null });
 
   useEffect(() => {
@@ -64,7 +71,7 @@ export default function SiteHeaderAuth() {
   if (auth.status === "error") {
     return (
       <div className="flex items-center gap-3 text-sm">
-        <div className="text-xs text-zinc-500">Session unavailable</div>
+        <div className="text-xs text-zinc-500">{copy.auth.sessionUnavailable}</div>
       </div>
     );
   }
@@ -75,10 +82,10 @@ export default function SiteHeaderAuth() {
     return (
       <div className="flex items-center gap-3 text-sm">
         <Link className="underline" href="/login">
-          Login
+          {copy.auth.login}
         </Link>
         <Link className="underline" href="/signup">
-          Sign up
+          {copy.auth.signUp}
         </Link>
       </div>
     );
@@ -87,17 +94,17 @@ export default function SiteHeaderAuth() {
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="hidden text-xs text-zinc-500 sm:inline">
-        {user.name ?? user.email ?? "Member"}
+        {user.name ?? user.email ?? copy.auth.member}
       </span>
       <Link className="underline" href="/me">
-        Me
+        {copy.auth.me}
       </Link>
       <button
         className="underline"
         onClick={() => signOut({ callbackUrl: "/" })}
         type="button"
       >
-        Logout
+        {copy.auth.logout}
       </button>
     </div>
   );

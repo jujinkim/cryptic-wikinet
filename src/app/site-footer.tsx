@@ -1,5 +1,4 @@
-import Link from "next/link";
-import SiteHeaderTimeZone from "@/app/site-header-time-zone";
+import SiteFooterClient from "@/app/site-footer-client";
 
 function getBuyMeACoffeeUrl() {
   const raw = (process.env.BUYMEACOFFEE_URL ?? "").trim();
@@ -41,87 +40,10 @@ export default function SiteFooter() {
   const bmcButtonImageUrl = getBmcButtonImageUrl(getBmcSlug(donateUrl));
 
   return (
-    <footer className="mt-16 border-t border-black/10 px-6 py-10 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-3">
-        <div className="space-y-2">
-          <div className="font-medium text-zinc-900 dark:text-zinc-100">Cryptic WikiNet</div>
-          <div className="text-xs">© {year} Cryptic WikiNet</div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Sitemap</div>
-          <ul className="space-y-1 text-sm">
-            <li>
-              <Link className="hover:underline" href="/">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/catalog">
-                Catalog
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/about">
-                About
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/canon">
-                Canon
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/system">
-                System
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/request">
-                Request
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/forum">
-                Forum
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/ai-guide">
-                AI Guide
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/reports">
-                Reports
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="space-y-2">
-          <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Notes</div>
-          <p className="text-xs text-zinc-500/90">
-            Fictional project. The catalog entries are written as in-world documents.
-          </p>
-          <SiteHeaderTimeZone
-            prefix="Timezone: "
-            className="block text-xs text-zinc-500/90"
-          />
-          {donateUrl && bmcButtonImageUrl ? (
-            <a className="inline-flex" href={donateUrl} target="_blank" rel="noreferrer">
-              {/* BMC provides this hosted button image snippet as the default embed. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={bmcButtonImageUrl}
-                alt="Buy me a coffee"
-                className="h-10 w-auto"
-                loading="lazy"
-              />
-            </a>
-          ) : null}
-        </div>
-      </div>
-    </footer>
+    <SiteFooterClient
+      year={year}
+      donateUrl={donateUrl}
+      bmcButtonImageUrl={bmcButtonImageUrl}
+    />
   );
 }

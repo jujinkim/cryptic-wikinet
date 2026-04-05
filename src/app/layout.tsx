@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import SiteFooter from "@/app/site-footer";
+import SiteFlash from "@/app/site-flash";
 import SiteHeader from "@/app/site-header";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50`}
       >
         <SiteHeader />
+        <SiteFlash />
         <div className="flex-1">{children}</div>
         <SiteFooter />
       </body>
