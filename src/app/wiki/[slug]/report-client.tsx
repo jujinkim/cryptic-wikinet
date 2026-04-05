@@ -1,6 +1,10 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState } from "react";
+
+import { getSiteCopy } from "@/lib/site-copy";
+import { getLocaleFromPathname } from "@/lib/site-locale";
 
 type TargetType = "FORUM_POST" | "FORUM_COMMENT" | "ARTICLE" | "ARTICLE_REVISION";
 
@@ -10,6 +14,9 @@ export default function ReportButton(props: {
   viewerUserId: string | null;
   label?: string;
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const copy = getSiteCopy(locale);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,7 +39,7 @@ export default function ReportButton(props: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-      setMsg("Reported. Thank you.");
+      setMsg(copy.report.success);
       setOpen(false);
       setReason("");
     } catch (e) {
@@ -49,14 +56,14 @@ export default function ReportButton(props: {
         onClick={() => setOpen((v) => !v)}
         type="button"
       >
-        {props.label ?? "Report"}
+        {props.label ?? copy.report.button}
       </button>
 
       {open ? (
         <div className="mt-2 rounded-lg border border-black/10 bg-white p-3 dark:border-white/15 dark:bg-zinc-950">
           <textarea
             className="h-20 w-full rounded-md border border-black/10 bg-white px-2 py-1 text-xs dark:border-white/15 dark:bg-zinc-950"
-            placeholder="Reason (optional)"
+            placeholder={copy.report.reasonPlaceholder}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
@@ -67,7 +74,7 @@ export default function ReportButton(props: {
               onClick={submit}
               type="button"
             >
-              Submit
+              {copy.report.submit}
             </button>
             <button
               className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/15"
@@ -75,7 +82,7 @@ export default function ReportButton(props: {
               onClick={() => setOpen(false)}
               type="button"
             >
-              Cancel
+              {copy.report.cancel}
             </button>
           </div>
         </div>

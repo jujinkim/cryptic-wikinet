@@ -1,9 +1,12 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import LocalTime from "@/components/local-time";
+import { getSiteCopy } from "@/lib/site-copy";
+import { getLocaleFromPathname } from "@/lib/site-locale";
 
 type CommentPolicy = "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
 
@@ -36,9 +39,9 @@ function authorLabel(p: {
   authorType: "AI" | "HUMAN";
   authorAiAccount?: { name: string } | null;
   authorUser?: { id: string; name: string | null } | null;
-}) {
+}, humanLabel: string) {
   if (p.authorType === "AI") return p.authorAiAccount?.name ?? "AI";
-  if (!p.authorUser) return "Human";
+  if (!p.authorUser) return humanLabel;
   return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }
 
@@ -98,6 +101,9 @@ export default function ForumPostClient(props: {
   initialComments: CommentItem[];
   viewerUserId: string | null;
 }) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const copy = getSiteCopy(locale);
   const { post, viewerUserId } = props;
   const [comments, setComments] = useState<CommentItem[]>(props.initialComments);
 
@@ -251,7 +257,7 @@ export default function ForumPostClient(props: {
           <>
             <h1 className="text-4xl font-semibold tracking-tight">{post.title}</h1>
             <div className="mt-2 text-xs text-zinc-500">
-              {authorLabel(post)} · {post.authorType} · comments: {post.commentPolicy} ·{" "}
+              {authorLabel(post, copy.forum.human)} · {post.authorType === "AI" ? copy.forum.ai : copy.forum.human} · {copy.forum.comments}: {copy.forum.commentPolicyLabels[post.commentPolicy] ?? post.commentPolicy} ·{" "}
               <LocalTime value={post.createdAt} />
             </div>
           </>
@@ -261,24 +267,24 @@ export default function ForumPostClient(props: {
               className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950"
               value={postTitle}
               onChange={(e) => setPostTitle(e.target.value)}
-              placeholder="Title"
+              placeholder={copy.forumPost.titlePlaceholder}
             />
             <textarea
               className="h-48 w-full rounded-lg border border-black/10 bg-white px-3 py-2 font-mono text-xs dark:border-white/15 dark:bg-zinc-950"
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
-              placeholder="Markdown"
+              placeholder={copy.forumPost.contentPlaceholder}
             />
             <div className="flex flex-wrap items-center gap-3">
-              <label className="text-xs text-zinc-500">commentPolicy</label>
+              <label className="text-xs text-zinc-500">{copy.forumPost.commentPolicyLabel}</label>
               <select
                 className="rounded-md border border-black/10 bg-white px-2 py-1 text-xs dark:border-white/15 dark:bg-zinc-950"
                 value={postPolicy}
                 onChange={(e) => setPostPolicy(e.target.value as CommentPolicy)}
               >
-                <option value="BOTH">BOTH</option>
-                <option value="HUMAN_ONLY">HUMAN_ONLY</option>
-                <option value="AI_ONLY">AI_ONLY</option>
+                <option value="BOTH">{copy.forum.commentPolicyLabels.BOTH}</option>
+                <option value="HUMAN_ONLY">{copy.forum.commentPolicyLabels.HUMAN_ONLY}</option>
+                <option value="AI_ONLY">{copy.forum.commentPolicyLabels.AI_ONLY}</option>
               </select>
 
               <button
@@ -286,7 +292,7 @@ export default function ForumPostClient(props: {
                 disabled={postBusy}
                 onClick={savePostEdits}
               >
-                Save
+                {copy.forumPost.save}
               </button>
               <button
                 className="rounded-md border border-black/10 px-3 py-1.5 text-xs dark:border-white/15"
@@ -298,7 +304,7 @@ export default function ForumPostClient(props: {
                   setPostPolicy(post.commentPolicy);
                 }}
               >
-                Cancel
+                {copy.forumPost.cancel}
               </button>
             </div>
             {postErr ? <div className="text-xs text-red-600">{postErr}</div> : null}
@@ -311,7 +317,7 @@ export default function ForumPostClient(props: {
               className="rounded-md border border-black/10 px-3 py-1.5 text-xs dark:border-white/15"
               onClick={() => setEditingPost(true)}
             >
-              Edit post
+              {copy.forumPost.editPost}
             </button>
           ) : null}
 
@@ -328,10 +334,10 @@ export default function ForumPostClient(props: {
       </article>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Comments</h2>
+            <h2 className="text-xl font-semibold">{copy.forumPost.commentsLabel}</h2>
 
         {sorted.length === 0 ? (
-          <div className="mt-4 text-sm text-zinc-500">No comments yet.</div>
+          <div className="mt-4 text-sm text-zinc-500">{copy.forumPost.noCommentsYet}</div>
         ) : (
           <ul className="mt-4 space-y-3">
             {sorted.map((c) => (
@@ -345,20 +351,31 @@ export default function ForumPostClient(props: {
                 commentRefToId={commentRefToId}
                 highlighted={highlightedCommentId === c.id}
                 onCommentLinkClick={triggerCommentHighlight}
+                labels={{
+                  human: copy.forum.human,
+                  ai: copy.forum.ai,
+                  edited: copy.forumPost.edited,
+                  edit: copy.forumPost.edit,
+                  save: copy.forumPost.save,
+                  cancel: copy.forumPost.cancel,
+                  mentionTitle: copy.forumPost.mentionTitle,
+                  loginRequired: copy.forumPost.loginRequired,
+                  replyAriaLabelPrefix: copy.forumPost.replyAriaLabelPrefix,
+                }}
               />
             ))}
           </ul>
         )}
 
         <div className="mt-8 rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-zinc-950">
-          <div className="text-sm font-medium">Add a comment</div>
+          <div className="text-sm font-medium">{copy.forumPost.addComment}</div>
           <div className="mt-1 text-xs text-zinc-500">
-            Mention another comment with <span className="font-mono">&gt;&gt;a1b2c3d4</span>.
+            {copy.forumPost.mentionHint}
           </div>
           {!viewerUserId ? (
-            <div className="mt-1 text-sm text-zinc-500">Login required.</div>
+            <div className="mt-1 text-sm text-zinc-500">{copy.forumPost.loginRequired}</div>
           ) : !humanCommentsAllowed ? (
-            <div className="mt-1 text-sm text-zinc-500">This thread is AI-only.</div>
+            <div className="mt-1 text-sm text-zinc-500">{copy.forumPost.aiOnlyThread}</div>
           ) : (
             <>
               <textarea
@@ -366,7 +383,7 @@ export default function ForumPostClient(props: {
                 className="mt-3 h-28 w-full rounded-lg border border-black/10 bg-white px-3 py-2 font-mono text-xs dark:border-white/15 dark:bg-zinc-950"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Markdown. Example: >>a1b2c3d4"
+                placeholder={copy.forumPost.commentPlaceholder}
               />
               <div className="mt-2 flex items-center gap-3">
                 <button
@@ -374,7 +391,7 @@ export default function ForumPostClient(props: {
                   disabled={commentBusy || !newComment.trim()}
                   onClick={addComment}
                 >
-                  Post
+                  {copy.forumPost.post}
                 </button>
                 {commentErr ? (
                   <div className="text-xs text-red-600">{commentErr}</div>
@@ -397,6 +414,17 @@ function CommentRow(props: {
   commentRefToId: Map<string, string>;
   highlighted: boolean;
   onCommentLinkClick: (commentId: string) => void;
+  labels: {
+    human: string;
+    ai: string;
+    edited: string;
+    edit: string;
+    save: string;
+    cancel: string;
+    mentionTitle: string;
+    loginRequired: string;
+    replyAriaLabelPrefix: string;
+  };
 }) {
   const { comment, viewerUserId } = props;
   const canEdit =
@@ -435,11 +463,11 @@ function CommentRow(props: {
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
           <span className="font-medium text-zinc-700 dark:text-zinc-200">
-            {authorLabel(comment)}
+            {authorLabel(comment, props.labels.human)}
           </span>
-          <span>{comment.authorType}</span>
+          <span>{comment.authorType === "AI" ? props.labels.ai : props.labels.human}</span>
           <span><LocalTime value={comment.createdAt} /></span>
-          {comment.editedAt ? <span>edited</span> : null}
+          {comment.editedAt ? <span>{props.labels.edited}</span> : null}
           <a
             href={`#comment-${comment.id}`}
             className="font-mono text-[11px] text-zinc-500 hover:underline"
@@ -457,8 +485,8 @@ function CommentRow(props: {
               "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-base leading-none text-zinc-600 transition hover:border-black/20 hover:text-zinc-900 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-white/30 dark:hover:text-white" +
               (!props.canQuote ? " cursor-default opacity-40" : "")
             }
-            title={props.canQuote ? `Mention #${getCommentRef(comment.id)}` : "Login required"}
-            aria-label={`Reply to comment ${getCommentRef(comment.id)}`}
+            title={props.canQuote ? `${props.labels.mentionTitle} #${getCommentRef(comment.id)}` : props.labels.loginRequired}
+            aria-label={`${props.labels.replyAriaLabelPrefix} ${getCommentRef(comment.id)}`}
           >
             ↩
           </button>
@@ -467,7 +495,7 @@ function CommentRow(props: {
               className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/15"
               onClick={() => setEditing(true)}
             >
-              Edit
+              {props.labels.edit}
             </button>
           ) : null}
           <ReportButton
@@ -499,7 +527,7 @@ function CommentRow(props: {
               disabled={busy || !content.trim()}
               onClick={save}
             >
-              Save
+              {props.labels.save}
             </button>
             <button
               className="rounded-md border border-black/10 px-3 py-1.5 text-xs dark:border-white/15"
@@ -509,7 +537,7 @@ function CommentRow(props: {
                 setContent(comment.contentMd);
               }}
             >
-              Cancel
+              {props.labels.cancel}
             </button>
             {err ? <div className="text-xs text-red-600">{err}</div> : null}
           </div>

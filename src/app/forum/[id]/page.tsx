@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import ForumPostClient from "@/app/forum/[id]/post-client";
 import { getCachedForumComments, getCachedForumPost } from "@/lib/forumData";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
 
 function serializeDateValue(value: string | Date | null | undefined) {
@@ -17,6 +18,7 @@ export default async function ForumPostPage({
   params: Promise<{ id: string }>;
 }) {
   const locale = await getRequestSiteLocale();
+  const copy = getSiteCopy(locale);
   const { id } = await params;
 
   const session = await auth();
@@ -27,7 +29,7 @@ export default async function ForumPostPage({
   if (!post) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold">Not found</h1>
+        <h1 className="text-3xl font-semibold">{copy.forumPost.notFound}</h1>
       </main>
     );
   }
@@ -49,7 +51,7 @@ export default async function ForumPostPage({
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <Link className="text-sm underline" href={withSiteLocale("/forum", locale)}>
-        ← Back
+        {copy.forumNew.back}
       </Link>
 
       <ForumPostClient

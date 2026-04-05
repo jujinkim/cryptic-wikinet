@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import LocalTime from "@/components/local-time";
+import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type CatalogItem = {
@@ -24,7 +25,6 @@ type ApprovedTag = {
 
 const TYPE_OPTIONS = ["entity", "phenomenon", "object", "place", "protocol", "event"] as const;
 const STATUS_OPTIONS = ["unverified", "recurring", "contained", "dormant", "unknown"] as const;
-const RECENT_LIMIT = 50;
 
 function buildCatalogHref(
   basePath: string,
@@ -87,6 +87,7 @@ export default function CatalogClient(props: {
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
+  const copy = getSiteCopy(locale);
   const catalogHref = withSiteLocale("/catalog", locale);
   const [query, setQuery] = useState(props.initialQuery);
   const [tag, setTag] = useState(props.initialTag);
@@ -98,6 +99,7 @@ export default function CatalogClient(props: {
   const [error, setError] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query);
   const firstLoadRef = useRef(true);
+  const catalogLoadError = copy.catalog.loadError;
 
   useEffect(() => {
     let cancelled = false;
@@ -155,7 +157,7 @@ export default function CatalogClient(props: {
       .then(({ ok, j }) => {
         if (cancelled) return;
         if (!ok) {
-          setError(j?.error ?? "Failed to load catalog");
+          setError(j?.error ?? catalogLoadError);
           setItems([]);
           return;
         }
@@ -163,7 +165,7 @@ export default function CatalogClient(props: {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(String(err));
+        setError(err instanceof Error && err.message ? err.message : catalogLoadError);
         setItems([]);
       })
       .finally(() => {
@@ -174,7 +176,7 @@ export default function CatalogClient(props: {
     return () => {
       cancelled = true;
     };
-  }, [apiUrl]);
+  }, [apiUrl, catalogLoadError]);
 
   function resetFilters() {
     setQuery("");
@@ -188,20 +190,20 @@ export default function CatalogClient(props: {
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <div className="rounded-2xl border border-black/10 bg-white p-5 dark:border-white/15 dark:bg-zinc-950">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Catalog Menu
+            {copy.catalog.menuTitle}
           </div>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Browse the most recently updated public entries by type, status, or tag.
+            {copy.catalog.menuBody}
           </p>
 
           <div className="mt-4">
             <button type="button" className={sidebarButtonClass(!query && !tag && !type && !status)} onClick={resetFilters}>
-              All entries
+              {copy.catalog.allEntries}
             </button>
           </div>
 
           <div className="mt-5 space-y-2">
-            <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Types</div>
+            <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">{copy.catalog.types}</div>
             <div className="space-y-2">
               {TYPE_OPTIONS.map((option) => (
                 <button
@@ -210,14 +212,14 @@ export default function CatalogClient(props: {
                   className={sidebarButtonClass(type === option)}
                   onClick={() => setType((current) => (current === option ? "" : option))}
                 >
-                  {option}
+                  {copy.catalog.typeLabels[option] ?? option}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="mt-5 space-y-2">
-            <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Status</div>
+            <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">{copy.catalog.status}</div>
             <div className="space-y-2">
               {STATUS_OPTIONS.map((option) => (
                 <button
@@ -226,14 +228,14 @@ export default function CatalogClient(props: {
                   className={sidebarButtonClass(status === option)}
                   onClick={() => setStatus((current) => (current === option ? "" : option))}
                 >
-                  {option}
+                  {copy.catalog.statusLabels[option] ?? option}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="mt-5 space-y-2">
-            <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Tags</div>
+            <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">{copy.catalog.tags}</div>
             <div className="max-h-72 overflow-y-auto pr-1">
               <div className="flex flex-wrap gap-2">
                 {approvedTags.map((item) => (
@@ -256,19 +258,19 @@ export default function CatalogClient(props: {
       <section className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Catalog</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">{copy.catalog.title}</h1>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Recent public dossier entries, limited to the newest {RECENT_LIMIT} results.
+              {copy.catalog.subtitle}
             </p>
           </div>
 
           <div className="w-full sm:max-w-sm">
             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-              Search catalog
+              {copy.catalog.searchLabel}
             </label>
             <input
               className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black"
-              placeholder="Search by title or slug"
+              placeholder={copy.catalog.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -276,24 +278,24 @@ export default function CatalogClient(props: {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-          {query ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">query:{query}</span> : null}
-          {type ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">type:{type}</span> : null}
-          {status ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">status:{status}</span> : null}
-          {tag ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">tag:{tag}</span> : null}
+          {query ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">{copy.catalog.queryPrefix}:{query}</span> : null}
+          {type ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">{copy.catalog.typePrefix}:{copy.catalog.typeLabels[type] ?? type}</span> : null}
+          {status ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">{copy.catalog.statusPrefix}:{copy.catalog.statusLabels[status] ?? status}</span> : null}
+          {tag ? <span className="rounded-full border border-black/10 px-2 py-1 dark:border-white/15">{copy.catalog.tagPrefix}:{tag}</span> : null}
           {query || type || status || tag ? (
             <button type="button" className="underline" onClick={resetFilters}>
-              clear
+              {copy.catalog.clear}
             </button>
           ) : null}
         </div>
 
         <div className="mt-6">
           {loading ? (
-            <div className="text-sm text-zinc-500">Loading…</div>
+            <div className="text-sm text-zinc-500">{copy.catalog.loading}</div>
           ) : error ? (
             <div className="text-sm text-red-600">{error}</div>
           ) : items.length === 0 ? (
-            <div className="text-sm text-zinc-500">No matching entries.</div>
+            <div className="text-sm text-zinc-500">{copy.catalog.noMatches}</div>
           ) : (
             <ul className="divide-y divide-black/5 dark:divide-white/10">
               {items.map((item) => (
@@ -311,13 +313,13 @@ export default function CatalogClient(props: {
                         {item.type ? (
                           <button
                             type="button"
-                            className={tagPillClass(type === item.type)}
-                            onClick={() => setType((current) => (current === item.type ? "" : item.type ?? ""))}
-                          >
-                            {item.type}
-                          </button>
-                        ) : null}
-                        {item.status ? (
+                          className={tagPillClass(type === item.type)}
+                          onClick={() => setType((current) => (current === item.type ? "" : item.type ?? ""))}
+                        >
+                          {copy.catalog.typeLabels[item.type] ?? item.type}
+                        </button>
+                      ) : null}
+                      {item.status ? (
                           <button
                             type="button"
                             className={tagPillClass(status === item.status)}
@@ -325,7 +327,7 @@ export default function CatalogClient(props: {
                               setStatus((current) => (current === item.status ? "" : item.status ?? ""))
                             }
                           >
-                            {item.status}
+                            {copy.catalog.statusLabels[item.status] ?? item.status}
                           </button>
                         ) : null}
                         {(item.tags ?? []).slice(0, 8).map((itemTag) => (

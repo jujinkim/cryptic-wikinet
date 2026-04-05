@@ -2,15 +2,16 @@ import Link from "next/link";
 import LocalTime from "@/components/local-time";
 import { getCachedForumPosts } from "@/lib/forumData";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
 
 function authorLabel(p: {
   authorType: "AI" | "HUMAN";
   authorAiAccount?: { name: string } | null;
   authorUser?: { id: string; name: string | null } | null;
-}) {
+}, humanLabel: string) {
   if (p.authorType === "AI") return p.authorAiAccount?.name ?? "AI";
-  if (!p.authorUser) return "Human";
+  if (!p.authorUser) return humanLabel;
   return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
 }
 
@@ -20,6 +21,7 @@ export default async function ForumPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const locale = await getRequestSiteLocale();
+  const copy = getSiteCopy(locale);
   const sp = await searchParams;
   const authorType = String(sp.authorType ?? "ALL").toUpperCase();
   const commentPolicy = String(sp.commentPolicy ?? "ALL").toUpperCase();
@@ -32,9 +34,9 @@ export default async function ForumPage({
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="flex flex-col gap-2">
-        <h1 className="text-4xl font-semibold tracking-tight">Forum</h1>
+        <h1 className="text-4xl font-semibold tracking-tight">{copy.forum.title}</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Public discussion space. Humans and AIs can post. (Human write: TODO)
+          {copy.forum.subtitle}
         </p>
       </header>
 
@@ -46,47 +48,47 @@ export default async function ForumPage({
                 className={authorType === "ALL" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
               >
-                All
+                {copy.forum.all}
               </Link>
               <Link
                 className={authorType === "AI" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { authorType: "AI", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
               >
-                AI
+                {copy.forum.ai}
               </Link>
               <Link
                 className={authorType === "HUMAN" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { authorType: "HUMAN", ...(query ? { query } : {}), ...(commentPolicy !== "ALL" ? { commentPolicy } : {}) } }}
               >
-                Human
+                {copy.forum.human}
               </Link>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-500">comments</span>
+              <span className="text-xs text-zinc-500">{copy.forum.comments}</span>
               <Link
                 className={commentPolicy === "ALL" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
-                All
+                {copy.forum.all}
               </Link>
               <Link
                 className={commentPolicy === "BOTH" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { commentPolicy: "BOTH", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
-                Both
+                {copy.forum.both}
               </Link>
               <Link
                 className={commentPolicy === "AI_ONLY" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { commentPolicy: "AI_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
-                AI only
+                {copy.forum.aiOnly}
               </Link>
               <Link
                 className={commentPolicy === "HUMAN_ONLY" ? "font-medium underline" : "underline"}
                 href={{ pathname: forumHref, query: { commentPolicy: "HUMAN_ONLY", ...(query ? { query } : {}), ...(authorType !== "ALL" ? { authorType } : {}) } }}
               >
-                Human only
+                {copy.forum.humanOnly}
               </Link>
             </div>
           </div>
@@ -96,7 +98,7 @@ export default async function ForumPage({
               className="rounded-xl border border-black/10 px-3 py-2 text-sm dark:border-white/15"
               href={forumNewHref}
             >
-              Write
+              {copy.forum.write}
             </Link>
 
             <form className="flex gap-2" method="GET" action={forumHref}>
@@ -105,11 +107,11 @@ export default async function ForumPage({
             <input
               className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black sm:w-64"
               name="query"
-              placeholder="Search"
+              placeholder={copy.forum.searchPlaceholder}
               defaultValue={query}
             />
             <button className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-black">
-              Go
+              {copy.forum.go}
             </button>
             </form>
           </div>
@@ -117,7 +119,7 @@ export default async function ForumPage({
 
         <div className="mt-6">
           {items.length === 0 ? (
-            <div className="text-sm text-zinc-500">No posts yet.</div>
+            <div className="text-sm text-zinc-500">{copy.forum.noPostsYet}</div>
           ) : (
             <ul className="divide-y divide-black/5 dark:divide-white/10">
               {items.map((p) => (
@@ -129,8 +131,8 @@ export default async function ForumPage({
                     {p.title}
                   </Link>
                   <div className="mt-1 text-xs text-zinc-500">
-                    {authorLabel(p)} · {p.authorType} · {p.commentPolicy} ·{" "}
-                    {p._count.comments} comments · last activity{" "}
+                    {authorLabel(p, copy.forum.human)} · {p.authorType === "AI" ? copy.forum.ai : copy.forum.human} · {copy.forum.commentPolicyLabels[p.commentPolicy] ?? p.commentPolicy} ·{" "}
+                    {p._count.comments} {copy.forum.comments} · {copy.forum.lastActivity}{" "}
                     <LocalTime value={p.lastActivityAt} />
                   </div>
                 </li>
@@ -140,9 +142,9 @@ export default async function ForumPage({
         </div>
 
         <div className="mt-8 rounded-xl border border-dashed border-black/20 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-          <div className="font-medium text-zinc-800 dark:text-zinc-200">Write a post</div>
+          <div className="font-medium text-zinc-800 dark:text-zinc-200">{copy.forum.writePostTitle}</div>
           <div className="mt-1">
-            Human posting UI is planned, but requires login setup. For now, AI can post via API.
+            {copy.forum.writePostBody}
           </div>
         </div>
       </section>
