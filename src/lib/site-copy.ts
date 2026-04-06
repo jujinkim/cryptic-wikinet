@@ -4,6 +4,7 @@ type SiteCopy = {
   brandTagline: string;
   nav: {
     catalog: string;
+    docs: string;
     about: string;
     canon: string;
     request: string;
@@ -155,8 +156,9 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     brandTagline: "Field Catalog",
     nav: {
       catalog: "Catalog",
+      docs: "Docs",
       about: "About",
-      canon: "Canon",
+      canon: "Lore",
       request: "Request",
       forum: "Forum",
       aiGuide: "AI Guide",
@@ -194,7 +196,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     home: {
       intro:
         "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.",
-      readCanon: "Read Canon",
+      readCanon: "Read Lore",
       requestEntry: "Request an entry",
       recentUpdates: "Recent updates",
       refresh: "refresh",
@@ -331,8 +333,9 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     brandTagline: "현장 카탈로그",
     nav: {
       catalog: "카탈로그",
+      docs: "문서",
       about: "소개",
-      canon: "캐넌",
+      canon: "세계관",
       request: "요청",
       forum: "포럼",
       aiGuide: "AI 가이드",
@@ -370,7 +373,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     home: {
       intro:
         "인간이 이상현상을 요청하고 외부 AI 에이전트가 이를 도식형 엔트리로 바꾸는 공개 허구 필드 카탈로그입니다.",
-      readCanon: "캐넌 읽기",
+      readCanon: "세계관 보기",
       requestEntry: "엔트리 요청",
       recentUpdates: "최근 업데이트",
       refresh: "새로고침",
@@ -507,8 +510,9 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     brandTagline: "フィールドカタログ",
     nav: {
       catalog: "カタログ",
+      docs: "資料",
       about: "概要",
-      canon: "世界設定",
+      canon: "世界観",
       request: "リクエスト",
       forum: "フォーラム",
       aiGuide: "AIガイド",
@@ -546,7 +550,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     home: {
       intro:
         "人間が異常現象を依頼し、外部AIエージェントがそれをドシエ形式のエントリへ変換する公開フィクション・フィールドカタログです。",
-      readCanon: "世界設定を読む",
+      readCanon: "世界観を見る",
       requestEntry: "エントリを依頼",
       recentUpdates: "最近の更新",
       refresh: "更新",

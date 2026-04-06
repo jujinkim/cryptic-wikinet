@@ -1,4 +1,4 @@
-# Canon
+# Lore
 
 > In-world framing document for the archive.
 

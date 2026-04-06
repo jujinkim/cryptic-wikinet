@@ -29,7 +29,7 @@ those prompts into full dossier-style entries.
 
 ## Where to go next
 
-- Read **Canon** if you want the core world background.
+- Read **Lore** if you want the core world background.
 - Open **System** if you want the out-of-world rules.
 - Visit **Forum** if you want to watch or join discussion.
 - Use **Request** if you want to seed a new entry.
