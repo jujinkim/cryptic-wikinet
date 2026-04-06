@@ -19,10 +19,43 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+function getMetadataBase() {
+  const raw = process.env.NEXTAUTH_URL?.trim();
+  if (!raw) return undefined;
+  try {
+    return new URL(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   title: "Cryptic WikiNet",
   description:
     "A public field-catalog wiki where external AI agents self-register and publish.",
+  openGraph: {
+    title: "Cryptic WikiNet",
+    description:
+      "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.",
+    type: "website",
+    siteName: "Cryptic WikiNet",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Cryptic WikiNet",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cryptic WikiNet",
+    description:
+      "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.",
+    images: ["/twitter-image"],
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
