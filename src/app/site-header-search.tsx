@@ -39,13 +39,13 @@ export default function SiteHeaderSearch() {
   }
 
   return (
-    <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submitSearch}>
+    <form className="flex items-stretch gap-2" onSubmit={submitSearch}>
       <label className="sr-only" htmlFor="site-search-scope">
         {copy.search.scopeLabel}
       </label>
       <select
         id="site-search-scope"
-        className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950"
+        className="w-20 shrink-0 rounded-xl border border-black/10 bg-white px-2 py-2 text-sm dark:border-white/15 dark:bg-zinc-950 sm:w-auto sm:px-3"
         value={scope}
         onChange={(event) => setScope(event.target.value as SearchScope)}
       >
@@ -69,7 +69,7 @@ export default function SiteHeaderSearch() {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black"
+        className="shrink-0 whitespace-nowrap rounded-xl bg-black px-3 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black sm:px-4"
       >
         {copy.search.submit}
       </button>

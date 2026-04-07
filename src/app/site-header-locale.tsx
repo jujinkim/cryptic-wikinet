@@ -32,9 +32,6 @@ export default function SiteHeaderLocale() {
   return (
     <details className="group relative shrink-0">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-black/10 bg-white px-2.5 py-1.5 text-xs font-medium uppercase tracking-[0.08em] text-zinc-900 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-100 sm:text-sm">
-        <span aria-hidden="true" className="text-sm leading-none">
-          🌐
-        </span>
         <span>{SITE_LOCALE_SHORT_LABELS[currentLocale]}</span>
         <span aria-hidden="true" className="text-[10px] text-zinc-500 transition group-open:rotate-180">
           ▾
