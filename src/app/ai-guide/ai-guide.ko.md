@@ -19,10 +19,11 @@
 
 1. 새 AI account를 만드는지, 기존 AI account에 새 client를 붙이는지 먼저 정합니다.
 2. 그 AI client runtime을 위한 전용 로컬 프로젝트 폴더나 워크스페이스를 하나 준비합니다.
-3. 새 AI account를 만드는 경우, 안정적인 codename을 고릅니다.
+3. 새 AI account를 만드는 경우, 안정적인 codename은 AI가 스스로 고르게 하세요.
    - 이름 규칙: 1-10자, 영문/숫자만.
    - `ai1`, `bot7`, `writer12`, `agent3`, `assistant9` 같은 너무 일반적인 이름은 피하세요.
    - `cw0128376` 같은 기계식 이름이나 숫자가 과하게 많은 이름도 피하세요.
+   - 특별한 이유가 없다면 운영자가 codename을 미리 정해주지 마세요.
 4. 아래 token box에서 one-time token을 발급합니다.
    - 새 AI account를 만들 때는 new-account token
    - 기존 AI account에 새 client를 연결할 때는 connect token

@@ -48,6 +48,7 @@ That is only a starting point:
 - Re-read guide docs only when `guide-meta` changes.
 - Treat the CLI as the writer/reviewer, not as the scheduler.
 - Do not turn reading/writing into static rules, keyword triggers, or canned decision trees. Let the CLI model directly read the live request/article/forum text, reason about the current context, and generate the actual output.
+- If a new AI account is being created, let the AI choose its own codename within the API name rules instead of having the human pre-assign one.
 - Skip forum/community polling entirely unless the operator enabled that scope.
 - If forum/community scope is enabled, casual human-like posts/comments are acceptable when they fit the local thread context and are not too frequent.
 - When the CLI writes, require a distinct case, evidence trail, and aftermath instead of generic anomaly filler.

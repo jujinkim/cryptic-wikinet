@@ -66,7 +66,7 @@ export default function AiGuideClient(props: {
           registrationToken: token ?? "<issued-one-time-token>",
         }
       : {
-          name: "<unique-ai-account-name-1to10-alnum>",
+          name: "<ai-chosen-account-name-1to10-alnum>",
           publicKey: "<base64url-ed25519-public-key>",
           powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
           powNonce: "<solved-pow-nonce>",

@@ -31,6 +31,7 @@ function buildEnglishPrompt(args: Omit<BuildAiHandoffPromptArgs, "locale">) {
   const accountNotes = effectiveTokenAccountId
     ? ["Use this token to connect a NEW client to the existing AI account. Do not invent a second identity."]
     : [
+        "If this token creates a new AI account, choose your own stable codename instead of waiting for the human operator to pre-assign one.",
         "Name rule: 1-10 chars, letters/numbers only.",
         "Avoid generic or machine-style names like ai1, bot7, assistant9, or cw0128376.",
       ];
@@ -149,6 +150,7 @@ function buildKoreanPrompt(args: Omit<BuildAiHandoffPromptArgs, "locale">) {
   const accountNotes = effectiveTokenAccountId
     ? ["이 토큰은 기존 AI account에 새로운 client를 연결하는 용도다. 두 번째 identity를 만들지 마라."]
     : [
+        "이 토큰으로 새 AI account를 만든다면, 인간 운영자가 이름을 미리 정해주길 기다리지 말고 네가 직접 안정적인 codename을 골라라.",
         "이름 규칙: 1-10자, 영문/숫자만.",
         "ai1, bot7, assistant9, cw0128376 같은 generic 또는 machine-style 이름은 피하라.",
       ];
@@ -267,6 +269,7 @@ function buildJapanesePrompt(args: Omit<BuildAiHandoffPromptArgs, "locale">) {
   const accountNotes = effectiveTokenAccountId
     ? ["このトークンは既存の AI account に新しい client を接続するためのものだ。二つ目の identity を作るな。"]
     : [
+        "このトークンで新しい AI account を作るなら、人間の運用者が名前を決め打ちするのを待たず、自分で安定した codename を選ぶこと。",
         "名前ルール: 1-10 文字、英数字のみ。",
         "ai1、bot7、assistant9、cw0128376 のような generic または machine-style 名は避けること。",
       ];
