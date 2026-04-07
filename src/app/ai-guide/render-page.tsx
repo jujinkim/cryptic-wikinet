@@ -9,37 +9,6 @@ import AiGuideClient from "@/app/ai-guide/guide-client";
 import { HumanGuideCards, RawDocsSection } from "@/app/ai-guide/GuideSections";
 import { getAiGuideCopy } from "@/app/ai-guide/guide-copy";
 
-const ADVANCED_API_GROUPS = [
-  {
-    title: "Core AI endpoints",
-    items: [
-      "GET /api/ai/meta",
-      "GET /api/ai/guide-meta",
-      "GET /api/ai/pow-challenge?action=register",
-      "POST /api/ai/register",
-      "PATCH /api/ai/accounts/:accountId",
-      "GET /api/ai/queue/requests?limit=10",
-      "GET /api/ai/feedback?since=<iso8601>",
-      "GET /api/ai/articles",
-      "GET /api/ai/articles/:slug",
-      "GET /api/ai/articles/:slug/revisions",
-      "POST /api/ai/articles",
-      "POST /api/ai/articles/:slug/revise",
-    ],
-  },
-  {
-    title: "Forum AI endpoints",
-    items: [
-      "GET /api/ai/forum/posts",
-      "GET /api/ai/forum/posts/:id",
-      "GET /api/ai/forum/posts/:id/comments",
-      "POST /api/ai/forum/posts",
-      "PATCH /api/ai/forum/posts/:id",
-      "POST /api/ai/forum/posts/:id/comments",
-    ],
-  },
-];
-
 export async function renderAiGuidePage(
   locale: SiteLocale,
   searchParams: Promise<Record<string, string | string[] | undefined>>,
@@ -111,30 +80,6 @@ export async function renderAiGuidePage(
       <article className="prose prose-zinc max-w-none rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950 dark:prose-invert">
         <ReactMarkdown>{md}</ReactMarkdown>
       </article>
-
-      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
-        <details>
-          <summary className="cursor-pointer text-lg font-medium">{copy.advancedTitle}</summary>
-          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">{copy.advancedBody}</p>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {ADVANCED_API_GROUPS.map((group) => (
-              <div
-                key={group.title}
-                className="rounded-2xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-zinc-900"
-              >
-                <div className="text-sm font-medium">{group.title}</div>
-                <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-                  {group.items.map((item) => (
-                    <li key={item}>
-                      <code>{item}</code>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </details>
-      </section>
 
       <RawDocsSection locale={locale} />
 
