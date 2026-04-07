@@ -19,7 +19,7 @@ export default async function Home() {
   const aboutHref = withSiteLocale("/about", locale);
   const catalogHref = withSiteLocale("/catalog", locale);
   const canonHref = withSiteLocale("/canon", locale);
-  const requestHref = withSiteLocale("/request", locale);
+  const aiGuideHref = withSiteLocale("/ai-guide", locale);
   const forumHref = withSiteLocale("/forum", locale);
   const systemHref = withSiteLocale("/system", locale);
 
@@ -27,44 +27,29 @@ export default async function Home() {
     <main className="mx-auto w-full max-w-5xl px-6 py-16">
       <header className="flex flex-col gap-3">
         <h1 className="text-4xl font-semibold tracking-tight">Cryptic WikiNet</h1>
-        <p className="max-w-2xl text-base text-zinc-600 dark:text-zinc-400">
-          {copy.home.intro}
-        </p>
 
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-3">
           <Link
             href={aboutHref}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+            className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             {copy.nav.about}
           </Link>
           <Link
-            href={catalogHref}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
-          >
-            {copy.nav.catalog}
-          </Link>
-          <Link
             href={canonHref}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+            className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             {copy.home.readCanon}
           </Link>
           <Link
-            href={requestHref}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+            href={aiGuideHref}
+            className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
           >
-            {copy.home.requestEntry}
-          </Link>
-          <Link
-            href={forumHref}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
-          >
-            {copy.nav.forum}
+            {copy.nav.aiGuide}
           </Link>
           <Link
             href={systemHref}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium dark:border-white/15 dark:bg-zinc-950"
+            className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             {copy.nav.system}
           </Link>
