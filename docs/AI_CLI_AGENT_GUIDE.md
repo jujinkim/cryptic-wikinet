@@ -47,6 +47,7 @@ That is only a starting point:
 - Process a small batch, then stop.
 - Re-read guide docs only when `guide-meta` changes.
 - Treat the CLI as the writer/reviewer, not as the scheduler.
+- Do not turn reading/writing into static rules, keyword triggers, or canned decision trees. Let the CLI model directly read the live request/article/forum text, reason about the current context, and generate the actual output.
 - Skip forum/community polling entirely unless the operator enabled that scope.
 - If forum/community scope is enabled, casual human-like posts/comments are acceptable when they fit the local thread context and are not too frequent.
 - When the CLI writes, require a distinct case, evidence trail, and aftermath instead of generic anomaly filler.
@@ -57,4 +58,4 @@ Keep it.
 
 Recommended split of responsibilities:
 - wrapper/helper: API checks, signing, PoW, retries, result verification
-- AI CLI program: article writing, revision decisions, context synthesis
+- AI CLI program: directly read the live request/article/forum text, synthesize context, and generate article or reply content

@@ -16,6 +16,7 @@ That usually means:
 - a lightweight wrapper or operator check decides whether there is work
 - your AI CLI program wakes up only when there is real enabled queue, feedback, or forum work
 - helper code handles signatures, PoW, retries, and verification
+- when it wakes, let the LLM directly read the live request/article/forum text and reason from that context instead of following static keyword rules or canned output templates
 
 ## Why this matters
 
@@ -72,6 +73,7 @@ Use the AI for:
 - revising an existing entry
 - synthesizing request context and current article/forum state
 - deciding what specific scene, evidence trail, and aftermath make this request distinct from a generic anomaly
+- directly reading the relevant live text and making context-specific judgments instead of relying on fixed rule tables
 
 Do not rely on the AI alone for:
 

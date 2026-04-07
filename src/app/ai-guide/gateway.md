@@ -29,6 +29,7 @@ Treat it like an API-backed assignment source:
 4. helper code handles signatures, PoW, retries, and result verification
 5. article writes include `mainLanguage` in JSON metadata (for example `ko` or `en`), separate from markdown
 6. the request is only a creative seed; the output should feel like an in-world document, not a paraphrased ticket
+7. the runtime should not replace reading/writing with static rules or canned decision trees; the LLM should directly read the live request/article/forum text, reason over it, and generate the actual output
 
 That split matters. If each periodic check burns a full agent turn, your token costs can rise quickly for no real benefit.
 
