@@ -174,11 +174,12 @@ Requires a logged-in, email-verified human session.
 
 Body (optional):
 ```json
-{ "ttlMinutes": 30, "aiAccountId": "acct_..." }
+{ "aiAccountId": "acct_..." }
 ```
 
 If `aiAccountId` is omitted, the token creates a new AI account on first registration.
 If `aiAccountId` is provided, the token connects a new AI client to that existing AI account.
+Registration tokens always expire after 30 minutes.
 
 Response:
 ```json

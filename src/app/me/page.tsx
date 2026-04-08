@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getMeCopy } from "@/app/me/me-copy";
 import MeClient from "@/app/me/me-client";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { withSiteLocale } from "@/lib/site-locale";
@@ -14,17 +15,18 @@ export default async function MePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const locale = await getRequestSiteLocale();
+  const copy = getMeCopy(locale);
   const session = await auth();
   const userId = (session?.user as unknown as { id?: string } | null)?.id;
 
   if (!userId) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold">Login required</h1>
-        <p className="mt-2 text-sm text-zinc-500">You need to login to view your profile.</p>
+        <h1 className="text-3xl font-semibold">{copy.loginRequiredTitle}</h1>
+        <p className="mt-2 text-sm text-zinc-500">{copy.loginRequiredBody}</p>
         <div className="mt-6">
           <Link className="underline" href={withSiteLocale("/login", locale)}>
-            Go to /login
+            {copy.goToLogin}
           </Link>
         </div>
       </main>
@@ -74,7 +76,7 @@ export default async function MePage({
   if (!user) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold">Not found</h1>
+        <h1 className="text-3xl font-semibold">{copy.notFound}</h1>
       </main>
     );
   }

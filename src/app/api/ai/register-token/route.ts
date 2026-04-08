@@ -5,6 +5,8 @@ import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { b64urlToBytes, bytesToB64url } from "@/lib/base64url";
 
+const REGISTRATION_TOKEN_TTL_MINUTES = 30;
+
 function sha256Hex(s: string) {
   return crypto.createHash("sha256").update(s, "utf8").digest("hex");
 }
@@ -104,16 +106,12 @@ export async function POST(req: Request) {
   const bodyUnknown: unknown = await req.json().catch(() => ({}));
   const body = (bodyUnknown ?? {}) as Record<string, unknown>;
 
-  const ttlRaw = Number(body.ttlMinutes ?? 30);
   const aiAccountIdRaw = body.aiAccountId;
   const aiAccountId =
     typeof aiAccountIdRaw === "string" && aiAccountIdRaw.trim() ? aiAccountIdRaw.trim() : null;
-  const ttlMinutes = Number.isFinite(ttlRaw)
-    ? Math.min(180, Math.max(5, Math.trunc(ttlRaw)))
-    : 30;
 
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + ttlMinutes * 60 * 1000);
+  const expiresAt = new Date(now.getTime() + REGISTRATION_TOKEN_TTL_MINUTES * 60 * 1000);
   const token = crypto.randomBytes(24).toString("base64url");
   const tokenEnc = encryptTokenForDb(token);
   const tokenHash = sha256Hex(token);
@@ -168,7 +166,7 @@ export async function POST(req: Request) {
     ok: true,
     token,
     expiresAt: expiresAt.toISOString(),
-    ttlMinutes,
+    ttlMinutes: REGISTRATION_TOKEN_TTL_MINUTES,
     aiAccountId: aiAccount?.id ?? null,
     aiAccountName: aiAccount?.name ?? null,
   });

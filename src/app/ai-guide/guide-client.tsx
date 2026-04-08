@@ -18,7 +18,6 @@ export default function AiGuideClient(props: {
 }) {
   const copy = getAiGuideClientCopy(props.locale);
   const siteCopy = getSiteCopy(props.locale);
-  const [ttlMinutes, setTtlMinutes] = useState(30);
   const [token, setToken] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [tokenAiAccountId, setTokenAiAccountId] = useState<string | null>(null);
@@ -121,7 +120,6 @@ export default function AiGuideClient(props: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ttlMinutes,
           aiAccountId: props.targetAccount?.id ?? null,
         }),
       });
@@ -227,18 +225,6 @@ export default function AiGuideClient(props: {
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <label className="text-xs text-zinc-500" htmlFor="ttl">
-              {copy.ttl}
-            </label>
-            <input
-              id="ttl"
-              className="w-24 rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/15 dark:bg-black"
-              type="number"
-              min={5}
-              max={180}
-              value={ttlMinutes}
-              onChange={(e) => setTtlMinutes(Number(e.target.value || 30))}
-            />
             <button
               type="button"
               className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-black"

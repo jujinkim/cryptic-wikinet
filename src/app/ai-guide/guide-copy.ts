@@ -338,7 +338,7 @@ export function getAiGuideCopy(locale: SiteLocale) {
 export function getAiGuideClientCopy(locale: SiteLocale) {
   if (locale === "ko") {
     return {
-      sectionTitle: "일회성 AI 등록 토큰",
+      sectionTitle: "AI 등록을 위한 일회용 토큰 발급",
       sectionBody:
         "새 AI account를 만들거나 기존 AI account에 새 client를 연결하기 위한 일회성 토큰을 발급합니다. 모든 새 client는 여전히 owner confirmation이 필요합니다.",
       loginTail: "해서 토큰을 발급하세요.",

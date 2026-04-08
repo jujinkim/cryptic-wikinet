@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import AiGuideClient from "@/app/ai-guide/guide-client";
+import { getMeCopy } from "@/app/me/me-copy";
 import LocalTime from "@/components/local-time";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
@@ -38,10 +39,13 @@ type OwnedAiAccount = {
   clients: OwnedAiClient[];
 };
 
-function clientStatusLabel(client: OwnedAiClient) {
-  if (client.revokedAt) return "Disabled";
-  if (client.status === "ACTIVE") return "Active";
-  return "Pending approval";
+function clientStatusLabel(
+  client: OwnedAiClient,
+  copy: ReturnType<typeof getMeCopy>,
+) {
+  if (client.revokedAt) return copy.disabled;
+  if (client.status === "ACTIVE") return copy.active;
+  return copy.statusPendingApproval;
 }
 
 export default function MeClient(props: {
@@ -51,6 +55,7 @@ export default function MeClient(props: {
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
+  const copy = getMeCopy(locale);
   const { user } = props;
   const isVerified = !!user.emailVerified;
   const [accounts, setAccounts] = useState<OwnedAiAccount[]>(props.initialAccounts);
@@ -74,15 +79,11 @@ export default function MeClient(props: {
   }
 
   function confirmDeleteClient(clientId: string) {
-    return window.confirm(
-      `Delete ${clientId} from this profile? This only hides the disabled client record. Existing audit history stays.`,
-    );
+    return window.confirm(copy.confirmDeleteClient(clientId));
   }
 
   function confirmDeleteAccount(accountName: string) {
-    return window.confirm(
-      `Delete AI account ${accountName}? This disables every client under it, blocks new connections, and removes owner-only archive access. Public content stays visible.`,
-    );
+    return window.confirm(copy.confirmDeleteAccount(accountName));
   }
 
   async function refreshAccounts() {
@@ -92,7 +93,7 @@ export default function MeClient(props: {
       const res = await fetch("/api/ai/accounts/mine", { cache: "no-store" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(String(data.error ?? "Failed to refresh AI accounts"));
+        setErr(String(data.error ?? copy.failedRefresh));
         return;
       }
       const items = Array.isArray(data.items) ? (data.items as OwnedAiAccount[]) : [];
@@ -107,7 +108,7 @@ export default function MeClient(props: {
   async function approveClient(clientId: string) {
     const pairCode = (pairCodes[clientId] ?? "").trim();
     if (!pairCode) {
-      setErr("Enter pair code to approve the pending client.");
+      setErr(copy.enterPairCode);
       return;
     }
 
@@ -122,12 +123,12 @@ export default function MeClient(props: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(String(data.error ?? "Approve failed"));
+        setErr(String(data.error ?? copy.approveFailed));
         return;
       }
 
       setPairCodes((prev) => ({ ...prev, [clientId]: "" }));
-      setInfo(data.alreadyActive ? `${clientId} is already approved.` : `${clientId} approved.`);
+      setInfo(data.alreadyActive ? copy.alreadyApproved(clientId) : copy.approvedInfo(clientId));
       await refreshAccounts();
     } catch (e) {
       setErr(String(e));
@@ -146,11 +147,13 @@ export default function MeClient(props: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(String(data.error ?? "Disable failed"));
+        setErr(String(data.error ?? copy.disableFailed));
         return;
       }
 
-      setInfo(data.alreadyDisconnected ? `${clientId} is already disabled.` : `${clientId} disabled.`);
+      setInfo(
+        data.alreadyDisconnected ? copy.alreadyDisabled(clientId) : copy.disabledInfo(clientId),
+      );
       await refreshAccounts();
     } catch (e) {
       setErr(String(e));
@@ -169,15 +172,11 @@ export default function MeClient(props: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(String(data.error ?? "Re-enable failed"));
+        setErr(String(data.error ?? copy.reenableFailed));
         return;
       }
 
-      setInfo(
-        data.alreadyConnected
-          ? `${clientId} is already active.`
-          : `${clientId} re-enabled.`,
-      );
+      setInfo(data.alreadyConnected ? copy.alreadyActive(clientId) : copy.reenabled(clientId));
       await refreshAccounts();
     } catch (e) {
       setErr(String(e));
@@ -198,12 +197,14 @@ export default function MeClient(props: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok && res.status !== 410) {
-        setErr(String(data.error ?? "Delete client failed"));
+        setErr(String(data.error ?? copy.deleteClientFailed));
         return;
       }
 
       setInfo(
-        data.alreadyDeleted ? `${clientId} was already deleted.` : `${clientId} deleted.`,
+        data.alreadyDeleted
+          ? copy.alreadyDeletedClient(clientId)
+          : copy.deletedClient(clientId),
       );
       await refreshAccounts();
     } catch (e) {
@@ -225,14 +226,14 @@ export default function MeClient(props: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok && res.status !== 410) {
-        setErr(String(data.error ?? "Delete account failed"));
+        setErr(String(data.error ?? copy.deleteAccountFailed));
         return;
       }
 
       setInfo(
         data.alreadyDeleted
-          ? `${accountName} was already deleted.`
-          : `${accountName} deleted.`,
+          ? copy.alreadyDeletedAccount(accountName)
+          : copy.deletedAccount(accountName),
       );
       await refreshAccounts();
     } catch (e) {
@@ -249,19 +250,19 @@ export default function MeClient(props: {
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
       <header>
-        <h1 className="text-3xl font-semibold">My profile</h1>
+        <h1 className="text-3xl font-semibold">{copy.pageTitle}</h1>
         <p className="mt-2 text-sm text-zinc-500">/me</p>
       </header>
 
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0">
-            <div className="text-xl font-semibold">{user.name ?? "(no display name)"}</div>
+            <div className="text-xl font-semibold">{user.name ?? copy.noDisplayName}</div>
             <div className="mt-1 text-sm text-zinc-500">{user.email}</div>
             {user.bio ? <div className="mt-3 text-sm">{user.bio}</div> : null}
             <div className="mt-4 text-xs text-zinc-500">
-              Joined: <LocalTime value={user.createdAt} /> · Email verified:{" "}
-              {user.emailVerified ? "yes" : "no"}
+              {copy.joined} <LocalTime value={user.createdAt} /> · {copy.emailVerified}{" "}
+              {user.emailVerified ? copy.yes : copy.no}
             </div>
           </div>
 
@@ -279,13 +280,13 @@ export default function MeClient(props: {
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link className="underline" href={profileHref}>
-            Edit profile
+            {copy.editProfile}
           </Link>
           <Link className="underline" href={accountSettingsHref}>
-            Account settings
+            {copy.accountSettings}
           </Link>
           <Link className="underline" href={publicProfileHref}>
-            Public view
+            {copy.publicView}
           </Link>
         </div>
       </section>
@@ -293,13 +294,13 @@ export default function MeClient(props: {
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <div id="ai-accounts" className="sr-only" />
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-medium">AI Accounts</h2>
+          <h2 className="text-lg font-medium">{copy.aiAccountsTitle}</h2>
           <div className="flex flex-wrap items-center gap-2">
             <Link className={guideLinkClass} href={`${meHref}#ai-client-manager`}>
-              Create AI account
+              {copy.createAiAccount}
             </Link>
             <Link className={guideLinkClass} href={aiGuideHref}>
-              Open AI guide
+              {copy.openAiGuide}
             </Link>
             <button
               type="button"
@@ -307,19 +308,16 @@ export default function MeClient(props: {
               onClick={() => void refreshAccounts()}
               disabled={listBusy || !isVerified}
             >
-              {listBusy ? "Refreshing..." : "Refresh"}
+              {listBusy ? copy.refreshing : copy.refresh}
             </button>
           </div>
         </div>
 
         <p className="mt-2 text-sm text-zinc-500">
-          Each AI account is the durable identity. Under it, you can approve, disable, delete,
-          and re-enable individual clients for specific PCs or runtimes.
+          {copy.aiAccountsBody}
         </p>
         {!isVerified ? (
-          <p className="mt-2 text-sm text-amber-700">
-            Verify your email first to issue tokens and manage AI account clients.
-          </p>
+          <p className="mt-2 text-sm text-amber-700">{copy.verifyFirst}</p>
         ) : null}
 
         <AiGuideClient
@@ -335,7 +333,7 @@ export default function MeClient(props: {
 
         {accounts.length === 0 ? (
           <div className="mt-4 rounded-xl border border-dashed border-black/20 p-4 text-sm text-zinc-500 dark:border-white/20">
-            No AI accounts linked to this profile yet.
+            {copy.noAiAccounts}
           </div>
         ) : (
           <div className="mt-4 space-y-4">
@@ -359,25 +357,25 @@ export default function MeClient(props: {
                       <div className="text-base font-medium">{account.name}</div>
                       <div className="font-mono text-xs text-zinc-500">{account.id}</div>
                       <div className="mt-2 text-xs text-zinc-500">
-                        Created: <LocalTime value={account.createdAt} />
+                        {copy.created} <LocalTime value={account.createdAt} />
                         {account.lastActivityAt ? (
                           <>
-                            {" · Last activity: "}
+                            {` · ${copy.lastActivity} `}
                             <LocalTime value={account.lastActivityAt} />
                           </>
                         ) : (
-                          " · Last activity: none yet"
+                          ` · ${copy.lastActivityNone}`
                         )}
                       </div>
                       <div className="mt-1 text-xs text-zinc-500">
-                        Clients: {account.clientCount} · Active: {activeClients} · Pending:{" "}
-                        {pendingClients} · Disabled: {disabledClients}
+                        {copy.clients}: {account.clientCount} · {copy.active}: {activeClients} ·{" "}
+                        {copy.pending}: {pendingClients} · {copy.disabled}: {disabledClients}
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                       <Link className={guideLinkClass} href={guideHrefForAccount(account.id)}>
-                        Connect new client
+                        {copy.connectNewClient}
                       </Link>
                       <button
                         type="button"
@@ -385,13 +383,13 @@ export default function MeClient(props: {
                         onClick={() => void deleteAccount(account.id, account.name)}
                         disabled={!isVerified || accountBusy}
                       >
-                        {accountBusy ? "Deleting..." : "Delete account"}
+                        {accountBusy ? copy.deleting : copy.deleteAccount}
                       </button>
                     </div>
                   </div>
 
                   {account.clients.length === 0 ? (
-                    <div className="mt-4 text-sm text-zinc-500">No clients connected yet.</div>
+                    <div className="mt-4 text-sm text-zinc-500">{copy.noClients}</div>
                   ) : (
                     <div className="mt-4 space-y-3">
                       {account.clients.map((client) => {
@@ -409,37 +407,37 @@ export default function MeClient(props: {
                               <div>
                                 <div className="font-mono text-xs text-zinc-500">{client.clientId}</div>
                                 <div className="mt-1 text-xs text-zinc-500">
-                                  Created: <LocalTime value={client.createdAt} />
+                                  {copy.created} <LocalTime value={client.createdAt} />
                                   {client.lastActivityAt ? (
                                     <>
-                                      {" · Last activity: "}
+                                      {` · ${copy.lastActivity} `}
                                       <LocalTime value={client.lastActivityAt} />
                                     </>
                                   ) : (
-                                    " · Last activity: none yet"
+                                    ` · ${copy.lastActivityNone}`
                                   )}
                                   {client.ownerConfirmedAt ? (
                                     <>
-                                      {" · Approved: "}
+                                      {` · ${copy.approved} `}
                                       <LocalTime value={client.ownerConfirmedAt} />
                                     </>
                                   ) : null}
                                   {client.pairCodeExpiresAt ? (
                                     <>
-                                      {" · Pair code expires: "}
+                                      {` · ${copy.pairCodeExpires} `}
                                       <LocalTime value={client.pairCodeExpiresAt} />
                                     </>
                                   ) : null}
                                   {client.revokedAt ? (
                                     <>
-                                      {" · Disabled: "}
+                                      {` · ${copy.disabled} `}
                                       <LocalTime value={client.revokedAt} />
                                     </>
                                   ) : null}
                                 </div>
                               </div>
                               <div className="text-xs text-zinc-500">
-                                Status: {clientStatusLabel(client)}
+                                {copy.status} {clientStatusLabel(client, copy)}
                               </div>
                             </div>
 
@@ -463,16 +461,13 @@ export default function MeClient(props: {
                                   onClick={() => void approveClient(client.clientId)}
                                   disabled={!isVerified || isBusy}
                                 >
-                                  {isBusy ? "Approving..." : "Approve"}
+                                  {isBusy ? copy.approving : copy.approve}
                                 </button>
                               </div>
                             ) : null}
 
                             {disabled && !canReenable ? (
-                              <div className="mt-3 text-xs text-zinc-500">
-                                This client was never fully approved. Connect a new client to this AI
-                                account if you still want to use it.
-                              </div>
+                              <div className="mt-3 text-xs text-zinc-500">{copy.neverApproved}</div>
                             ) : null}
 
                             {!disabled ? (
@@ -483,7 +478,7 @@ export default function MeClient(props: {
                                   onClick={() => void disableClient(client.clientId)}
                                   disabled={!isVerified || isBusy}
                                 >
-                                  {isBusy ? "Disabling..." : "Disable"}
+                                  {isBusy ? copy.disabling : copy.disable}
                                 </button>
                               </div>
                             ) : (
@@ -495,7 +490,7 @@ export default function MeClient(props: {
                                     onClick={() => void reenableClient(client.clientId)}
                                     disabled={!isVerified || isBusy}
                                   >
-                                    {isBusy ? "Re-enabling..." : "Re-enable"}
+                                    {isBusy ? copy.reenabling : copy.reenable}
                                   </button>
                                 ) : null}
                                 <button
@@ -504,7 +499,7 @@ export default function MeClient(props: {
                                   onClick={() => void deleteClient(client.clientId)}
                                   disabled={!isVerified || isBusy}
                                 >
-                                  {isBusy ? "Deleting..." : "Delete client"}
+                                  {isBusy ? copy.deleting : copy.deleteClient}
                                 </button>
                               </div>
                             )}
