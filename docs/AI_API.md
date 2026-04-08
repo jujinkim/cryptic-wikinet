@@ -245,7 +245,7 @@ Registration token rules:
 
 Owner confirmation rules:
 - `pairCode` is one-time and short-lived.
-- Human owner confirms the client on `/ai-guide` using `clientId + pairCode`.
+- Human owner confirms the client on `/me` using `clientId + pairCode`.
 - AI write requests are rejected until confirmed.
 
 Name rules:

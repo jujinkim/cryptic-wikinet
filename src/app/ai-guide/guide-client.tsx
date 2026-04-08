@@ -9,24 +9,12 @@ import LocalTime from "@/components/local-time";
 import { getSiteCopy } from "@/lib/site-copy";
 import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 
-type OwnedAiClient = {
-  id: string;
-  name: string;
-  aiAccountId: string | null;
-  aiAccount: { id: string; name: string } | null;
-  clientId: string;
-  status: "PENDING" | "ACTIVE";
-  createdAt: string;
-  ownerConfirmedAt: string | null;
-  pairCodeExpiresAt: string | null;
-  revokedAt: string | null;
-};
-
 export default function AiGuideClient(props: {
   locale: SiteLocale;
   isLoggedIn: boolean;
   isVerified: boolean;
   targetAccount: { id: string; name: string } | null;
+  onChanged?: () => Promise<void> | void;
 }) {
   const copy = getAiGuideClientCopy(props.locale);
   const siteCopy = getSiteCopy(props.locale);
@@ -39,10 +27,6 @@ export default function AiGuideClient(props: {
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [origin, setOrigin] = useState("");
-
-  const [ownedClients, setOwnedClients] = useState<OwnedAiClient[]>([]);
-  const [ownedBusy, setOwnedBusy] = useState(false);
-  const [ownedErr, setOwnedErr] = useState<string | null>(null);
 
   const [confirmClientId, setConfirmClientId] = useState("");
   const [confirmPairCode, setConfirmPairCode] = useState("");
@@ -96,27 +80,6 @@ export default function AiGuideClient(props: {
     token,
   ]);
 
-  async function loadOwnedClients() {
-    if (!props.isLoggedIn || !props.isVerified) return;
-
-    setOwnedBusy(true);
-    setOwnedErr(null);
-    try {
-      const res = await fetch("/api/ai/clients/mine", { cache: "no-store" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setOwnedErr(String(data.error ?? "Failed to load AI clients"));
-        return;
-      }
-      const items = Array.isArray(data.items) ? (data.items as OwnedAiClient[]) : [];
-      setOwnedClients(items);
-    } catch (e) {
-      setOwnedErr(String(e));
-    } finally {
-      setOwnedBusy(false);
-    }
-  }
-
   async function loadActiveToken() {
     if (!props.isLoggedIn || !props.isVerified) return;
 
@@ -146,7 +109,6 @@ export default function AiGuideClient(props: {
   useEffect(() => {
     if (!props.isLoggedIn || !props.isVerified) return;
     void loadActiveToken();
-    void loadOwnedClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.isLoggedIn, props.isVerified]);
 
@@ -217,7 +179,7 @@ export default function AiGuideClient(props: {
           ? copy.alreadyActive
           : copy.confirmed,
       );
-      await loadOwnedClients();
+      await props.onChanged?.();
     } catch (e) {
       setConfirmErr(String(e));
     } finally {
@@ -227,7 +189,7 @@ export default function AiGuideClient(props: {
 
   return (
     <section
-      id="registration-token"
+      id="ai-client-manager"
       className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950"
     >
       <h2 className="text-lg font-medium">{copy.sectionTitle}</h2>
@@ -256,7 +218,7 @@ export default function AiGuideClient(props: {
               <div className="mt-1">
                 <Link
                   className="underline"
-                  href={`${withSiteLocale("/ai-guide", props.locale)}#registration-token`}
+                  href={`${withSiteLocale("/me", props.locale)}#ai-client-manager`}
                 >
                   {copy.switchBack}
                 </Link>
@@ -349,51 +311,10 @@ export default function AiGuideClient(props: {
               >
                 {confirmBusy ? copy.confirming : copy.confirmButton}
               </button>
-              <button
-                type="button"
-                className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-zinc-950"
-                onClick={() => void loadOwnedClients()}
-                disabled={ownedBusy}
-              >
-                {ownedBusy ? copy.refreshing : copy.refreshList}
-              </button>
             </div>
 
             {confirmErr ? <div className="mt-2 text-sm text-red-600">{confirmErr}</div> : null}
             {confirmInfo ? <div className="mt-2 text-sm text-zinc-500">{confirmInfo}</div> : null}
-            {ownedErr ? <div className="mt-2 text-sm text-red-600">{ownedErr}</div> : null}
-
-            <div className="mt-3 max-h-56 overflow-auto rounded-lg border border-black/10 p-2 text-xs dark:border-white/15">
-              {ownedBusy ? (
-                <div className="text-zinc-500">{copy.loading}</div>
-              ) : ownedClients.length === 0 ? (
-                <div className="text-zinc-500">{copy.noClients}</div>
-              ) : (
-                <ul className="space-y-1">
-                  {ownedClients.map((c) => (
-                    <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-black/10 px-2 py-1 dark:border-white/15">
-                      <div>
-                        <span className="font-mono">{c.clientId}</span>{" "}
-                        <span>({c.aiAccount?.name ?? c.name})</span>
-                      </div>
-                      <div className="text-zinc-500">
-                        {c.revokedAt
-                          ? copy.disabled
-                          : c.status === "ACTIVE"
-                            ? copy.active
-                            : c.pairCodeExpiresAt
-                              ? (
-                                <>
-                                  {copy.pendingUntil} <LocalTime value={c.pairCodeExpiresAt} />
-                                </>
-                              )
-                              : copy.pending}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
           </div>
 
           {err ? <div className="text-sm text-red-600">{err}</div> : null}

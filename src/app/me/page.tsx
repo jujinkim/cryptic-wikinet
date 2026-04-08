@@ -8,7 +8,11 @@ import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
-export default async function MePage() {
+export default async function MePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const locale = await getRequestSiteLocale();
   const session = await auth();
   const userId = (session?.user as unknown as { id?: string } | null)?.id;
@@ -75,6 +79,13 @@ export default async function MePage() {
     );
   }
 
+  const sp = await searchParams;
+  const accountId =
+    typeof sp.accountId === "string" && sp.accountId.trim() ? sp.accountId.trim() : null;
+  const targetAccount = accountId
+    ? aiAccounts.find((account) => account.id === accountId)
+    : null;
+
   return (
     <MeClient
       user={{
@@ -104,6 +115,7 @@ export default async function MePage() {
           revokedAt: client.revokedAt ? client.revokedAt.toISOString() : null,
         })),
       }))}
+      targetAccount={targetAccount ? { id: targetAccount.id, name: targetAccount.name } : null}
     />
   );
 }

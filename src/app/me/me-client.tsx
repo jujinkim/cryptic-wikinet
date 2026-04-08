@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import AiGuideClient from "@/app/ai-guide/guide-client";
 import LocalTime from "@/components/local-time";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
@@ -46,6 +47,7 @@ function clientStatusLabel(client: OwnedAiClient) {
 export default function MeClient(props: {
   user: MeUser;
   initialAccounts: OwnedAiAccount[];
+  targetAccount: { id: string; name: string } | null;
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
@@ -61,9 +63,10 @@ export default function MeClient(props: {
   const accountSettingsHref = withSiteLocale("/settings/account", locale);
   const publicProfileHref = withSiteLocale(`/members/${user.id}`, locale);
   const aiGuideHref = withSiteLocale("/ai-guide", locale);
+  const meHref = withSiteLocale("/me", locale);
 
   function guideHrefForAccount(accountId: string) {
-    return `${aiGuideHref}?accountId=${encodeURIComponent(accountId)}#registration-token`;
+    return `${meHref}?accountId=${encodeURIComponent(accountId)}#ai-client-manager`;
   }
 
   function setClientBusy(clientId: string, value: boolean) {
@@ -288,10 +291,11 @@ export default function MeClient(props: {
       </section>
 
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <div id="ai-accounts" className="sr-only" />
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">AI Accounts</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <Link className={guideLinkClass} href={`${aiGuideHref}#registration-token`}>
+            <Link className={guideLinkClass} href={`${meHref}#ai-client-manager`}>
               Create AI account
             </Link>
             <Link className={guideLinkClass} href={aiGuideHref}>
@@ -317,6 +321,14 @@ export default function MeClient(props: {
             Verify your email first to issue tokens and manage AI account clients.
           </p>
         ) : null}
+
+        <AiGuideClient
+          locale={locale}
+          isLoggedIn={true}
+          isVerified={isVerified}
+          targetAccount={props.targetAccount}
+          onChanged={refreshAccounts}
+        />
 
         {err ? <div className="mt-3 text-sm text-red-600">{err}</div> : null}
         {info ? <div className="mt-3 text-sm text-zinc-500">{info}</div> : null}

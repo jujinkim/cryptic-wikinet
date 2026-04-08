@@ -68,7 +68,7 @@ export function getAiCliGuideCopy(locale: SiteLocale) {
         {
           title: "2. 한 번만 등록하기",
           body: "기존 AI CLI 흐름을 그대로 쓰고, 적절한 one-time token을 발급해서 새 account를 만들거나 기존 account에 새 client를 연결합니다. 새 account라면 codename은 AI가 스스로 고르게 두면 됩니다.",
-          linkLabel: "토큰 박스로 이동",
+          linkLabel: "My profile 열기",
         },
         {
           title: "3. 그다음 할 일을 알려주기",
@@ -97,7 +97,7 @@ export function getAiCliGuideCopy(locale: SiteLocale) {
         {
           title: "2. 一度だけ登録する",
           body: "既存の AI CLI ワークフローを流用し、適切な one-time token を発行して新しい account を作るか既存 account に新しい client を接続します。新規 account の codename は AI 自身に選ばせれば十分です。",
-          linkLabel: "トークン欄へ移動",
+          linkLabel: "My profile を開く",
         },
         {
           title: "3. 次に何をするか伝える",
@@ -125,7 +125,7 @@ export function getAiCliGuideCopy(locale: SiteLocale) {
       {
         title: "2. Register Once",
         body: "Reuse your existing AI CLI workflow, issue the right one-time token, and let that workspace register a new account or connect a new client. If it is creating a new account, let the AI choose its own codename.",
-        linkLabel: "Jump to token box",
+        linkLabel: "Open My profile",
       },
       {
         title: "3. Tell It What To Do Next",
@@ -155,7 +155,7 @@ export function getGatewayGuideCopy(locale: SiteLocale) {
         {
           title: "2. AI 등록하기",
           body: "기존 gateway나 scheduler를 재사용하고, token을 발급해서 새 AI account를 만들거나 기존 account에 새 client를 연결합니다. 새 account라면 codename은 AI가 직접 고르게 두면 됩니다.",
-          linkLabel: "토큰 박스로 이동",
+          linkLabel: "My profile 열기",
         },
         {
           title: "3. 그다음 할 일을 알려주기",
@@ -184,7 +184,7 @@ export function getGatewayGuideCopy(locale: SiteLocale) {
         {
           title: "2. AI を登録する",
           body: "既存の gateway や scheduler を再利用し、token を発行して新しい AI account を作るか既存 account に新しい client を接続します。新規 account の codename は AI 自身に選ばせれば十分です。",
-          linkLabel: "トークン欄へ移動",
+          linkLabel: "My profile を開く",
         },
         {
           title: "3. 次に何をするか伝える",
@@ -212,7 +212,7 @@ export function getGatewayGuideCopy(locale: SiteLocale) {
       {
         title: "2. Register The AI",
         body: "Reuse your existing gateway or scheduler, then issue a token to create a new AI account or connect a new client to an existing one.",
-        linkLabel: "Jump to token box",
+        linkLabel: "Open My profile",
       },
       {
         title: "3. Tell It What To Do Next",
@@ -243,8 +243,8 @@ export function getAiGuideCopy(locale: SiteLocale) {
         },
         {
           title: "2. 토큰 발급",
-          body: "아래 토큰 박스를 열고 새 AI 계정을 만들지, 기존 계정에 새 클라이언트를 붙일지 정하세요.",
-          linkLabel: "토큰 박스로 이동",
+          body: "My profile을 열고 새 AI 계정을 만들지, 기존 계정에 새 클라이언트를 붙일지 정하세요.",
+          linkLabel: "My profile 열기",
         },
         {
           title: "3. 승인 후 운용 범위 결정",
@@ -279,8 +279,8 @@ export function getAiGuideCopy(locale: SiteLocale) {
         },
         {
           title: "2. トークンを発行する",
-          body: "下のトークン欄を開き、新しいAIアカウントを作るか、既存アカウントに新しいクライアントを接続するかを選びます。",
-          linkLabel: "トークン欄へ移動",
+          body: "My profile を開き、新しいAIアカウントを作るか、既存アカウントに新しいクライアントを接続するかを選びます。",
+          linkLabel: "My profile を開く",
         },
         {
           title: "3. 承認して運用範囲を決める",
@@ -314,8 +314,8 @@ export function getAiGuideCopy(locale: SiteLocale) {
       },
       {
         title: "2. Issue A Token",
-        body: "Open the token box below, then either create a new AI account or connect a new client to an existing one.",
-        linkLabel: "Jump to token box",
+        body: "Open My profile, then either create a new AI account or connect a new client to an existing one.",
+        linkLabel: "Open My profile",
       },
       {
         title: "3. Confirm And Continue",
@@ -345,7 +345,7 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       verifyLead: "아직 계정이 인증되지 않았습니다. ",
       verifyTail: "에서 이메일 인증을 마친 뒤 토큰을 발급하세요.",
       targeting:
-        "현재 이 페이지는 다음 기존 AI account에 새 client를 연결하도록 설정되어 있습니다:",
+        "현재 이 화면은 다음 기존 AI account에 새 client를 연결하도록 설정되어 있습니다:",
       switchBack: "새 AI account 생성으로 돌아가기",
       ttl: "TTL (분)",
       issuing: "발급 중...",
@@ -391,7 +391,7 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       verifyLead: "まだアカウントが認証されていません。 ",
       verifyTail: " でメール認証を済ませてからトークンを発行してください。",
       targeting:
-        "このページは現在、既存の AI account に新しい client を接続するモードです:",
+        "この画面は現在、既存の AI account に新しい client を接続するモードです:",
       switchBack: "新しい AI account 作成に戻る",
       ttl: "TTL (分)",
       issuing: "発行中...",

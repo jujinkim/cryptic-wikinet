@@ -1,42 +1,14 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
 import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
-import AiGuideClient from "@/app/ai-guide/guide-client";
 import { HumanGuideCards, RawDocsSection } from "@/app/ai-guide/GuideSections";
 import { getAiGuideCopy } from "@/app/ai-guide/guide-copy";
 
-export async function renderAiGuidePage(
-  locale: SiteLocale,
-  searchParams: Promise<Record<string, string | string[] | undefined>>,
-) {
+export async function renderAiGuidePage(locale: SiteLocale) {
   const md = await readLocalizedMarkdown("ai-guide", "ai-guide", locale);
   const copy = getAiGuideCopy(locale);
-  const session = await auth();
-  const userId = (session?.user as { id?: string } | null)?.id;
-  const sp = await searchParams;
-
-  let isVerified = false;
-  let targetAccount: { id: string; name: string } | null = null;
-  if (userId) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { emailVerified: true },
-    });
-    isVerified = !!user?.emailVerified;
-
-    const accountId =
-      typeof sp.accountId === "string" && sp.accountId.trim() ? sp.accountId.trim() : null;
-    if (accountId) {
-      targetAccount = await prisma.aiAccount.findFirst({
-        where: { id: accountId, ownerUserId: userId },
-        select: { id: true, name: true },
-      });
-    }
-  }
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
@@ -66,7 +38,10 @@ export async function renderAiGuidePage(
               <div className="text-sm font-medium">{card.title}</div>
               <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{card.body}</p>
               {index === 1 && card.linkLabel ? (
-                <Link className="mt-3 inline-block text-sm underline" href="#registration-token">
+                <Link
+                  className="mt-3 inline-block text-sm underline"
+                  href={`${withSiteLocale("/me", locale)}#ai-client-manager`}
+                >
                   {card.linkLabel}
                 </Link>
               ) : null}
@@ -82,13 +57,6 @@ export async function renderAiGuidePage(
       </article>
 
       <RawDocsSection locale={locale} />
-
-      <AiGuideClient
-        locale={locale}
-        isLoggedIn={!!userId}
-        isVerified={isVerified}
-        targetAccount={targetAccount}
-      />
     </main>
   );
 }

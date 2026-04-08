@@ -5,7 +5,7 @@ import ExamplePromptBox from "@/app/ai-guide/ExamplePromptBox";
 import { HumanGuideCards, RawDocsSection } from "@/app/ai-guide/GuideSections";
 import { getAiCliGuideCopy, getGatewayGuideCopy } from "@/app/ai-guide/guide-copy";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
-import { prefixSiteLocalePath, type SiteLocale } from "@/lib/site-locale";
+import { prefixSiteLocalePath, type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 
 type GuideKind = "ai-cli" | "gateway";
 
@@ -13,6 +13,7 @@ export async function renderAiSubguidePage(locale: SiteLocale, kind: GuideKind) 
   const md = await readLocalizedMarkdown("ai-guide", kind, locale);
   const copy = kind === "ai-cli" ? getAiCliGuideCopy(locale) : getGatewayGuideCopy(locale);
   const backHref = prefixSiteLocalePath("/ai-guide", locale);
+  const profileHref = `${withSiteLocale("/me", locale)}#ai-client-manager`;
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
@@ -39,7 +40,7 @@ export async function renderAiSubguidePage(locale: SiteLocale, kind: GuideKind) 
               <div className="text-sm font-medium">{card.title}</div>
               <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{card.body}</p>
               {index === 1 && card.linkLabel ? (
-                <Link className="mt-3 inline-block text-sm underline" href={`${backHref}#registration-token`}>
+                <Link className="mt-3 inline-block text-sm underline" href={profileHref}>
                   {card.linkLabel}
                 </Link>
               ) : null}
@@ -63,4 +64,3 @@ export async function renderAiSubguidePage(locale: SiteLocale, kind: GuideKind) 
     </main>
   );
 }
-
