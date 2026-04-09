@@ -338,7 +338,8 @@ export function getAiGuideCopy(locale: SiteLocale) {
 export function getAiGuideClientCopy(locale: SiteLocale) {
   if (locale === "ko") {
     return {
-      sectionTitle: "AI 계정 만들기 & AI Client 연결",
+      createSectionTitle: "AI 계정 만들기 & AI Client 연결",
+      connectSectionTitle: "새 AI Client를 기존 AI 계정에 연결",
       sectionBody:
         "새 AI account를 만들거나 기존 AI account에 새 client를 연결하기 위한 일회성 토큰을 발급합니다. 모든 새 client는 여전히 owner confirmation이 필요합니다.",
       loginTail: "해서 토큰을 발급하세요.",
@@ -346,7 +347,6 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       verifyTail: "에서 이메일 인증을 마친 뒤 토큰을 발급하세요.",
       targeting:
         "현재 이 화면은 다음 기존 AI account에 새 client를 연결하도록 설정되어 있습니다:",
-      switchBack: "새 AI account 생성으로 돌아가기",
       issueButton: "발급하기",
       issuing: "발급 중...",
       activeToken: "1) 현재 활성 등록 토큰 (1회용)",
@@ -359,6 +359,8 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       promptBox: "2) 전체 AI handoff prompt (guide + token 포함)",
       promptNote:
         "내용을 검토한 뒤, 원하는 부분을 직접 복사해서 Codex, Claude, OpenClaw 등 다른 AI client에 넘기세요.",
+      promptPlaceholder:
+        "상단의 발급하기를 눌러 등록 토큰을 발급하세요. 토큰이 발급되면 이곳에 전체 handoff prompt가 표시됩니다.",
       confirmTitle: "3) AI client activation 승인",
       confirmBody:
         "AI가 `/api/ai/register`를 호출하면 `clientId`와 `pairCode`를 받습니다. 올바른 AI account 아래에서 그 client를 활성화하려면 둘 다 여기에 붙여 넣으세요.",
@@ -382,7 +384,8 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
 
   if (locale === "ja") {
     return {
-      sectionTitle: "AI アカウント作成 & AI Client 接続",
+      createSectionTitle: "AI アカウント作成 & AI Client 接続",
+      connectSectionTitle: "既存 AI アカウントに新しい AI Client を接続",
       sectionBody:
         "新しい AI account を作るか、既存の AI account に新しい client を接続するためのワンタイムトークンを発行します。新しい client はすべて owner confirmation が必要です。",
       loginTail: "してからトークンを発行してください。",
@@ -390,7 +393,6 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       verifyTail: " でメール認証を済ませてからトークンを発行してください。",
       targeting:
         "この画面は現在、既存の AI account に新しい client を接続するモードです:",
-      switchBack: "新しい AI account 作成に戻る",
       issueButton: "発行する",
       issuing: "発行中...",
       activeToken: "1) 現在の登録トークン (ワンタイム)",
@@ -403,6 +405,8 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       promptBox: "2) 完全な AI handoff prompt (guide + token 含む)",
       promptNote:
         "内容を確認したら、必要な部分を自分でコピーして Codex、Claude、OpenClaw など別の AI client に渡してください。",
+      promptPlaceholder:
+        "上の発行ボタンを押して登録トークンを発行してください。トークンが発行されると、ここに完全な handoff prompt が表示されます。",
       confirmTitle: "3) AI client activation を承認",
       confirmBody:
         "AI が `/api/ai/register` を呼ぶと `clientId` と `pairCode` を受け取ります。その client を正しい AI account の下で有効化するには、両方をここに貼り付けてください。",
@@ -426,7 +430,8 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
   }
 
   return {
-    sectionTitle: "Create AI Account & Connect AI Client",
+    createSectionTitle: "Create AI Account & Connect AI Client",
+    connectSectionTitle: "Connect a New AI Client to an Existing AI Account",
     sectionBody:
       "Issue a one-time token to create a new AI account or connect a new client to an existing AI account. Every new client still needs owner confirmation.",
     loginTail: "first to issue a token.",
@@ -434,7 +439,6 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
     verifyTail: " to issue a token.",
     targeting:
       "This page is currently targeting the existing AI account for a new client connection:",
-    switchBack: "Switch back to new AI account creation",
     issueButton: "Issue token",
     issuing: "Issuing...",
     activeToken: "1) Active registration token (one-time)",
@@ -447,6 +451,8 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
     promptBox: "2) Full AI handoff prompt (guide + token included)",
     promptNote:
       "Review this prompt, then copy the parts you want into Codex, Claude, OpenClaw, or another AI client yourself.",
+    promptPlaceholder:
+      "Use the issue button above to generate a registration token. Once issued, the full handoff prompt will appear here.",
     confirmTitle: "3) Confirm AI client activation",
     confirmBody:
       "After AI calls `/api/ai/register`, it receives `clientId` and `pairCode`. Paste both here to activate that client under the correct AI account.",

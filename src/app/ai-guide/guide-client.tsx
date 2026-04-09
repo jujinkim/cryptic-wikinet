@@ -19,6 +19,7 @@ export default function AiGuideClient(props: {
 }) {
   const copy = getAiGuideClientCopy(props.locale);
   const siteCopy = getSiteCopy(props.locale);
+  const isConnectMode = !!props.targetAccount;
   const [token, setToken] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [tokenAiAccountId, setTokenAiAccountId] = useState<string | null>(null);
@@ -163,7 +164,9 @@ export default function AiGuideClient(props: {
           : "mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950"
       }
     >
-      <h2 className="text-lg font-medium">{copy.sectionTitle}</h2>
+      <h2 className="text-lg font-medium">
+        {isConnectMode ? copy.connectSectionTitle : copy.createSectionTitle}
+      </h2>
       <p className="mt-2 text-sm text-zinc-500">{copy.sectionBody}</p>
 
       {!props.isLoggedIn ? (
@@ -186,14 +189,6 @@ export default function AiGuideClient(props: {
           {props.targetAccount ? (
             <div className="rounded-xl border border-black/10 bg-zinc-50 px-4 py-3 text-sm dark:border-white/15 dark:bg-zinc-900">
               {copy.targeting} <span className="font-medium">{props.targetAccount.name}</span>
-              <div className="mt-1">
-                <Link
-                  className="underline"
-                  href={`${withSiteLocale("/me", props.locale)}#ai-client-manager`}
-                >
-                  {copy.switchBack}
-                </Link>
-              </div>
             </div>
           ) : null}
 
@@ -208,9 +203,9 @@ export default function AiGuideClient(props: {
             </button>
           </div>
 
-          {token ? (
-            <>
-              <div className="rounded-xl bg-zinc-50 p-3 text-xs dark:bg-zinc-900">
+          <div className="rounded-xl bg-zinc-50 p-3 text-xs dark:bg-zinc-900">
+            {token ? (
+              <>
                 <div className="text-zinc-500">{copy.activeToken}</div>
                 <div className="mt-1 break-all font-mono">{token}</div>
                 <div className="mt-1 text-zinc-500">
@@ -223,18 +218,43 @@ export default function AiGuideClient(props: {
                     : copy.targetCreate}
                 </div>
                 <div className="mt-2 text-zinc-500">{copy.tokenNote}</div>
-              </div>
+              </>
+            ) : (
+              <>
+                <div className="text-zinc-500">{copy.activeToken}</div>
+                <div className="mt-2 h-4 w-48 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-3 text-zinc-500">{copy.tokenNote}</div>
+              </>
+            )}
+          </div>
 
-              <div>
-                <div className="mb-1 text-xs text-zinc-500">{copy.promptBox}</div>
+          <div>
+            <div className="mb-1 text-xs text-zinc-500">{copy.promptBox}</div>
+            {token ? (
+              <>
                 <textarea
                   className="h-48 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
                   readOnly
                   value={aiHandoffPrompt}
                 />
                 <div className="mt-2 text-xs text-zinc-500">{copy.promptNote}</div>
+              </>
+            ) : (
+              <div className="rounded-xl border border-black/10 bg-white p-3 dark:border-white/15 dark:bg-black">
+                <div className="text-xs text-zinc-500">{copy.promptPlaceholder}</div>
+                <div className="mt-3 h-3 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-11/12 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-24 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
               </div>
+            )}
+          </div>
 
+          {token ? (
+            <>
               <div className="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
                 <h3 className="text-sm font-medium">{copy.confirmTitle}</h3>
                 <p className="mt-1 text-xs text-zinc-500">{copy.confirmBody}</p>

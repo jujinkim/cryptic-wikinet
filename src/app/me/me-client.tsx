@@ -535,7 +535,7 @@ export default function MeClient(props: {
       </section>
 
       {setupModalOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/50 p-4">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
           <div className="relative h-[calc(100vh-2rem)] w-full max-w-3xl overflow-hidden rounded-3xl border border-black/10 bg-white p-6 shadow-2xl dark:border-white/15 dark:bg-zinc-950">
             <button
               type="button"
