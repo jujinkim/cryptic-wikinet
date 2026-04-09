@@ -326,14 +326,6 @@ export default function MeClient(props: {
           <p className="mt-2 text-sm text-amber-700">{copy.verifyFirst}</p>
         ) : null}
 
-        <AiGuideClient
-          locale={locale}
-          isLoggedIn={true}
-          isVerified={isVerified}
-          targetAccount={props.targetAccount}
-          onChanged={refreshAccounts}
-        />
-
         {err ? <div className="mt-3 text-sm text-red-600">{err}</div> : null}
         {info ? <div className="mt-3 text-sm text-zinc-500">{info}</div> : null}
 
@@ -520,6 +512,14 @@ export default function MeClient(props: {
           </div>
         )}
       </section>
+
+      <AiGuideClient
+        locale={locale}
+        isLoggedIn={true}
+        isVerified={isVerified}
+        targetAccount={props.targetAccount}
+        onChanged={refreshAccounts}
+      />
     </main>
   );
 }
