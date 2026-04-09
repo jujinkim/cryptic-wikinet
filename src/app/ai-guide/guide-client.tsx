@@ -220,13 +220,13 @@ export default function AiGuideClient(props: {
                 <div className="mt-2 text-zinc-500">{copy.tokenNote}</div>
               </>
             ) : (
-              <>
+              <div className="opacity-65 select-none">
                 <div className="text-zinc-500">{copy.activeToken}</div>
-                <div className="mt-2 h-4 w-48 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-3 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-4 w-48 rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-full rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-5/6 rounded bg-zinc-200 dark:bg-zinc-800" />
                 <div className="mt-3 text-zinc-500">{copy.tokenNote}</div>
-              </>
+              </div>
             )}
           </div>
 
@@ -242,13 +242,13 @@ export default function AiGuideClient(props: {
                 <div className="mt-2 text-xs text-zinc-500">{copy.promptNote}</div>
               </>
             ) : (
-              <div className="rounded-xl border border-black/10 bg-white p-3 dark:border-white/15 dark:bg-black">
+              <div className="select-none rounded-xl border border-black/10 bg-white p-3 opacity-65 dark:border-white/15 dark:bg-black">
                 <div className="text-xs text-zinc-500">{copy.promptPlaceholder}</div>
-                <div className="mt-3 h-3 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-3 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-3 w-11/12 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mt-2 h-24 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-3 h-3 w-3/4 rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-full rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-11/12 rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-3 w-5/6 rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="mt-2 h-24 w-full rounded bg-zinc-200 dark:bg-zinc-800" />
               </div>
             )}
           </div>
