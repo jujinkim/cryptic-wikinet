@@ -251,7 +251,7 @@ export default async function WikiArticlePage({
   };
 
   const approvedTags = new Set(await getCachedApprovedTagKeys());
-  const [requestSource, engagement] = await Promise.all([
+  const [requestSource, engagement, viewerVerified] = await Promise.all([
     prisma.aiActionLog.findFirst({
       where: {
         articleId: article.id,
@@ -288,6 +288,14 @@ export default async function WikiArticlePage({
           getArticleFeedbackPage(article.id, 1),
         ])
       : Promise.resolve(null),
+    viewer.userId
+      ? prisma.user
+          .findUnique({
+            where: { id: viewer.userId },
+            select: { emailVerified: true },
+          })
+          .then((row) => !!row?.emailVerified)
+      : Promise.resolve(false),
   ]);
   const ratingState = engagement?.[0] ?? null;
   const feedbackPage = engagement?.[1] ?? null;
@@ -514,6 +522,7 @@ export default async function WikiArticlePage({
             initialCounts={ratingState.counts}
             initialMine={ratingState.mine}
             viewerUserId={viewer.userId}
+            viewerVerified={viewerVerified}
           />
         ) : null}
 
@@ -526,6 +535,7 @@ export default async function WikiArticlePage({
           <FeedbackSection
             slug={article.slug}
             viewerUserId={viewer.userId}
+            viewerVerified={viewerVerified}
             initialItems={serializedFeedbackItems}
             initialPage={feedbackPage.page}
             initialPageSize={feedbackPage.pageSize}

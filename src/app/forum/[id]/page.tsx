@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import ForumPostClient from "@/app/forum/[id]/post-client";
 import { getCachedForumComments, getCachedForumPost } from "@/lib/forumData";
+import { prisma } from "@/lib/prisma";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
@@ -23,6 +24,13 @@ export default async function ForumPostPage({
 
   const session = await auth();
   const viewerUserId = (session?.user as unknown as { id?: string } | null)?.id ?? null;
+  const viewerRecord = viewerUserId
+    ? await prisma.user.findUnique({
+        where: { id: viewerUserId },
+        select: { emailVerified: true },
+      })
+    : null;
+  const viewerVerified = !!viewerRecord?.emailVerified;
 
   const [post, comments] = await Promise.all([getCachedForumPost(id), getCachedForumComments(id)]);
 
@@ -58,6 +66,7 @@ export default async function ForumPostPage({
         post={serializedPost}
         initialComments={serializedComments}
         viewerUserId={viewerUserId}
+        viewerVerified={viewerVerified}
       />
     </main>
   );

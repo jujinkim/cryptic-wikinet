@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ReportButton from "@/app/wiki/[slug]/report-client";
 import LocalTime from "@/components/local-time";
 import { getSiteCopy } from "@/lib/site-copy";
-import { getLocaleFromPathname } from "@/lib/site-locale";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type CommentPolicy = "HUMAN_ONLY" | "AI_ONLY" | "BOTH";
 
@@ -100,6 +101,7 @@ export default function ForumPostClient(props: {
   post: PostShape;
   initialComments: CommentItem[];
   viewerUserId: string | null;
+  viewerVerified: boolean;
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
@@ -108,7 +110,10 @@ export default function ForumPostClient(props: {
   const [comments, setComments] = useState<CommentItem[]>(props.initialComments);
 
   const canEditPost =
-    viewerUserId && post.authorType === "HUMAN" && post.authorUser?.id === viewerUserId;
+    props.viewerVerified &&
+    viewerUserId &&
+    post.authorType === "HUMAN" &&
+    post.authorUser?.id === viewerUserId;
 
   const [editingPost, setEditingPost] = useState(false);
   const [postTitle, setPostTitle] = useState(post.title);
@@ -125,7 +130,8 @@ export default function ForumPostClient(props: {
   const highlightTimeoutRef = useRef<number | null>(null);
 
   const humanCommentsAllowed = post.commentPolicy !== "AI_ONLY";
-  const canWriteComment = !!viewerUserId && humanCommentsAllowed;
+  const canWriteComment = !!viewerUserId && props.viewerVerified && humanCommentsAllowed;
+  const profileSettingsHref = withSiteLocale("/settings/profile", locale);
 
   const sorted = useMemo(() => comments, [comments]);
   const commentRefToId = useMemo(() => {
@@ -348,6 +354,8 @@ export default function ForumPostClient(props: {
                 onSave={saveComment}
                 onQuote={quoteComment}
                 canQuote={canWriteComment && !commentBusy}
+                viewerVerified={props.viewerVerified}
+                humanCommentsAllowed={humanCommentsAllowed}
                 commentRefToId={commentRefToId}
                 highlighted={highlightedCommentId === c.id}
                 onCommentLinkClick={triggerCommentHighlight}
@@ -360,8 +368,12 @@ export default function ForumPostClient(props: {
                   cancel: copy.forumPost.cancel,
                   mentionTitle: copy.forumPost.mentionTitle,
                   loginRequired: copy.forumPost.loginRequired,
+                  verificationRequired: copy.common.emailVerificationRequired,
+                  goToProfileSettings: copy.common.goToProfileSettings,
+                  aiOnlyThread: copy.forumPost.aiOnlyThread,
                   replyAriaLabelPrefix: copy.forumPost.replyAriaLabelPrefix,
                 }}
+                profileSettingsHref={profileSettingsHref}
               />
             ))}
           </ul>
@@ -376,6 +388,13 @@ export default function ForumPostClient(props: {
             <div className="mt-1 text-sm text-zinc-500">{copy.forumPost.loginRequired}</div>
           ) : !humanCommentsAllowed ? (
             <div className="mt-1 text-sm text-zinc-500">{copy.forumPost.aiOnlyThread}</div>
+          ) : !props.viewerVerified ? (
+            <div className="mt-1 text-sm text-zinc-500">
+              {copy.common.emailVerificationRequired}{" "}
+              <Link className="underline" href={profileSettingsHref}>
+                {copy.common.goToProfileSettings}
+              </Link>
+            </div>
           ) : (
             <>
               <textarea
@@ -411,9 +430,12 @@ function CommentRow(props: {
   onSave: (commentId: string, contentMd: string) => Promise<void>;
   onQuote: (commentId: string) => void;
   canQuote: boolean;
+  viewerVerified: boolean;
+  humanCommentsAllowed: boolean;
   commentRefToId: Map<string, string>;
   highlighted: boolean;
   onCommentLinkClick: (commentId: string) => void;
+  profileSettingsHref: string;
   labels: {
     human: string;
     ai: string;
@@ -423,11 +445,15 @@ function CommentRow(props: {
     cancel: string;
     mentionTitle: string;
     loginRequired: string;
+    verificationRequired: string;
+    goToProfileSettings: string;
+    aiOnlyThread: string;
     replyAriaLabelPrefix: string;
   };
 }) {
   const { comment, viewerUserId } = props;
   const canEdit =
+    props.viewerVerified &&
     viewerUserId &&
     comment.authorType === "HUMAN" &&
     comment.authorUser?.id === viewerUserId;
@@ -485,7 +511,17 @@ function CommentRow(props: {
               "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-base leading-none text-zinc-600 transition hover:border-black/20 hover:text-zinc-900 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-white/30 dark:hover:text-white" +
               (!props.canQuote ? " cursor-default opacity-40" : "")
             }
-            title={props.canQuote ? `${props.labels.mentionTitle} #${getCommentRef(comment.id)}` : props.labels.loginRequired}
+            title={
+              props.canQuote
+                ? `${props.labels.mentionTitle} #${getCommentRef(comment.id)}`
+                : !viewerUserId
+                  ? props.labels.loginRequired
+                  : !props.humanCommentsAllowed
+                    ? props.labels.aiOnlyThread
+                    : !props.viewerVerified
+                      ? props.labels.verificationRequired
+                      : props.labels.mentionTitle
+            }
             aria-label={`${props.labels.replyAriaLabelPrefix} ${getCommentRef(comment.id)}`}
           >
             ↩
@@ -516,15 +552,24 @@ function CommentRow(props: {
         </div>
       ) : (
         <div className="mt-3">
+          {!props.viewerVerified ? (
+            <div className="mb-2 text-xs text-zinc-500">
+              {props.labels.verificationRequired}{" "}
+              <Link className="underline" href={props.profileSettingsHref}>
+                {props.labels.goToProfileSettings}
+              </Link>
+            </div>
+          ) : null}
           <textarea
             className="h-28 w-full rounded-lg border border-black/10 bg-white px-3 py-2 font-mono text-xs dark:border-white/15 dark:bg-zinc-950"
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            disabled={!props.viewerVerified}
           />
           <div className="mt-2 flex items-center gap-2">
             <button
               className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
-              disabled={busy || !content.trim()}
+              disabled={!props.viewerVerified || busy || !content.trim()}
               onClick={save}
             >
               {props.labels.save}

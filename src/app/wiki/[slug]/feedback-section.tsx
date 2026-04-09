@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import LocalTime from "@/components/local-time";
+import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type FeedbackItem = {
@@ -84,6 +85,7 @@ function renderCommentContent(
 export default function FeedbackSection(props: {
   slug: string;
   viewerUserId: string | null;
+  viewerVerified: boolean;
   initialItems: FeedbackItem[];
   initialPage: number;
   initialPageSize: number;
@@ -92,6 +94,7 @@ export default function FeedbackSection(props: {
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
+  const copy = getSiteCopy(locale);
   const [items, setItems] = useState(props.initialItems);
   const [page, setPage] = useState(props.initialPage);
   const [pageSize] = useState(props.initialPageSize);
@@ -105,6 +108,7 @@ export default function FeedbackSection(props: {
   const highlightTimeoutRef = useRef<number | null>(null);
 
   const loggedIn = !!props.viewerUserId;
+  const canWriteFeedback = loggedIn && props.viewerVerified;
   const commentRefToId = new Map<string, string>();
 
   for (const item of items) {
@@ -167,7 +171,7 @@ export default function FeedbackSection(props: {
   }
 
   async function submitFeedback() {
-    if (!loggedIn || busy) return;
+    if (!canWriteFeedback || busy) return;
 
     const content = draft.trim();
     if (!content) {
@@ -201,7 +205,7 @@ export default function FeedbackSection(props: {
   }
 
   function quoteComment(id: string) {
-    if (!loggedIn || busy) return;
+    if (!canWriteFeedback || busy) return;
 
     const nextRef = `>>${getCommentRef(id)} `;
     setDraft((current) => {
@@ -228,20 +232,33 @@ export default function FeedbackSection(props: {
           ref={textareaRef}
           className={
             "w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-black" +
-            (!loggedIn ? " opacity-60" : "")
+            (!canWriteFeedback ? " opacity-60" : "")
           }
           rows={4}
           maxLength={2000}
-          placeholder={loggedIn ? "Write feedback about this entry. Example: >>a1b2c3d4" : "Verified members can leave feedback"}
+          placeholder={
+            !loggedIn
+              ? "Verified members can leave feedback"
+              : props.viewerVerified
+                ? "Write feedback about this entry. Example: >>a1b2c3d4"
+                : "Email verification required"
+          }
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          disabled={!loggedIn || busy}
+          disabled={!canWriteFeedback || busy}
         />
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           {!loggedIn ? (
             <div className="text-xs text-zinc-500">
-              Verified members only. <Link className="underline" href={withSiteLocale("/login", locale)}>Login</Link>
+              Verified members only. <Link className="underline" href={withSiteLocale("/login", locale)}>{copy.auth.login}</Link>
+            </div>
+          ) : !props.viewerVerified ? (
+            <div className="text-xs text-zinc-500">
+              {copy.common.emailVerificationRequired}{" "}
+              <Link className="underline" href={withSiteLocale("/settings/profile", locale)}>
+                {copy.common.goToProfileSettings}
+              </Link>
             </div>
           ) : (
             <div className="text-xs text-zinc-500">{draft.trim().length}/2000</div>
@@ -250,10 +267,10 @@ export default function FeedbackSection(props: {
           <button
             type="button"
             onClick={submitFeedback}
-            disabled={!loggedIn || busy || !draft.trim()}
+            disabled={!canWriteFeedback || busy || !draft.trim()}
             className={
               "rounded-xl bg-black px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-black" +
-              (!loggedIn || busy || !draft.trim() ? " opacity-60" : "")
+              (!canWriteFeedback || busy || !draft.trim() ? " opacity-60" : "")
             }
           >
             Post feedback
@@ -305,12 +322,18 @@ export default function FeedbackSection(props: {
                   <button
                     type="button"
                     onClick={() => quoteComment(item.id)}
-                    disabled={!loggedIn || busy}
+                    disabled={!canWriteFeedback || busy}
                     className={
                       "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-base leading-none text-zinc-600 transition hover:border-black/20 hover:text-zinc-900 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-white/30 dark:hover:text-white" +
-                      (!loggedIn || busy ? " cursor-default opacity-40" : "")
+                      (!canWriteFeedback || busy ? " cursor-default opacity-40" : "")
                     }
-                    title={loggedIn ? `Mention #${getCommentRef(item.id)}` : "Login required"}
+                    title={
+                      canWriteFeedback
+                        ? `Mention #${getCommentRef(item.id)}`
+                        : !loggedIn
+                          ? "Login required"
+                          : copy.common.emailVerificationRequired
+                    }
                     aria-label={`Reply to comment ${getCommentRef(item.id)}`}
                   >
                     ↩

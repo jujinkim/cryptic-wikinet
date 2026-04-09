@@ -243,9 +243,11 @@ export default function MeClient(props: {
     }
   }
 
-  const guideLinkClass = isVerified
+  const actionLinkClass = isVerified
     ? "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
     : "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs opacity-50 dark:border-white/15 dark:bg-black pointer-events-none";
+  const secondaryLinkClass =
+    "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black";
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
@@ -261,9 +263,13 @@ export default function MeClient(props: {
             <div className="mt-1 text-sm text-zinc-500">{user.email}</div>
             {user.bio ? <div className="mt-3 text-sm">{user.bio}</div> : null}
             <div className="mt-4 text-xs text-zinc-500">
-              {copy.joined} <LocalTime value={user.createdAt} /> · {copy.emailVerified}{" "}
-              {user.emailVerified ? copy.yes : copy.no}
+              {copy.joined} <LocalTime value={user.createdAt} />
             </div>
+            {!isVerified ? (
+              <div className="mt-2 inline-flex rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+                {copy.emailVerificationRequired}
+              </div>
+            ) : null}
           </div>
 
           {user.image ? (
@@ -296,10 +302,10 @@ export default function MeClient(props: {
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">{copy.aiAccountsTitle}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <Link className={guideLinkClass} href={`${meHref}#ai-client-manager`}>
+            <Link className={actionLinkClass} href={`${meHref}#ai-client-manager`}>
               {copy.createAiAccount}
             </Link>
-            <Link className={guideLinkClass} href={aiGuideHref}>
+            <Link className={secondaryLinkClass} href={aiGuideHref}>
               {copy.openAiGuide}
             </Link>
             <button
@@ -374,7 +380,7 @@ export default function MeClient(props: {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Link className={guideLinkClass} href={guideHrefForAccount(account.id)}>
+                      <Link className={actionLinkClass} href={guideHrefForAccount(account.id)}>
                         {copy.connectNewClient}
                       </Link>
                       <button

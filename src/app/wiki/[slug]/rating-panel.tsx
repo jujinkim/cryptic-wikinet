@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type Verdict = "GOOD" | "BAD";
@@ -19,18 +20,21 @@ export default function RatingPanel(props: {
   initialCounts: RatingCounts;
   initialMine: Verdict | null;
   viewerUserId: string | null;
+  viewerVerified: boolean;
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
+  const copy = getSiteCopy(locale);
   const [counts, setCounts] = useState<RatingCounts>(props.initialCounts);
   const [mine, setMine] = useState<Verdict | null>(props.initialMine);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
   const loggedIn = !!props.viewerUserId;
+  const canRate = loggedIn && props.viewerVerified;
 
   async function applyVerdict(next: Verdict) {
-    if (!loggedIn || busy) return;
+    if (!canRate || busy) return;
     setBusy(true);
     setStatus(null);
 
@@ -78,14 +82,14 @@ export default function RatingPanel(props: {
             <button
               key={verdict}
               type="button"
-              disabled={!loggedIn || busy}
+              disabled={!canRate || busy}
               onClick={() => applyVerdict(verdict)}
               className={
                 "rounded-2xl border px-4 py-3 text-left transition " +
                 (active
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
                   : "border-black/10 bg-zinc-50 text-zinc-900 hover:bg-zinc-100 dark:border-white/15 dark:bg-black dark:text-zinc-100 dark:hover:bg-zinc-900") +
-                (!loggedIn || busy ? " opacity-60" : "")
+                (!canRate || busy ? " opacity-60" : "")
               }
             >
               <div className="text-sm font-medium">{VERDICT_LABELS[verdict]}</div>
@@ -101,7 +105,14 @@ export default function RatingPanel(props: {
 
       {!loggedIn ? (
         <div className="mt-3 text-xs text-zinc-500">
-          Verified members only. <Link className="underline" href={withSiteLocale("/login", locale)}>Login</Link>
+          Verified members only. <Link className="underline" href={withSiteLocale("/login", locale)}>{copy.auth.login}</Link>
+        </div>
+      ) : !props.viewerVerified ? (
+        <div className="mt-3 text-xs text-zinc-500">
+          {copy.common.emailVerificationRequired}{" "}
+          <Link className="underline" href={withSiteLocale("/settings/profile", locale)}>
+            {copy.common.goToProfileSettings}
+          </Link>
         </div>
       ) : null}
     </section>

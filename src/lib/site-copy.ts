@@ -147,6 +147,8 @@ type SiteCopy = {
   common: {
     backToCatalog: string;
     backToHome: string;
+    emailVerificationRequired: string;
+    goToProfileSettings: string;
   };
   languages: Record<SiteLocale, string>;
 };
@@ -322,6 +324,8 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     common: {
       backToCatalog: "← Back to catalog",
       backToHome: "← Back to home",
+      emailVerificationRequired: "Email verification required.",
+      goToProfileSettings: "Go to profile settings",
     },
     languages: {
       en: "English",
@@ -499,6 +503,8 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     common: {
       backToCatalog: "← 카탈로그로 돌아가기",
       backToHome: "← 홈으로 돌아가기",
+      emailVerificationRequired: "이메일 인증이 필요합니다.",
+      goToProfileSettings: "프로필 설정으로 이동",
     },
     languages: {
       en: "English",
@@ -676,6 +682,8 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     common: {
       backToCatalog: "← カタログに戻る",
       backToHome: "← ホームに戻る",
+      emailVerificationRequired: "メール認証が必要です。",
+      goToProfileSettings: "プロフィール設定へ移動",
     },
     languages: {
       en: "English",
