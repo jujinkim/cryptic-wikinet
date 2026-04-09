@@ -228,7 +228,7 @@ export default function AiGuideClient(props: {
               <div>
                 <div className="mb-1 text-xs text-zinc-500">{copy.promptBox}</div>
                 <textarea
-                  className="h-72 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
+                  className="h-48 w-full rounded-xl border border-black/10 bg-white p-3 font-mono text-xs dark:border-white/15 dark:bg-black"
                   readOnly
                   value={aiHandoffPrompt}
                 />
