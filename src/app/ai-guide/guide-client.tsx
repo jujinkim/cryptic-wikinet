@@ -79,38 +79,6 @@ export default function AiGuideClient(props: {
     token,
   ]);
 
-  async function loadActiveToken() {
-    if (!props.isLoggedIn || !props.isVerified) return;
-
-    try {
-      const res = await fetch("/api/ai/register-token", { method: "GET", cache: "no-store" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setErr(String(data.error ?? "Failed to load active token"));
-        return;
-      }
-
-      const t = typeof data.token === "string" && data.token ? data.token : null;
-      const ex = typeof data.expiresAt === "string" && data.expiresAt ? data.expiresAt : null;
-      const accountId =
-        typeof data.aiAccountId === "string" && data.aiAccountId ? data.aiAccountId : null;
-      const accountName =
-        typeof data.aiAccountName === "string" && data.aiAccountName ? data.aiAccountName : null;
-      setToken(t);
-      setExpiresAt(ex);
-      setTokenAiAccountId(accountId);
-      setTokenAiAccountName(accountName);
-    } catch (e) {
-      setErr(String(e));
-    }
-  }
-
-  useEffect(() => {
-    if (!props.isLoggedIn || !props.isVerified) return;
-    void loadActiveToken();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.isLoggedIn, props.isVerified]);
-
   async function issueToken() {
     setBusy(true);
     setErr(null);
@@ -231,17 +199,13 @@ export default function AiGuideClient(props: {
               onClick={issueToken}
               disabled={busy}
             >
-              {busy
-                ? copy.issuing
-                : props.targetAccount
-                  ? copy.issueConnect
-                  : copy.issueNew}
+              {busy ? copy.issuing : copy.issueButton}
             </button>
           </div>
 
           {token ? (
             <>
-              <div className="rounded-xl border border-black/10 bg-white p-3 text-xs dark:border-white/15 dark:bg-black">
+              <div className="rounded-xl bg-zinc-50 p-3 text-xs dark:bg-zinc-900">
                 <div className="text-zinc-500">{copy.activeToken}</div>
                 <div className="mt-1 break-all font-mono">{token}</div>
                 <div className="mt-1 text-zinc-500">
@@ -266,42 +230,41 @@ export default function AiGuideClient(props: {
                 <div className="mt-2 text-xs text-zinc-500">{copy.promptNote}</div>
               </div>
 
+              <div className="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+                <h3 className="text-sm font-medium">{copy.confirmTitle}</h3>
+                <p className="mt-1 text-xs text-zinc-500">{copy.confirmBody}</p>
+
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
+                    placeholder="ai_xxxxxxxxxxxxx"
+                    value={confirmClientId}
+                    onChange={(e) => setConfirmClientId(e.target.value)}
+                  />
+                  <input
+                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-widest dark:border-white/15 dark:bg-zinc-950"
+                    placeholder="ABCD-EFGH"
+                    value={confirmPairCode}
+                    onChange={(e) => setConfirmPairCode(e.target.value.toUpperCase())}
+                  />
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-zinc-950"
+                    onClick={confirmClient}
+                    disabled={confirmBusy}
+                  >
+                    {confirmBusy ? copy.confirming : copy.confirmButton}
+                  </button>
+                </div>
+
+                {confirmErr ? <div className="mt-2 text-sm text-red-600">{confirmErr}</div> : null}
+                {confirmInfo ? <div className="mt-2 text-sm text-zinc-500">{confirmInfo}</div> : null}
+              </div>
             </>
           ) : null}
-
-          <div className="rounded-xl border border-black/10 bg-white p-4 dark:border-white/15 dark:bg-black">
-            <h3 className="text-sm font-medium">{copy.confirmTitle}</h3>
-            <p className="mt-1 text-xs text-zinc-500">{copy.confirmBody}</p>
-
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <input
-                className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
-                placeholder="ai_xxxxxxxxxxxxx"
-                value={confirmClientId}
-                onChange={(e) => setConfirmClientId(e.target.value)}
-              />
-              <input
-                className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-widest dark:border-white/15 dark:bg-zinc-950"
-                placeholder="ABCD-EFGH"
-                value={confirmPairCode}
-                onChange={(e) => setConfirmPairCode(e.target.value.toUpperCase())}
-              />
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-zinc-950"
-                onClick={confirmClient}
-                disabled={confirmBusy}
-              >
-                {confirmBusy ? copy.confirming : copy.confirmButton}
-              </button>
-            </div>
-
-            {confirmErr ? <div className="mt-2 text-sm text-red-600">{confirmErr}</div> : null}
-            {confirmInfo ? <div className="mt-2 text-sm text-zinc-500">{confirmInfo}</div> : null}
-          </div>
 
           {err ? <div className="text-sm text-red-600">{err}</div> : null}
           {info ? <div className="text-sm text-zinc-500">{info}</div> : null}

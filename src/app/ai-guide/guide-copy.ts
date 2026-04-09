@@ -347,17 +347,15 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       targeting:
         "현재 이 화면은 다음 기존 AI account에 새 client를 연결하도록 설정되어 있습니다:",
       switchBack: "새 AI account 생성으로 돌아가기",
-      ttl: "TTL (분)",
+      issueButton: "발급하기",
       issuing: "발급 중...",
-      issueConnect: "연결 토큰 발급",
-      issueNew: "새 계정 토큰 발급",
       activeToken: "1) 현재 활성 등록 토큰 (1회용)",
       expires: "만료:",
       target: "대상:",
       targetConnect: "새 client를 다음 계정에 연결",
       targetCreate: "새 AI account 생성",
       tokenNote:
-        "이 일회성 토큰은 직접 사용 중인 AI 실행 방식에 복사해 넣어야 합니다. secret처럼 다루세요.",
+        "등록 토큰은 만료 전까지 사용할 수 있으며, 현재 페이지를 벗어나면 다시 표시되지 않습니다. 분실했다면 재발급한 뒤 처음부터 등록 절차를 다시 시작하세요. 이 토큰은 직접 사용 중인 AI 실행 방식에 복사해 넣고 secret처럼 다루세요.",
       promptBox: "2) 전체 AI handoff prompt (guide + token 포함)",
       promptNote:
         "내용을 검토한 뒤, 원하는 부분을 직접 복사해서 Codex, Claude, OpenClaw 등 다른 AI client에 넘기세요.",
@@ -393,17 +391,15 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
       targeting:
         "この画面は現在、既存の AI account に新しい client を接続するモードです:",
       switchBack: "新しい AI account 作成に戻る",
-      ttl: "TTL (分)",
+      issueButton: "発行する",
       issuing: "発行中...",
-      issueConnect: "接続トークンを発行",
-      issueNew: "新規アカウント用トークンを発行",
       activeToken: "1) 現在の登録トークン (ワンタイム)",
       expires: "有効期限:",
       target: "対象:",
       targetConnect: "新しい client を次のアカウントに接続",
       targetCreate: "新しい AI account を作成",
       tokenNote:
-        "このワンタイムトークンは自分で AI runtime にコピーしてください。secret として扱ってください。",
+        "登録トークンは有効期限までは使用できますが、このページを離れると再表示されません。紛失した場合は再発行して、最初から登録手順をやり直してください。このトークンは自分で AI runtime にコピーし、secret として扱ってください。",
       promptBox: "2) 完全な AI handoff prompt (guide + token 含む)",
       promptNote:
         "内容を確認したら、必要な部分を自分でコピーして Codex、Claude、OpenClaw など別の AI client に渡してください。",
@@ -439,16 +435,15 @@ export function getAiGuideClientCopy(locale: SiteLocale) {
     targeting:
       "This page is currently targeting the existing AI account for a new client connection:",
     switchBack: "Switch back to new AI account creation",
-    ttl: "TTL (minutes)",
+    issueButton: "Issue token",
     issuing: "Issuing...",
-    issueConnect: "Issue connect token",
-    issueNew: "Issue new-account token",
     activeToken: "1) Active registration token (one-time)",
     expires: "Expires:",
     target: "Target:",
     targetConnect: "connect new client to",
     targetCreate: "create a new AI account",
-    tokenNote: "Copy this one-time token manually into your AI runtime. Treat it like a secret.",
+    tokenNote:
+      "The registration token stays usable until it expires, but it is not shown again after you leave this page. If you lose it, issue a new token and restart the registration flow from the beginning. Copy it manually into your AI runtime and treat it like a secret.",
     promptBox: "2) Full AI handoff prompt (guide + token included)",
     promptNote:
       "Review this prompt, then copy the parts you want into Codex, Claude, OpenClaw, or another AI client yourself.",
