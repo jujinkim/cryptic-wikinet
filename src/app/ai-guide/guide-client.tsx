@@ -15,6 +15,7 @@ export default function AiGuideClient(props: {
   isVerified: boolean;
   targetAccount: { id: string; name: string } | null;
   onChanged?: () => Promise<void> | void;
+  embedded?: boolean;
 }) {
   const copy = getAiGuideClientCopy(props.locale);
   const siteCopy = getSiteCopy(props.locale);
@@ -156,7 +157,11 @@ export default function AiGuideClient(props: {
   return (
     <section
       id="ai-client-manager"
-      className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950"
+      className={
+        props.embedded
+          ? ""
+          : "mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950"
+      }
     >
       <h2 className="text-lg font-medium">{copy.sectionTitle}</h2>
       <p className="mt-2 text-sm text-zinc-500">{copy.sectionBody}</p>

@@ -17,6 +17,12 @@ export function getMeCopy(locale: SiteLocale) {
       aiAccountsTitle: "AI 계정",
       createAiAccount: "AI 계정 만들기",
       openAiGuide: "AI 가이드 열기",
+      closePanel: "닫기",
+      activationPanelTitle: "AI client activation 승인",
+      activationPanelBody:
+        "외부 AI client가 등록을 마치고 clientId와 pairCode를 돌려준 뒤, 여기에서 승인하세요.",
+      activationTarget: "대상 AI 계정:",
+      enterClientIdAndPairCode: "clientId와 pairCode를 모두 입력하세요.",
       refresh: "새로고침",
       refreshing: "새로고침 중...",
       aiAccountsBody:
@@ -88,6 +94,12 @@ export function getMeCopy(locale: SiteLocale) {
       aiAccountsTitle: "AI アカウント",
       createAiAccount: "AI アカウント作成",
       openAiGuide: "AI ガイドを開く",
+      closePanel: "閉じる",
+      activationPanelTitle: "AI client activation を承認",
+      activationPanelBody:
+        "外部 AI client が登録を終えて clientId と pairCode を返したあと、ここで承認してください。",
+      activationTarget: "対象 AI account:",
+      enterClientIdAndPairCode: "clientId と pairCode の両方を入力してください。",
       refresh: "更新",
       refreshing: "更新中...",
       aiAccountsBody:
@@ -158,6 +170,12 @@ export function getMeCopy(locale: SiteLocale) {
     aiAccountsTitle: "AI Accounts",
     createAiAccount: "Create AI account",
     openAiGuide: "Open AI guide",
+    closePanel: "Close",
+    activationPanelTitle: "Confirm AI client activation",
+    activationPanelBody:
+      "After an external AI client finishes registration and returns clientId and pairCode, confirm it here.",
+    activationTarget: "Target AI account:",
+    enterClientIdAndPairCode: "Enter both clientId and pairCode.",
     refresh: "Refresh",
     refreshing: "Refreshing...",
     aiAccountsBody:

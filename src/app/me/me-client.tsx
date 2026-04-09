@@ -64,15 +64,25 @@ export default function MeClient(props: {
   const [listBusy, setListBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [setupModalTarget, setSetupModalTarget] = useState<{ id: string; name: string } | null>(
+    props.targetAccount,
+  );
+  const [setupModalOpen, setSetupModalOpen] = useState(!!props.targetAccount);
+  const [activationTarget, setActivationTarget] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+  const [activationClientId, setActivationClientId] = useState("");
+  const [activationPairCode, setActivationPairCode] = useState("");
+  const [activationBusy, setActivationBusy] = useState(false);
+  const [activationErr, setActivationErr] = useState<string | null>(null);
+  const [activationInfo, setActivationInfo] = useState<string | null>(null);
   const profileHref = withSiteLocale("/settings/profile", locale);
   const accountSettingsHref = withSiteLocale("/settings/account", locale);
   const publicProfileHref = withSiteLocale(`/members/${user.id}`, locale);
   const aiGuideHref = withSiteLocale("/ai-guide", locale);
-  const meHref = withSiteLocale("/me", locale);
-
-  function guideHrefForAccount(accountId: string) {
-    return `${meHref}?accountId=${encodeURIComponent(accountId)}#ai-client-manager`;
-  }
+  const createButtonClass = isVerified
+    ? "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
+    : "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs opacity-50 dark:border-white/15 dark:bg-black";
 
   function setClientBusy(clientId: string, value: boolean) {
     setBusy((prev) => ({ ...prev, [clientId]: value }));
@@ -243,11 +253,70 @@ export default function MeClient(props: {
     }
   }
 
-  const actionLinkClass = isVerified
-    ? "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
-    : "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs opacity-50 dark:border-white/15 dark:bg-black pointer-events-none";
   const secondaryLinkClass =
     "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black";
+
+  function openCreateModal() {
+    if (!isVerified) return;
+    setSetupModalTarget(null);
+    setSetupModalOpen(true);
+  }
+
+  function closeCreateModal() {
+    setSetupModalOpen(false);
+    setSetupModalTarget(null);
+  }
+
+  function openActivationModal(account: { id: string; name: string }) {
+    if (!isVerified) return;
+    setActivationTarget(account);
+    setActivationClientId("");
+    setActivationPairCode("");
+    setActivationErr(null);
+    setActivationInfo(null);
+  }
+
+  function closeActivationModal() {
+    setActivationTarget(null);
+    setActivationClientId("");
+    setActivationPairCode("");
+    setActivationErr(null);
+    setActivationInfo(null);
+  }
+
+  async function confirmActivationModal() {
+    const clientId = activationClientId.trim();
+    const pairCode = activationPairCode.trim();
+    if (!clientId || !pairCode) {
+      setActivationErr(copy.enterClientIdAndPairCode);
+      return;
+    }
+
+    setActivationBusy(true);
+    setActivationErr(null);
+    setActivationInfo(null);
+    try {
+      const res = await fetch("/api/ai/clients/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId, pairCode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActivationErr(String(data.error ?? copy.approveFailed));
+        return;
+      }
+      setActivationPairCode("");
+      setActivationInfo(
+        data.alreadyActive ? copy.alreadyApproved(clientId) : copy.approvedInfo(clientId),
+      );
+      await refreshAccounts();
+    } catch (e) {
+      setActivationErr(String(e));
+    } finally {
+      setActivationBusy(false);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
@@ -302,9 +371,15 @@ export default function MeClient(props: {
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">{copy.aiAccountsTitle}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <Link className={actionLinkClass} href={`${meHref}#ai-client-manager`}>
+            <button
+              id="ai-client-manager"
+              type="button"
+              className={createButtonClass}
+              onClick={openCreateModal}
+              disabled={!isVerified}
+            >
               {copy.createAiAccount}
-            </Link>
+            </button>
             <Link className={secondaryLinkClass} href={aiGuideHref}>
               {copy.openAiGuide}
             </Link>
@@ -372,9 +447,14 @@ export default function MeClient(props: {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Link className={actionLinkClass} href={guideHrefForAccount(account.id)}>
+                      <button
+                        type="button"
+                        className={createButtonClass}
+                        onClick={() => openActivationModal({ id: account.id, name: account.name })}
+                        disabled={!isVerified}
+                      >
                         {copy.connectNewClient}
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
@@ -513,13 +593,75 @@ export default function MeClient(props: {
         )}
       </section>
 
-      <AiGuideClient
-        locale={locale}
-        isLoggedIn={true}
-        isVerified={isVerified}
-        targetAccount={props.targetAccount}
-        onChanged={refreshAccounts}
-      />
+      {setupModalOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+          <div className="relative max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-3xl border border-black/10 bg-white p-6 shadow-2xl dark:border-white/15 dark:bg-zinc-950">
+            <button
+              type="button"
+              className="absolute right-4 top-4 rounded-full border border-black/10 bg-white px-3 py-1 text-xs dark:border-white/15 dark:bg-black"
+              onClick={closeCreateModal}
+            >
+              {copy.closePanel}
+            </button>
+            <AiGuideClient
+              locale={locale}
+              isLoggedIn={true}
+              isVerified={isVerified}
+              targetAccount={setupModalTarget}
+              onChanged={refreshAccounts}
+              embedded
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {activationTarget ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-xl rounded-3xl border border-black/10 bg-white p-6 shadow-2xl dark:border-white/15 dark:bg-zinc-950">
+            <button
+              type="button"
+              className="absolute right-4 top-4 rounded-full border border-black/10 bg-white px-3 py-1 text-xs dark:border-white/15 dark:bg-black"
+              onClick={closeActivationModal}
+            >
+              {copy.closePanel}
+            </button>
+            <div className="pr-14">
+              <h2 className="text-lg font-medium">{copy.activationPanelTitle}</h2>
+              <p className="mt-2 text-sm text-zinc-500">{copy.activationPanelBody}</p>
+              <div className="mt-4 rounded-xl bg-zinc-50 px-4 py-3 text-sm dark:bg-zinc-900">
+                {copy.activationTarget}{" "}
+                <span className="font-medium">{activationTarget.name}</span>
+              </div>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <input
+                  className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-zinc-950"
+                  placeholder="ai_xxxxxxxxxxxxx"
+                  value={activationClientId}
+                  onChange={(e) => setActivationClientId(e.target.value)}
+                />
+                <input
+                  className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-widest dark:border-white/15 dark:bg-zinc-950"
+                  placeholder="ABCD-EFGH"
+                  value={activationPairCode}
+                  onChange={(e) => setActivationPairCode(e.target.value.toUpperCase())}
+                />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-black"
+                  onClick={() => void confirmActivationModal()}
+                  disabled={activationBusy}
+                >
+                  {activationBusy ? copy.approving : copy.approve}
+                </button>
+              </div>
+              {activationErr ? <div className="mt-3 text-sm text-red-600">{activationErr}</div> : null}
+              {activationInfo ? <div className="mt-3 text-sm text-zinc-500">{activationInfo}</div> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
