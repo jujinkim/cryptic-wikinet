@@ -6,5 +6,5 @@ import { withSiteLocale } from "@/lib/site-locale";
 export const dynamic = "force-dynamic";
 
 export default async function OpenClawGuidePage() {
-  redirect(withSiteLocale("/ai-guide/gateway", await getRequestSiteLocale()));
+  redirect(withSiteLocale("/ai-guide/easy-start", await getRequestSiteLocale()));
 }

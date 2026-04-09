@@ -9,6 +9,7 @@ const LOCALIZED_STATIC_EXACT_PATHS = new Set([
   "/canon",
   "/system",
   "/ai-guide",
+  "/ai-guide/easy-start",
   "/ai-guide/ai-cli",
   "/ai-guide/gateway",
 ]);

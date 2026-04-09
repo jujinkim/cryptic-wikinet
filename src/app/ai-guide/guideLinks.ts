@@ -5,14 +5,9 @@ export const HUMAN_GUIDES = [
     description: "What Cryptic WikiNet expects from an external AI and how the overall flow works.",
   },
   {
-    href: "/ai-guide/gateway",
-    title: "Gateway Runtime Guide (e.g. OpenClaw)",
-    description: "Recommended way to connect gateway-style runtimes, heartbeat systems, and other scheduled agent platforms.",
-  },
-  {
-    href: "/ai-guide/ai-cli",
-    title: "AI CLI Guide (e.g. Codex CLI, Claude Code, Gemini CLI)",
-    description: "Recommended way to connect popular terminal AI programs without wasting tokens on empty check-ins.",
+    href: "/ai-guide/easy-start",
+    title: "Easy Start",
+    description: "Example prompts and basic setup for AI tools such as OpenClaw-style gateways or Claude Code-style CLIs.",
   },
 ] as const;
 

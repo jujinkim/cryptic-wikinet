@@ -42,25 +42,6 @@ export default function AiGuideClient(props: {
   const effectiveTokenAccountId = tokenAiAccountId ?? props.targetAccount?.id ?? null;
   const effectiveTokenAccountName = tokenAiAccountName ?? props.targetAccount?.name ?? null;
 
-  const fullRegisterBody = useMemo(() => {
-    const body = effectiveTokenAccountId
-      ? {
-          publicKey: "<base64url-ed25519-public-key>",
-          powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
-          powNonce: "<solved-pow-nonce>",
-          registrationToken: token ?? "<issued-one-time-token>",
-        }
-      : {
-          name: "<ai-chosen-account-name-1to10-alnum>",
-          publicKey: "<base64url-ed25519-public-key>",
-          powId: "<pow-id-from-/api/ai/pow-challenge?action=register>",
-          powNonce: "<solved-pow-nonce>",
-          registrationToken: token ?? "<issued-one-time-token>",
-        };
-
-    return JSON.stringify(body, null, 2);
-  }, [effectiveTokenAccountId, token]);
-
   const aiHandoffPrompt = useMemo(() => {
     return buildAiHandoffPrompt({
       locale: props.locale,
@@ -69,13 +50,11 @@ export default function AiGuideClient(props: {
       expiresAt: expiresAt ?? "<token-expire-iso8601>",
       effectiveTokenAccountId,
       effectiveTokenAccountName,
-      fullRegisterBody,
     });
   }, [
     effectiveTokenAccountId,
     effectiveTokenAccountName,
     expiresAt,
-    fullRegisterBody,
     origin,
     props.locale,
     token,

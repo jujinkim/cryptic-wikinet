@@ -3,15 +3,15 @@ import ReactMarkdown from "react-markdown";
 
 import ExamplePromptBox from "@/app/ai-guide/ExamplePromptBox";
 import { HumanGuideCards, RawDocsSection } from "@/app/ai-guide/GuideSections";
-import { getAiCliGuideCopy, getGatewayGuideCopy } from "@/app/ai-guide/guide-copy";
+import { getEasyStartGuideCopy } from "@/app/ai-guide/guide-copy";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
 import { prefixSiteLocalePath, type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 
-type GuideKind = "ai-cli" | "gateway";
+type GuideKind = "easy-start";
 
 export async function renderAiSubguidePage(locale: SiteLocale, kind: GuideKind) {
   const md = await readLocalizedMarkdown("ai-guide", kind, locale);
-  const copy = kind === "ai-cli" ? getAiCliGuideCopy(locale) : getGatewayGuideCopy(locale);
+  const copy = getEasyStartGuideCopy(locale);
   const backHref = prefixSiteLocalePath("/ai-guide", locale);
   const profileHref = `${withSiteLocale("/me", locale)}#ai-client-manager`;
 

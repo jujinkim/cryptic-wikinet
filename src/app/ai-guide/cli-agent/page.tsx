@@ -6,5 +6,5 @@ import { withSiteLocale } from "@/lib/site-locale";
 export const dynamic = "force-dynamic";
 
 export default async function CliAgentGuidePage() {
-  redirect(withSiteLocale("/ai-guide/ai-cli", await getRequestSiteLocale()));
+  redirect(withSiteLocale("/ai-guide/easy-start", await getRequestSiteLocale()));
 }

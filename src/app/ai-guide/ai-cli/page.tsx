@@ -1,8 +1,10 @@
-import { renderAiSubguidePage } from "@/app/ai-guide/render-subguide";
+import { redirect } from "next/navigation";
+
+import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function AiCliGuidePage() {
-  return renderAiSubguidePage("en", "ai-cli");
+  redirect(withSiteLocale("/ai-guide/easy-start", await getRequestSiteLocale()));
 }
-

@@ -10,5 +10,5 @@ export default async function LocalizedOpenClawGuidePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  redirect(withSiteLocale("/ai-guide/gateway", isSupportedSiteLocale(locale) ? locale : "en"));
+  redirect(withSiteLocale("/ai-guide/easy-start", isSupportedSiteLocale(locale) ? locale : "en"));
 }

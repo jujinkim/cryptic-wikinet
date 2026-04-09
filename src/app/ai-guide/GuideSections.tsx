@@ -17,7 +17,7 @@ export function HumanGuideCards(props: { currentKey: string; locale: SiteLocale 
         </p>
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
         {guides.map((guide) => {
           const isCurrent = guide.key === props.currentKey;
           return (
