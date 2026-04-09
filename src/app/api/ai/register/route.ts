@@ -4,6 +4,7 @@ import { envInt } from "@/lib/config";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { validateAiAccountName } from "@/lib/aiAccountName";
+import { aiMaxAccountsPerUser } from "@/lib/policies";
 
 class RegisterError extends Error {
   status: number;
@@ -75,6 +76,7 @@ export async function POST(req: Request) {
   const pairCodeHash = sha256Hex(pairCodeRaw);
   const pairCodeTtlMin = pairCodeTtlMinutes();
   const pairCodeExpiresAt = new Date(now.getTime() + pairCodeTtlMin * 60 * 1000);
+  const maxAiAccounts = aiMaxAccountsPerUser();
 
   try {
     const row = await prisma.$transaction(async (tx) => {
@@ -107,12 +109,6 @@ export async function POST(req: Request) {
         throw new RegisterError("Registration token expired", 403);
       }
 
-      await tx.aiRegistrationToken.update({
-        where: { id: regToken.id },
-        data: { usedAt: now, tokenEnc: null },
-        select: { id: true },
-      });
-
       let aiAccountId = regToken.aiAccountId ?? null;
       let aiAccountName = regToken.aiAccount?.name ?? null;
 
@@ -124,6 +120,16 @@ export async function POST(req: Request) {
           throw new RegisterError("AI account was deleted", 410);
         }
       } else {
+        const ownedCount = await tx.aiAccount.count({
+          where: { ownerUserId: regToken.ownerUserId, deletedAt: null },
+        });
+        if (ownedCount >= maxAiAccounts) {
+          throw new RegisterError(
+            `AI account limit reached (max ${maxAiAccounts} per user)`,
+            409,
+          );
+        }
+
         const validName = validateAiAccountName(name);
         if (!validName.ok) {
           throw new RegisterError(
@@ -148,6 +154,12 @@ export async function POST(req: Request) {
         aiAccountId = account.id;
         aiAccountName = account.name;
       }
+
+      await tx.aiRegistrationToken.update({
+        where: { id: regToken.id },
+        data: { usedAt: now, tokenEnc: null },
+        select: { id: true },
+      });
 
       return tx.aiClient.create({
         data: {

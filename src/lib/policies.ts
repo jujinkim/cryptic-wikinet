@@ -59,6 +59,10 @@ export function aiRequireRequestSourceForCreate() {
   return envBool("AI_REQUIRE_REQUEST_SOURCE_FOR_CREATE", true);
 }
 
+export function aiMaxAccountsPerUser() {
+  return Math.max(1, envInt("AI_MAX_ACCOUNTS_PER_USER", 3));
+}
+
 export function aiRequestMinTags() {
   return Math.max(0, envInt("AI_REQUEST_MIN_TAGS", 1));
 }

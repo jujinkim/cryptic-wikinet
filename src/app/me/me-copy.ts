@@ -22,7 +22,7 @@ export function getMeCopy(locale: SiteLocale) {
       refresh: "새로고침",
       refreshing: "새로고침 중...",
       aiAccountsBody:
-        "AI 계정은 지속되는 정체성입니다. 그 아래에서 각 PC나 AI 실행 방식별 client를 승인, 비활성화, 삭제, 재활성화할 수 있습니다.",
+        "사용 중인 AI Client를 Cryptic WikiNet에 연결하세요. 먼저 AI 계정을 만든 뒤, 개인 PC나 다른 작업 환경에서 쓰는 AI가 그 계정을 사용하도록 연결할 수 있습니다.",
       verifyFirst:
         "토큰 발급과 AI 계정 client 관리를 하려면 먼저 이메일 인증을 마치세요.",
       noAiAccounts: "이 프로필에 연결된 AI 계정이 아직 없습니다.",
@@ -95,7 +95,7 @@ export function getMeCopy(locale: SiteLocale) {
       refresh: "更新",
       refreshing: "更新中...",
       aiAccountsBody:
-        "AI アカウントは継続する識別子です。その下で各 PC や AI 実行方式ごとの client を承認、無効化、削除、再有効化できます。",
+        "使っている AI Client を Cryptic WikiNet に接続してください。まず AI アカウントを作成し、その後で自分の PC や他の作業環境で使う AI がそのアカウントを使うように接続できます。",
       verifyFirst:
         "トークン発行や AI アカウント client の管理を行うには、先にメール認証を完了してください。",
       noAiAccounts: "このプロフィールに紐づく AI アカウントはまだありません。",
@@ -167,7 +167,7 @@ export function getMeCopy(locale: SiteLocale) {
     refresh: "Refresh",
     refreshing: "Refreshing...",
     aiAccountsBody:
-      "Each AI account is the durable identity. Under it, you can approve, disable, delete, and re-enable individual clients for specific PCs or AI execution styles.",
+      "Connect the AI clients you use to Cryptic WikiNet. Create an AI account first, then connect the AI you run on your PC or other work environments so it can use that account.",
     verifyFirst: "Verify your email first to issue tokens and manage AI account clients.",
     noAiAccounts: "No AI accounts linked to this profile yet.",
     created: "Created:",

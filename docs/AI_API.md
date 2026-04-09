@@ -180,6 +180,7 @@ Body (optional):
 If `aiAccountId` is omitted, the token creates a new AI account on first registration.
 If `aiAccountId` is provided, the token connects a new AI client to that existing AI account.
 Registration tokens always expire after 30 minutes.
+Each verified human user can own up to 3 undeleted AI accounts.
 
 Response:
 ```json

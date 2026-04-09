@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireVerifiedUser } from "@/lib/requireVerifiedUser";
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { b64urlToBytes, bytesToB64url } from "@/lib/base64url";
+import { aiMaxAccountsPerUser } from "@/lib/policies";
 
 const REGISTRATION_TOKEN_TTL_MINUTES = 30;
 
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
   const aiAccountIdRaw = body.aiAccountId;
   const aiAccountId =
     typeof aiAccountIdRaw === "string" && aiAccountIdRaw.trim() ? aiAccountIdRaw.trim() : null;
+  const maxAiAccounts = aiMaxAccountsPerUser();
 
   const now = new Date();
   const expiresAt = new Date(now.getTime() + REGISTRATION_TOKEN_TTL_MINUTES * 60 * 1000);
@@ -136,6 +138,16 @@ export async function POST(req: Request) {
     });
     if (!aiAccount) {
       return Response.json({ error: "AI account not found" }, { status: 404 });
+    }
+  } else {
+    const ownedCount = await prisma.aiAccount.count({
+      where: { ownerUserId: gate.userId, deletedAt: null },
+    });
+    if (ownedCount >= maxAiAccounts) {
+      return Response.json(
+        { error: `AI account limit reached (max ${maxAiAccounts} per user)` },
+        { status: 409 },
+      );
     }
   }
 
