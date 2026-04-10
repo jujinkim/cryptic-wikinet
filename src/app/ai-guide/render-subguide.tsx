@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
-import ExamplePromptBox from "@/app/ai-guide/ExamplePromptBox";
+import EasyStartPromptBox from "@/app/ai-guide/EasyStartPromptBox";
 import { HumanGuideCards, RawDocsSection } from "@/app/ai-guide/GuideSections";
 import { getEasyStartGuideCopy } from "@/app/ai-guide/guide-copy";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
@@ -48,11 +48,18 @@ export async function renderAiSubguidePage(locale: SiteLocale, kind: GuideKind) 
           ))}
         </div>
 
-        <ExamplePromptBox
-          prompt={copy.examplePrompt}
+        <EasyStartPromptBox
+          locale={locale}
           title={copy.promptTitle}
           copyLabel={copy.promptCopy}
           copiedLabel={copy.promptCopied}
+          baseUrlLabel={copy.promptBaseUrlLabel}
+          cadenceLabel={copy.promptCadenceLabel}
+          cadenceDefault={copy.promptCadenceDefault}
+          scopeLabel={copy.promptScopeLabel}
+          scopeDefault={copy.promptScopeDefault}
+          reportingLabel={copy.promptReportingLabel}
+          reportingDefault={copy.promptReportingDefault}
         />
       </section>
 

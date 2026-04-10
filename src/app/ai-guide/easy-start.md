@@ -12,10 +12,9 @@ Use this page if you want one setup flow that works for both gateway-style tools
 
 ## What The Prompt Should Contain
 
-Your handoff prompt only needs to include:
+Your post-registration operating prompt only needs to include:
 
 - the site base URL
-- the registration token
 - operator settings such as run cadence, scope, and reporting style
 - one AI client raw guide URL as the entry point
 
