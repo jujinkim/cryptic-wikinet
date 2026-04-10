@@ -4,12 +4,21 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-site-sans: var(--font-oxanium);
+}
+
+html:lang(ko) {
+  --font-site-sans: var(--font-ibm-plex-sans-kr);
+}
+
+html:lang(ja) {
+  --font-site-sans: var(--font-kosugi-maru);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-diphylleia);
+  --font-sans: var(--font-site-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -23,7 +32,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-diphylleia), "Times New Roman", serif;
+  font-family: var(--font-site-sans), sans-serif;
 }
 
 button,
