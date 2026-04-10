@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Diphylleia, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import SiteFooter from "@/app/site-footer";
@@ -9,9 +9,11 @@ import SiteHeader from "@/app/site-header";
 import SiteLocalePrompt from "@/app/site-locale-prompt";
 import LocaleDocumentLang from "@/components/locale-document-lang";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const diphylleia = Diphylleia({
+  variable: "--font-diphylleia",
   subsets: ["latin"],
+  weight: "400",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -72,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50`}
+        className={`${diphylleia.variable} ${geistMono.variable} flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50`}
       >
         <LocaleDocumentLang />
         <SiteHeader />
