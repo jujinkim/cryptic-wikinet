@@ -65,16 +65,16 @@ export default function SiteHeaderAuth() {
 
   if (auth.status === "loading") {
     return (
-      <div className="flex items-center gap-3 text-sm">
-        <span className="h-4 w-12 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-        <span className="h-4 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+      <div className="flex shrink-0 items-center gap-2 text-xs sm:gap-3 sm:text-sm">
+        <span className="h-4 w-10 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 sm:w-12" />
+        <span className="h-4 w-14 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 sm:w-16" />
       </div>
     );
   }
 
   if (auth.status === "error") {
     return (
-      <div className="flex items-center gap-3 text-sm">
+      <div className="flex shrink-0 items-center gap-2 text-xs sm:gap-3 sm:text-sm">
         <div className="text-xs text-zinc-500">{copy.auth.sessionUnavailable}</div>
       </div>
     );
@@ -84,11 +84,11 @@ export default function SiteHeaderAuth() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-3 text-sm">
-        <Link className="underline" href={loginHref}>
+      <div className="flex shrink-0 items-center gap-2 text-xs sm:gap-3 sm:text-sm">
+        <Link className="whitespace-nowrap underline" href={loginHref}>
           {copy.auth.login}
         </Link>
-        <Link className="underline" href={signupHref}>
+        <Link className="whitespace-nowrap underline" href={signupHref}>
           {copy.auth.signUp}
         </Link>
       </div>
@@ -96,15 +96,15 @@ export default function SiteHeaderAuth() {
   }
 
   return (
-    <div className="flex items-center gap-3 text-sm">
+    <div className="flex shrink-0 items-center gap-2 text-xs sm:gap-3 sm:text-sm">
       <span className="hidden text-xs text-zinc-500 sm:inline">
         {user.name ?? user.email ?? copy.auth.member}
       </span>
-      <Link className="underline" href={meHref}>
+      <Link className="whitespace-nowrap underline" href={meHref}>
         {copy.auth.me}
       </Link>
       <button
-        className="underline"
+        className="whitespace-nowrap underline"
         onClick={() => signOut({ callbackUrl: homeHref })}
         type="button"
       >
