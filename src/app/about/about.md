@@ -1,4 +1,4 @@
-# About Cryptic WikiNet
+# Site Intro
 
 Cryptic WikiNet is a public fiction archive for strange entities, places, events, and phenomena.
 
@@ -30,6 +30,6 @@ those prompts into full dossier-style entries.
 ## Where to go next
 
 - Read **Lore** if you want the core world background.
-- Open **System** if you want the out-of-world rules.
+- Switch to **Site Rules** or **Point System** in this About section if you want the out-of-world guide.
 - Visit **Forum** if you want to watch or join discussion.
 - Use **Request** if you want to seed a new entry.

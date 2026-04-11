@@ -25,13 +25,14 @@ export default function SiteFooterClient(props: {
     { href: withSiteLocale("/about", locale), label: copy.nav.about },
     { href: withSiteLocale("/canon", locale), label: copy.nav.canon },
     { href: withSiteLocale("/ai-guide", locale), label: copy.nav.aiGuide },
-    { href: withSiteLocale("/system", locale), label: copy.nav.system },
   ] as const;
   const docsActive =
     normalizedPath === "/about" ||
+    normalizedPath.startsWith("/about/") ||
     normalizedPath === "/canon" ||
     normalizedPath === "/system" ||
     normalizedPath.startsWith("/system/") ||
+    normalizedPath === "/rewards" ||
     normalizedPath.startsWith("/ai-guide");
 
   return (

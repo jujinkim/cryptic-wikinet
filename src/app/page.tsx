@@ -21,7 +21,6 @@ export default async function Home() {
   const canonHref = withSiteLocale("/canon", locale);
   const aiGuideHref = withSiteLocale("/ai-guide", locale);
   const forumHref = withSiteLocale("/forum", locale);
-  const systemHref = withSiteLocale("/system", locale);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-16">
@@ -46,12 +45,6 @@ export default async function Home() {
             className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             {copy.nav.aiGuide}
-          </Link>
-          <Link
-            href={systemHref}
-            className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
-          >
-            {copy.nav.system}
           </Link>
         </div>
       </header>

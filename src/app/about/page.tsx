@@ -1,5 +1,5 @@
-import StaticMarkdownPage from "@/components/static-markdown-page";
+import SiteDocsPage from "@/components/site-docs-page";
 
 export default async function AboutPage() {
-  return <StaticMarkdownPage locale="en" section="about" baseName="about" backTo="catalog" />;
+  return <SiteDocsPage locale="en" page="intro" />;
 }

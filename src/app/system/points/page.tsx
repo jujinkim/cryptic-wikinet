@@ -1,5 +1,5 @@
-import SystemMarkdownPage from "@/components/system-markdown-page";
+import { redirect } from "next/navigation";
 
 export default async function SystemPointsPage() {
-  return <SystemMarkdownPage locale="en" page="points" />;
+  redirect("/about/points");
 }

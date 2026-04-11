@@ -5,46 +5,52 @@ import { getSiteCopy } from "@/lib/site-copy";
 import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 import { readLocalizedMarkdown } from "@/lib/static-markdown";
 
-function getSystemPageCopy(locale: SiteLocale) {
+function getSiteDocsCopy(locale: SiteLocale) {
   switch (locale) {
     case "ko":
       return {
-        title: "사이트 시스템",
-        intro: "Cryptic WikiNet의 사이트 규칙과 포인트 시스템을 여기에서 함께 확인할 수 있습니다.",
-        basic: "사이트 규칙",
-        points: "포인트 시스템",
+        title: "소개",
+        intro: "이 섹션에서 사이트 소개, 사이트 규칙, 포인트 시스템을 함께 볼 수 있습니다.",
+        introTab: "사이트 소개",
+        rulesTab: "사이트 규칙",
+        pointsTab: "포인트 시스템",
       };
     case "ja":
       return {
-        title: "サイトシステム",
-        intro: "Cryptic WikiNet のサイトルールとポイントシステムをここでまとめて確認できます。",
-        basic: "サイトルール",
-        points: "ポイントシステム",
+        title: "概要",
+        intro: "このセクションでは、サイト紹介、サイトルール、ポイントシステムをまとめて確認できます。",
+        introTab: "サイト紹介",
+        rulesTab: "サイトルール",
+        pointsTab: "ポイントシステム",
       };
     default:
       return {
-        title: "Site System",
-        intro: "This page groups the site rules and the current point system in one place.",
-        basic: "Site Rules",
-        points: "Point System",
+        title: "About",
+        intro: "This section groups the site intro, site rules, and current point system in one place.",
+        introTab: "Site Intro",
+        rulesTab: "Site Rules",
+        pointsTab: "Point System",
       };
   }
 }
 
-export default async function SystemMarkdownPage(props: {
+export default async function SiteDocsPage(props: {
   locale: SiteLocale;
-  page: "basic" | "points";
+  page: "intro" | "rules" | "points";
 }) {
   const copy = getSiteCopy(props.locale);
-  const pageCopy = getSystemPageCopy(props.locale);
-  const md = await readLocalizedMarkdown(
-    "system",
-    props.page === "basic" ? "system" : "points",
-    props.locale,
-  );
+  const pageCopy = getSiteDocsCopy(props.locale);
+  const source =
+    props.page === "intro"
+      ? { section: "about", baseName: "about" }
+      : props.page === "rules"
+        ? { section: "system", baseName: "system" }
+        : { section: "system", baseName: "points" };
+  const md = await readLocalizedMarkdown(source.section, source.baseName, props.locale);
   const backHref = withSiteLocale("/catalog", props.locale);
-  const basicHref = withSiteLocale("/system", props.locale);
-  const pointsHref = withSiteLocale("/system/points", props.locale);
+  const introHref = withSiteLocale("/about", props.locale);
+  const rulesHref = withSiteLocale("/about/rules", props.locale);
+  const pointsHref = withSiteLocale("/about/points", props.locale);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -59,7 +65,11 @@ export default async function SystemMarkdownPage(props: {
         <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">{pageCopy.intro}</p>
 
         <div className="mt-5 flex flex-wrap gap-3">
-          {[{ href: basicHref, label: pageCopy.basic, active: props.page === "basic" }, { href: pointsHref, label: pageCopy.points, active: props.page === "points" }].map((item) => (
+          {[
+            { href: introHref, label: pageCopy.introTab, active: props.page === "intro" },
+            { href: rulesHref, label: pageCopy.rulesTab, active: props.page === "rules" },
+            { href: pointsHref, label: pageCopy.pointsTab, active: props.page === "points" },
+          ].map((item) => (
             <Link
               key={item.href}
               href={item.href}

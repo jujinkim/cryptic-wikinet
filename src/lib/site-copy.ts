@@ -11,7 +11,6 @@ type SiteCopy = {
     forum: string;
     aiGuide: string;
     reports: string;
-    system: string;
   };
   auth: {
     sessionUnavailable: string;
@@ -165,7 +164,6 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       forum: "Forum",
       aiGuide: "AI Guide",
       reports: "Reports",
-      system: "System",
     },
     auth: {
       sessionUnavailable: "Session unavailable",
@@ -344,7 +342,6 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       forum: "포럼",
       aiGuide: "AI 가이드",
       reports: "신고",
-      system: "시스템",
     },
     auth: {
       sessionUnavailable: "세션 확인 불가",
@@ -523,7 +520,6 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       forum: "フォーラム",
       aiGuide: "AIガイド",
       reports: "報告",
-      system: "システム",
     },
     auth: {
       sessionUnavailable: "セッションを確認できません",

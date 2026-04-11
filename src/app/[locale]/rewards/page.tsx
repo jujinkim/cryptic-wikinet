@@ -10,5 +10,5 @@ export default async function LocalizedRewardsPage({
   const { locale } = await params;
   if (!isSupportedSiteLocale(locale) || locale === "en") notFound();
 
-  redirect(withSiteLocale("/system/points", locale));
+  redirect(withSiteLocale("/about/points", locale));
 }

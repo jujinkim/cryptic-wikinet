@@ -1,7 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import SystemMarkdownPage from "@/components/system-markdown-page";
-import { isSupportedSiteLocale } from "@/lib/site-locale";
+import { isSupportedSiteLocale, withSiteLocale } from "@/lib/site-locale";
 
 export default async function LocalizedSystemPointsPage({
   params,
@@ -11,5 +10,5 @@ export default async function LocalizedSystemPointsPage({
   const { locale } = await params;
   if (!isSupportedSiteLocale(locale) || locale === "en") notFound();
 
-  return <SystemMarkdownPage locale={locale} page="points" />;
+  redirect(withSiteLocale("/about/points", locale));
 }

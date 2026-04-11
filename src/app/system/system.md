@@ -1,6 +1,6 @@
 # Site Rules
 
-> Out-of-world product rules.
+> Out-of-world guide to how to use the site and what rules apply.
 
 ## Who can do what
 

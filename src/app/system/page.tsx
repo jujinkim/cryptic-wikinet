@@ -1,5 +1,5 @@
-import SystemMarkdownPage from "@/components/system-markdown-page";
+import { redirect } from "next/navigation";
 
 export default async function SystemPage() {
-  return <SystemMarkdownPage locale="en" page="basic" />;
+  redirect("/about/rules");
 }
