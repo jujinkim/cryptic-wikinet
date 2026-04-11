@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import FullScreenLoadingOverlay from "@/components/full-screen-loading-overlay";
 import LocalTime from "@/components/local-time";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
+import { RequestListSkeleton } from "@/app/request/RequestPageSkeleton";
 
 export default function RequestClient() {
   const router = useRouter();
@@ -27,11 +29,14 @@ export default function RequestClient() {
       user: { id: string; name: string | null };
     }>
   >([]);
+  const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   const [keywords, setKeywords] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   async function refreshList() {
+    setListLoading(true);
     setListError(null);
     try {
       const url =
@@ -43,6 +48,8 @@ export default function RequestClient() {
       setItems(Array.isArray(j?.items) ? j.items : []);
     } catch {
       setListError("Failed to load requests");
+    } finally {
+      setListLoading(false);
     }
   }
 
@@ -57,9 +64,12 @@ export default function RequestClient() {
   }, [statusFilter]);
 
   const disabled = authenticated !== true;
+  const submitDisabled = disabled || submitting || !keywords.trim();
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
+      <FullScreenLoadingOverlay show={submitting} />
+
       <h1 className="text-4xl font-semibold tracking-tight">Request an entry</h1>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
         Members can submit keywords to steer what gets cataloged next.
@@ -80,7 +90,7 @@ export default function RequestClient() {
           rows={5}
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
-          disabled={disabled}
+          disabled={disabled || submitting}
         />
 
         {status ? (
@@ -98,31 +108,37 @@ export default function RequestClient() {
         <button
           className={
             "mt-4 w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white dark:bg-white dark:text-black" +
-            (disabled ? " opacity-50" : "")
+            (submitDisabled ? " opacity-50" : "")
           }
-          disabled={disabled}
+          disabled={submitDisabled}
           onClick={async () => {
+            if (submitDisabled) return;
+            setSubmitting(true);
             setStatus(null);
-            const res = await fetch("/api/requests", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ keywords: keywords.trim() }),
-            });
-            const j = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              const msg = String(j?.error ?? "Failed");
-              if (res.status === 403 && msg.toLowerCase().includes("email")) {
-                setStatus(
-                  "이메일 인증이 필요해. /settings/profile에서 인증 메일 재전송할 수 있어.",
-                );
-              } else {
-                setStatus(msg);
+            try {
+              const res = await fetch("/api/requests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ keywords: keywords.trim() }),
+              });
+              const j = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                const msg = String(j?.error ?? "Failed");
+                if (res.status === 403 && msg.toLowerCase().includes("email")) {
+                  setStatus(
+                    "이메일 인증이 필요해. /settings/profile에서 인증 메일 재전송할 수 있어.",
+                  );
+                } else {
+                  setStatus(msg);
+                }
+                return;
               }
-              return;
+              setKeywords("");
+              setStatus("Submitted.");
+              await refreshList();
+            } finally {
+              setSubmitting(false);
             }
-            setKeywords("");
-            setStatus("Submitted.");
-            await refreshList();
           }}
         >
           Submit request
@@ -158,7 +174,9 @@ export default function RequestClient() {
           </div>
         </div>
 
-        {listError ? (
+        {listLoading ? (
+          <RequestListSkeleton />
+        ) : listError ? (
           <div className="mt-4 text-sm text-zinc-500">{listError}</div>
         ) : items.length === 0 ? (
           <div className="mt-4 text-sm text-zinc-500">No requests yet.</div>

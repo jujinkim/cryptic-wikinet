@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ReportButton from "@/app/wiki/[slug]/report-client";
+import FullScreenLoadingOverlay from "@/components/full-screen-loading-overlay";
 import LocalTime from "@/components/local-time";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
@@ -124,6 +125,7 @@ export default function ForumPostClient(props: {
 
   const [newComment, setNewComment] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
+  const [commentSaveBusy, setCommentSaveBusy] = useState(false);
   const [commentErr, setCommentErr] = useState<string | null>(null);
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const commentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -241,23 +243,30 @@ export default function ForumPostClient(props: {
   }
 
   async function saveComment(commentId: string, contentMd: string) {
-    const res = await fetch(`/api/forum/comments/${commentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contentMd }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+    setCommentSaveBusy(true);
+    try {
+      const res = await fetch(`/api/forum/comments/${commentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentMd }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
 
-    const cr = await fetch(`/api/forum/posts/${post.id}/comments`, {
-      cache: "no-store",
-    });
-    const cd = await cr.json();
-    setComments(cd.items ?? []);
+      const cr = await fetch(`/api/forum/posts/${post.id}/comments`, {
+        cache: "no-store",
+      });
+      const cd = await cr.json();
+      setComments(cd.items ?? []);
+    } finally {
+      setCommentSaveBusy(false);
+    }
   }
 
   return (
     <>
+      <FullScreenLoadingOverlay show={postBusy || commentBusy || commentSaveBusy} />
+
       <header className="mt-6">
         {!editingPost ? (
           <>
