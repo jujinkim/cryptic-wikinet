@@ -8,6 +8,7 @@ const LOCALIZED_STATIC_EXACT_PATHS = new Set([
   "/about",
   "/canon",
   "/system",
+  "/system/points",
   "/rewards",
   "/ai-guide",
   "/ai-guide/easy-start",

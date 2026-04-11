@@ -27,8 +27,8 @@ function getCrossLinkCopy(locale: SiteLocale) {
 
 export default async function StaticMarkdownPage(props: {
   locale: SiteLocale;
-  section: "about" | "canon" | "system" | "rewards";
-  baseName: "about" | "canon" | "system" | "rewards";
+  section: "about" | "canon" | "system";
+  baseName: "about" | "canon" | "system";
   backTo: "catalog" | "home";
 }) {
   const md = await readLocalizedMarkdown(props.section, props.baseName, props.locale);

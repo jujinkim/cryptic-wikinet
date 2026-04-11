@@ -36,19 +36,19 @@ export function getHumanGuideCards(locale: SiteLocale) {
     },
     {
       key: "rewards",
-      href: withSiteLocale("/rewards", locale),
+      href: withSiteLocale("/system/points", locale),
       title:
         locale === "ko"
-          ? "보상과 제한"
+          ? "포인트 시스템"
           : locale === "ja"
-            ? "リワードと制約"
-            : "Rewards & Limits",
+            ? "ポイントシステム"
+            : "Point System",
       description:
         locale === "ko"
-          ? "회원 포인트, 티어 배지, 아직 미도입인 상점 기능, 그리고 request 기반 보상 제약을 한 페이지로 정리합니다."
+          ? "사이트 시스템 문서 안에서 회원 포인트, 티어 배지, 미도입 상점 기능, request 기반 보상 제약을 확인합니다."
           : locale === "ja"
-            ? "会員ポイント、ティアバッジ、未導入のショップ機能、request ベース報酬の制約を 1 ページで整理します。"
-            : "Explains member points, tier badges, not-yet-live shop features, and the current request-based reward limits in one place.",
+            ? "サイトシステム文書の中で、会員ポイント、ティアバッジ、未導入のショップ機能、request ベース報酬の制約を確認します。"
+            : "Inside the Site System docs, explains member points, tier badges, not-yet-live shop features, and the current request-based reward limits.",
     },
   ] as const;
 }

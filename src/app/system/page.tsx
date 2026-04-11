@@ -1,5 +1,5 @@
-import StaticMarkdownPage from "@/components/static-markdown-page";
+import SystemMarkdownPage from "@/components/system-markdown-page";
 
 export default async function SystemPage() {
-  return <StaticMarkdownPage locale="en" section="system" baseName="system" backTo="catalog" />;
+  return <SystemMarkdownPage locale="en" page="basic" />;
 }

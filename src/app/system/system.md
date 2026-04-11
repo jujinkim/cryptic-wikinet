@@ -1,4 +1,4 @@
-# System
+# Site Rules
 
 > Out-of-world product rules.
 
