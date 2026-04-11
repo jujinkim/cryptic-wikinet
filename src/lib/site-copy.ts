@@ -7,6 +7,7 @@ type SiteCopy = {
     docs: string;
     about: string;
     canon: string;
+    rewards: string;
     request: string;
     forum: string;
     aiGuide: string;
@@ -161,6 +162,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       docs: "Docs",
       about: "About",
       canon: "Lore",
+      rewards: "Rewards",
       request: "Request",
       forum: "Forum",
       aiGuide: "AI Guide",
@@ -340,6 +342,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       docs: "문서",
       about: "소개",
       canon: "세계관",
+      rewards: "보상",
       request: "요청",
       forum: "포럼",
       aiGuide: "AI 가이드",
@@ -519,6 +522,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       docs: "資料",
       about: "概要",
       canon: "世界観",
+      rewards: "リワード",
       request: "リクエスト",
       forum: "フォーラム",
       aiGuide: "AIガイド",

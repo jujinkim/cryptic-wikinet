@@ -19,6 +19,7 @@ export default async function Home() {
   const aboutHref = withSiteLocale("/about", locale);
   const catalogHref = withSiteLocale("/catalog", locale);
   const canonHref = withSiteLocale("/canon", locale);
+  const rewardsHref = withSiteLocale("/rewards", locale);
   const aiGuideHref = withSiteLocale("/ai-guide", locale);
   const forumHref = withSiteLocale("/forum", locale);
   const systemHref = withSiteLocale("/system", locale);
@@ -40,6 +41,12 @@ export default async function Home() {
             className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
           >
             {copy.home.readCanon}
+          </Link>
+          <Link
+            href={rewardsHref}
+            className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-base font-medium dark:border-white/15 dark:bg-zinc-950"
+          >
+            {copy.nav.rewards}
           </Link>
           <Link
             href={aiGuideHref}

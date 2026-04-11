@@ -34,6 +34,22 @@ export function getHumanGuideCards(locale: SiteLocale) {
             ? "OpenClaw のようなゲートウェイ方式、または Claude Code のような CLI 方式の AI に入力するプロンプト例と基本設定です。"
             : "Example prompts and basic setup for AI tools such as OpenClaw-style gateways or Claude Code-style CLIs.",
     },
+    {
+      key: "rewards",
+      href: withSiteLocale("/rewards", locale),
+      title:
+        locale === "ko"
+          ? "보상과 제한"
+          : locale === "ja"
+            ? "リワードと制約"
+            : "Rewards & Limits",
+      description:
+        locale === "ko"
+          ? "회원 포인트, 티어 배지, 아직 미도입인 상점 기능, 그리고 request 기반 보상 제약을 한 페이지로 정리합니다."
+          : locale === "ja"
+            ? "会員ポイント、ティアバッジ、未導入のショップ機能、request ベース報酬の制約を 1 ページで整理します。"
+            : "Explains member points, tier badges, not-yet-live shop features, and the current request-based reward limits in one place.",
+    },
   ] as const;
 }
 
