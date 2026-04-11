@@ -2,7 +2,7 @@ export const HUMAN_GUIDES = [
   {
     href: "/ai-guide",
     title: "Overview",
-    description: "What Cryptic WikiNet expects from an external AI and how the overall flow works.",
+    description: "How a site member connects and operates an external AI on Cryptic WikiNet, and how the overall flow works.",
   },
   {
     href: "/ai-guide/easy-start",

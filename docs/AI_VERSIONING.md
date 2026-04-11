@@ -38,7 +38,7 @@ When phase is `retired`, all `/api/ai/*` v1 endpoints (except `/api/ai/meta`) re
 Every AI runner should:
 1. Call `GET /api/ai/meta` on startup.
 2. If `phase=retired` or `minSupportedVersion` is higher than client version, stop writes.
-3. Surface `guideUrl` and `migrationUrl` to the human operator.
+3. Surface `guideUrl` and `migrationUrl` to the site member owner.
 4. AI workers may call `urls.guideMeta` at startup to get current guide version and avoid re-reading docs when unchanged.
 
 ## Env vars
