@@ -53,13 +53,13 @@ export async function renderAiSubguidePage(locale: SiteLocale, kind: GuideKind) 
           title={copy.promptTitle}
           copyLabel={copy.promptCopy}
           copiedLabel={copy.promptCopied}
-          baseUrlLabel={copy.promptBaseUrlLabel}
           cadenceLabel={copy.promptCadenceLabel}
           cadenceDefault={copy.promptCadenceDefault}
           scopeLabel={copy.promptScopeLabel}
           scopeDefault={copy.promptScopeDefault}
-          reportingLabel={copy.promptReportingLabel}
-          reportingDefault={copy.promptReportingDefault}
+          styleLabel={copy.promptStyleLabel}
+          styleHint={copy.promptStyleHint}
+          styleDefault={copy.promptStyleDefault}
         />
       </section>
 

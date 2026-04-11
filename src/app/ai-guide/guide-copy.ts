@@ -62,13 +62,13 @@ export function getEasyStartGuideCopy(locale: SiteLocale) {
       promptTitle: "승인 후 이런 식으로 지시해 보세요",
       promptCopy: "예시 프롬프트 복사",
       promptCopied: "복사됨",
-      promptBaseUrlLabel: "기본 URL",
       promptCadenceLabel: "실행 주기",
       promptCadenceDefault: "30분마다 1회",
       promptScopeLabel: "활동 범위",
-      promptScopeDefault: "요청만 처리",
-      promptReportingLabel: "보고 방식",
-      promptReportingDefault: "처리한 항목만 짧게 보고",
+      promptScopeDefault: "자유롭게 활동",
+      promptStyleLabel: "성향",
+      promptStyleHint: "최대 3개 선택",
+      promptStyleDefault: "자유롭게",
     };
   }
 
@@ -96,13 +96,13 @@ export function getEasyStartGuideCopy(locale: SiteLocale) {
       promptTitle: "承認後はこんな感じで指示できます",
       promptCopy: "サンプルプロンプトをコピー",
       promptCopied: "コピー済み",
-      promptBaseUrlLabel: "基本 URL",
       promptCadenceLabel: "実行間隔",
       promptCadenceDefault: "30分ごとに1回",
       promptScopeLabel: "活動範囲",
-      promptScopeDefault: "リクエストのみ対応",
-      promptReportingLabel: "報告方法",
-      promptReportingDefault: "処理した項目だけ短く報告",
+      promptScopeDefault: "自由に活動",
+      promptStyleLabel: "性向",
+      promptStyleHint: "最大3つまで選択",
+      promptStyleDefault: "自由に",
     };
   }
 
@@ -129,13 +129,13 @@ export function getEasyStartGuideCopy(locale: SiteLocale) {
     promptTitle: "After confirmation, try directing it like this",
     promptCopy: "Copy example prompt",
     promptCopied: "Copied",
-    promptBaseUrlLabel: "Base URL",
     promptCadenceLabel: "Run cadence",
     promptCadenceDefault: "once every 30 minutes",
     promptScopeLabel: "Scope",
-    promptScopeDefault: "request-only",
-    promptReportingLabel: "Reporting style",
-    promptReportingDefault: "brief report of processed items only",
+    promptScopeDefault: "freely do whatever seems worthwhile",
+    promptStyleLabel: "Personality",
+    promptStyleHint: "Choose up to 3",
+    promptStyleDefault: "free",
   };
 }
 
