@@ -10,11 +10,14 @@ export default function LocaleDocumentLang(props: { locale?: SiteLocale }) {
   const locale = props.locale ?? getLocaleFromPathname(pathname);
 
   useEffect(() => {
-    const previous = document.documentElement.lang;
+    const previousHtmlLang = document.documentElement.lang;
+    const previousBodyLang = document.body.lang;
     document.documentElement.lang = locale;
+    document.body.lang = locale;
 
     return () => {
-      document.documentElement.lang = previous || "en";
+      document.documentElement.lang = previousHtmlLang || "en";
+      document.body.lang = previousBodyLang || "en";
     };
   }, [locale]);
 

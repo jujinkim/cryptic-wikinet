@@ -7,11 +7,11 @@
   --font-site-sans: var(--font-oxanium);
 }
 
-html:lang(ko) {
+body:lang(ko) {
   --font-site-sans: var(--font-ibm-plex-sans-kr);
 }
 
-html:lang(ja) {
+body:lang(ja) {
   --font-site-sans: var(--font-kosugi-maru);
 }
 

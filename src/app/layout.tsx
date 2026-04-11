@@ -85,10 +85,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${oxanium.variable} ${ibmPlexSansKr.variable} ${kosugiMaru.variable} ${geistMono.variable} flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50`}
-      >
+    <html
+      lang="en"
+      className={`${oxanium.variable} ${ibmPlexSansKr.variable} ${kosugiMaru.variable} ${geistMono.variable}`}
+    >
+      <body className="flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50">
         <LocaleDocumentLang />
         <SiteHeader />
         <SiteFlash />
