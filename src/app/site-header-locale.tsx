@@ -31,7 +31,10 @@ export default function SiteHeaderLocale() {
 
   return (
     <details className="group relative shrink-0">
-      <summary className="flex cursor-pointer list-none items-center gap-1 rounded-xl border border-black/10 bg-white px-2 py-1 text-[11px] font-medium uppercase tracking-[0.06em] text-zinc-900 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-100 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-sm sm:tracking-[0.08em]">
+      <summary
+        className="flex cursor-pointer list-none items-center gap-1 rounded-xl border border-black/10 bg-white px-2 py-1 text-[11px] font-medium uppercase tracking-[0.06em] text-zinc-900 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-100 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-sm sm:tracking-[0.08em]"
+        data-testid="site-header-locale-trigger"
+      >
         <span>{SITE_LOCALE_SHORT_LABELS[currentLocale]}</span>
         <span aria-hidden="true" className="text-[10px] text-zinc-500 transition group-open:rotate-180">
           ▾

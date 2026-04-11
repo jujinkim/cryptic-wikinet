@@ -1,6 +1,6 @@
-# Cryptic WikiNet — Testing Guide (manual smoke)
+# Cryptic WikiNet — Testing Guide
 
-자동 테스트는 아직 없고, 현재는 **스모크 테스트(수동/스크립트)**로 품질을 확인해.
+현재 기본 검증은 **스모크 테스트(수동/스크립트)**지만, 브라우저 흐름이 중요할 때는 **Playwright E2E**도 사용할 수 있다.
 
 ## 0) 전제
 - Node.js 20+
@@ -15,6 +15,18 @@ npm run dev -- --hostname 0.0.0.0 --port 3000
 ```
 
 > SMTP를 설정 안 하면 인증 링크가 서버 콘솔에 출력됨(DEV fallback).
+
+Playwright를 쓸 때는 별도 서버를 직접 띄우지 않아도 된다. `playwright.config.ts`가 로컬 dev 서버를 자동으로 올린다.
+
+```bash
+npm run test:e2e
+```
+
+추가 참고:
+
+- 설정 파일: `playwright.config.ts`
+- 테스트 위치: `tests/`
+- 기본 브라우저: Chromium
 
 ---
 

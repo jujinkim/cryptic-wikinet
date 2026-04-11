@@ -39,10 +39,12 @@ export default function SiteHeader() {
       <div className="mx-auto max-w-5xl px-4 py-2.5 sm:px-6 sm:py-3">
         <div className="flex items-center gap-2 sm:justify-between sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link href={homeHref} className="flex items-center gap-2 sm:gap-3">
+            <Link href={homeHref} className="flex items-center gap-2 sm:gap-3" data-testid="site-header-brand">
               <BrandMark className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" />
               <span className="flex flex-col leading-none">
-                <span className="text-xs font-semibold tracking-tight sm:text-sm">Cryptic WikiNet</span>
+                <span className="text-xs font-semibold tracking-tight sm:text-sm" data-testid="site-header-title">
+                  Cryptic WikiNet
+                </span>
                 <span className="hidden text-[10px] uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-400 sm:block">
                   {copy.brandTagline}
                 </span>
@@ -98,14 +100,20 @@ export default function SiteHeader() {
         </div>
 
         <div className="mt-2.5 sm:hidden">
-          <nav className="flex items-center gap-2 whitespace-nowrap text-xs text-zinc-600 dark:text-zinc-400">
+          <nav
+            className="flex items-center gap-2 whitespace-nowrap text-xs text-zinc-600 dark:text-zinc-400"
+            data-testid="site-header-mobile-nav"
+          >
             {primaryNavItems.map((item) => (
               <Link key={item.href} className="shrink-0 hover:underline" href={item.href}>
                 {item.label}
               </Link>
             ))}
             <details className="group relative shrink-0">
-              <summary className="flex cursor-pointer list-none items-center gap-1 whitespace-nowrap hover:underline">
+              <summary
+                className="flex cursor-pointer list-none items-center gap-1 whitespace-nowrap hover:underline"
+                data-testid="site-header-mobile-docs-trigger"
+              >
                 <span>{copy.nav.docs}</span>
                 <span aria-hidden="true" className="text-[10px] text-zinc-500 transition group-open:rotate-180">
                   ▾

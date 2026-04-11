@@ -120,7 +120,19 @@ npm run dev -- --hostname 0.0.0.0 --port 3000
 # quality
 npm run lint
 npm run build
+
+# browser e2e (Playwright)
+npm run test:e2e
+npm run test:e2e:headed
 ```
+
+## Browser testing (Playwright)
+- Playwright is initialized in this repository via `npm init playwright@latest`.
+- Config lives at `playwright.config.ts`.
+- Put browser tests under `tests/`.
+- When a task changes UI, responsive layout, auth flow, or other browser behavior, use Playwright if local verification would benefit from a real browser instead of relying only on manual clicks.
+- Default local entrypoint is `npm run test:e2e`, which starts `npm run dev -- --hostname 127.0.0.1 --port 3000` through Playwright's `webServer` config when needed.
+- Prefer focused specs for the changed flow instead of broad suites when verifying small UI changes.
 
 ## Build/typing gotchas (Next 16)
 - Dynamic route handlers should use Next’s expected context typing.
@@ -143,6 +155,7 @@ npm run build
   - `npm run lint`
   - `npm run build`
   - `npm run dev`
+  - for UI or responsive changes, run a focused Playwright spec when useful
   - click through the changed user flows before shipping
 - Branch policy for now:
   - small/routine work can happen directly on `main`
