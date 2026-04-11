@@ -43,6 +43,16 @@ enum AiActionStatus {
   ERROR
 }
 
+enum MemberRewardEventKind {
+  REQUEST_ARTICLE_CREATE
+}
+
+enum MemberRewardEventStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+}
+
 enum AiClientStatus {
   PENDING
   ACTIVE
@@ -84,9 +94,9 @@ model User {
   emailVerified DateTime?
   image         String?
 
-  passwordHash  String?
-  role          UserRole  @default(MEMBER)
-  createdAt     DateTime  @default(now())
+  passwordHash String?
+  role         UserRole @default(MEMBER)
+  createdAt    DateTime @default(now())
 
   accounts         Account[]
   sessions         Session[]
@@ -94,15 +104,16 @@ model User {
   articleFeedback  ArticleFeedback[]
   creationRequests CreationRequest[]
 
-  forumPosts        ForumPost[]
-  forumComments     ForumComment[]
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
 
-  reports           Report[] @relation("ReportsByUser")
-  resolvedReports   Report[] @relation("ReportsResolvedByUser")
+  reports         Report[] @relation("ReportsByUser")
+  resolvedReports Report[] @relation("ReportsResolvedByUser")
 
-  aiAccounts            AiAccount[]
-  aiClients             AiClient[]
-  aiRegistrationTokens  AiRegistrationToken[]
+  aiAccounts           AiAccount[]
+  aiClients            AiClient[]
+  aiRegistrationTokens AiRegistrationToken[]
+  memberRewardEvents   MemberRewardEvent[]
 }
 
 model Account {
@@ -142,15 +153,15 @@ model VerificationToken {
 }
 
 model AiAccount {
-  id             String   @id
+  id             String    @id
   name           String
   ownerUserId    String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   lastActivityAt DateTime?
   deletedAt      DateTime?
 
-  ownerUser          User                @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  ownerUser          User                  @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   clients            AiClient[]
   registrationTokens AiRegistrationToken[]
   articles           Article[]
@@ -158,6 +169,7 @@ model AiAccount {
   actions            AiActionLog[]
   forumPosts         ForumPost[]
   forumComments      ForumComment[]
+  rewardEvents       MemberRewardEvent[]
 
   @@index([ownerUserId, createdAt])
   @@index([ownerUserId, lastActivityAt])
@@ -172,19 +184,19 @@ model AuthRateLimitBucket {
 }
 
 model AiClient {
-  id                 String   @id @default(uuid())
-  name               String
-  clientId           String   @unique
+  id          String  @id @default(uuid())
+  name        String
+  clientId    String  @unique
   // ed25519 public key, base64url encoded (32 bytes)
-  publicKey          String   @unique
-  aiAccountId        String?
+  publicKey   String  @unique
+  aiAccountId String?
 
   // kept for possible legacy HMAC clients; not used in new protocol
-  secretHash         String?
+  secretHash String?
 
-  rateLimitWindowSec Int      @default(3600)
-  rateLimitMaxWrites Int      @default(1)
-  createdAt          DateTime @default(now())
+  rateLimitWindowSec Int            @default(3600)
+  rateLimitMaxWrites Int            @default(1)
+  createdAt          DateTime       @default(now())
   lastActivityAt     DateTime?
   revokedAt          DateTime?
   deletedAt          DateTime?
@@ -194,8 +206,8 @@ model AiClient {
   pairCodeExpiresAt  DateTime?
   ownerConfirmedAt   DateTime?
 
-  aiAccount          AiAccount? @relation(fields: [aiAccountId], references: [id])
-  ownerUser          User?    @relation(fields: [ownerUserId], references: [id])
+  aiAccount AiAccount? @relation(fields: [aiAccountId], references: [id])
+  ownerUser User?      @relation(fields: [ownerUserId], references: [id])
 
   articles  Article[]
   revisions ArticleRevision[]
@@ -212,17 +224,17 @@ model AiClient {
 }
 
 model AiRegistrationToken {
-  id          String   @id @default(uuid())
-  tokenHash   String   @unique
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique
   tokenEnc    String?
   ownerUserId String
   aiAccountId String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   expiresAt   DateTime
   usedAt      DateTime?
 
-  aiAccount   AiAccount? @relation(fields: [aiAccountId], references: [id], onDelete: Cascade)
-  ownerUser   User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  aiAccount AiAccount? @relation(fields: [aiAccountId], references: [id], onDelete: Cascade)
+  ownerUser User       @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
 
   @@index([aiAccountId, expiresAt])
   @@index([ownerUserId, expiresAt])
@@ -230,19 +242,19 @@ model AiRegistrationToken {
 }
 
 model Article {
-  id                String   @id @default(uuid())
-  slug              String   @unique
+  id                String           @id @default(uuid())
+  slug              String           @unique
   title             String
   mainLanguage      String?
-  currentRevisionId String?  @unique
-  isPublic          Boolean  @default(true)
+  currentRevisionId String?          @unique
+  isPublic          Boolean          @default(true)
   lifecycle         ArticleLifecycle @default(PUBLIC_ACTIVE)
 
   // Catalog classification tags (article may contain unapproved tags; UI nav uses Tag allowlist)
-  tags              String[] @default([])
+  tags String[] @default([])
 
   createdByAiAccountId String?
-  createdByAiClientId String?
+  createdByAiClientId  String?
   coverImageUrl        String?
   coverImagePath       String?
   coverImageWidth      Int?
@@ -251,15 +263,16 @@ model Article {
   retentionEvaluatedAt DateTime?
   retentionGoodCount   Int?
   archivedAt           DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  createdByAiAccount AiAccount? @relation(fields: [createdByAiAccountId], references: [id])
-  createdByAiClient  AiClient? @relation(fields: [createdByAiClientId], references: [id])
-  currentRevision    ArticleRevision? @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
+  createdByAiAccount AiAccount?         @relation(fields: [createdByAiAccountId], references: [id])
+  createdByAiClient  AiClient?          @relation(fields: [createdByAiClientId], references: [id])
+  currentRevision    ArticleRevision?   @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   revisions          ArticleRevision[]
   ratings            Rating[]
   feedbackEntries    ArticleFeedback[]
+  rewardEvent        MemberRewardEvent?
 
   @@index([lifecycle, updatedAt])
   @@index([lifecycle, retentionEvaluatedAt, createdAt])
@@ -267,41 +280,69 @@ model Article {
 }
 
 model ArticleRevision {
-  id                 String         @id @default(uuid())
-  articleId          String
-  revNumber          Int
-  contentMd          String
-  mainLanguage       String?
-  summary            String?
-  source             RevisionSource
+  id                   String         @id @default(uuid())
+  articleId            String
+  revNumber            Int
+  contentMd            String
+  mainLanguage         String?
+  summary              String?
+  source               RevisionSource
   createdByAiAccountId String?
-  createdByAiClientId String?
-  createdAt          DateTime       @default(now())
+  createdByAiClientId  String?
+  createdAt            DateTime       @default(now())
 
-  article            Article        @relation(fields: [articleId], references: [id])
-  createdByAiAccount AiAccount?     @relation(fields: [createdByAiAccountId], references: [id])
-  createdByAiClient   AiClient?      @relation(fields: [createdByAiClientId], references: [id])
-  currentForArticle   Article?       @relation("CurrentRevision")
+  article            Article    @relation(fields: [articleId], references: [id])
+  createdByAiAccount AiAccount? @relation(fields: [createdByAiAccountId], references: [id])
+  createdByAiClient  AiClient?  @relation(fields: [createdByAiClientId], references: [id])
+  currentForArticle  Article?   @relation("CurrentRevision")
 
   @@unique([articleId, revNumber])
   @@index([createdByAiAccountId, createdAt])
 }
 
 model CreationRequest {
-  id          String        @id @default(uuid())
-  userId      String
-  keywords    String
-  constraints Json?
-  status      RequestStatus @default(OPEN)
+  id                    String        @id @default(uuid())
+  userId                String
+  keywords              String
+  constraints           Json?
+  status                RequestStatus @default(OPEN)
   consumedByAiAccountId String?
-  consumedByAiClientId String?
-  createdAt   DateTime      @default(now())
-  handledAt   DateTime?
+  consumedByAiClientId  String?
+  createdAt             DateTime      @default(now())
+  handledAt             DateTime?
 
-  user        User          @relation(fields: [userId], references: [id])
+  user        User               @relation(fields: [userId], references: [id])
+  rewardEvent MemberRewardEvent?
 
   @@index([status, handledAt])
   @@index([status, consumedByAiClientId, handledAt])
+}
+
+model MemberRewardEvent {
+  id          String                  @id @default(uuid())
+  ownerUserId String
+  aiAccountId String?
+  articleId   String?                 @unique
+  requestId   String?                 @unique
+  kind        MemberRewardEventKind
+  status      MemberRewardEventStatus @default(PENDING)
+  points      Int
+  eligibleAt  DateTime
+  confirmedAt DateTime?
+  canceledAt  DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  meta        Json?
+
+  ownerUser User             @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  aiAccount AiAccount?       @relation(fields: [aiAccountId], references: [id], onDelete: SetNull)
+  article   Article?         @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  request   CreationRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([status, eligibleAt])
+  @@index([ownerUserId, status, eligibleAt])
+  @@index([aiAccountId, status, eligibleAt])
+  @@index([ownerUserId, createdAt])
 }
 
 model Rating {
@@ -313,8 +354,8 @@ model Rating {
   comment   String?
   createdAt DateTime      @default(now())
 
-  article   Article       @relation(fields: [articleId], references: [id])
-  user      User          @relation(fields: [userId], references: [id])
+  article Article @relation(fields: [articleId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 
   @@unique([articleId, userId])
 }
@@ -327,8 +368,8 @@ model ArticleFeedback {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([articleId, createdAt])
   @@index([userId, createdAt])
@@ -349,18 +390,18 @@ model UnapprovedTagStat {
 }
 
 model AiActionLog {
-  id         String        @id @default(uuid())
+  id          String         @id @default(uuid())
   aiAccountId String?
-  aiClientId String
-  action     AiAction
-  articleId  String?
-  requestId  String?
-  status     AiActionStatus
-  meta       Json?
-  createdAt  DateTime      @default(now())
+  aiClientId  String
+  action      AiAction
+  articleId   String?
+  requestId   String?
+  status      AiActionStatus
+  meta        Json?
+  createdAt   DateTime       @default(now())
 
-  aiAccount  AiAccount?    @relation(fields: [aiAccountId], references: [id])
-  aiClient   AiClient      @relation(fields: [aiClientId], references: [id])
+  aiAccount AiAccount? @relation(fields: [aiAccountId], references: [id])
+  aiClient  AiClient   @relation(fields: [aiClientId], references: [id])
 
   @@index([aiAccountId, createdAt])
 }
@@ -388,37 +429,37 @@ model AiNonce {
 }
 
 model PowChallenge {
-  id         String   @id @default(uuid())
-  challenge  String   @unique
+  id         String    @id @default(uuid())
+  challenge  String    @unique
   action     String
   difficulty Int
   expiresAt  DateTime
   usedAt     DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([action, expiresAt])
 }
 
 model ForumPost {
-  id               String              @id @default(uuid())
-  title            String
-  contentMd        String
+  id        String @id @default(uuid())
+  title     String
+  contentMd String
 
-  authorType       ForumAuthorType
-  authorUserId     String?
+  authorType        ForumAuthorType
+  authorUserId      String?
   authorAiAccountId String?
-  authorAiClientId String?
+  authorAiClientId  String?
 
-  commentPolicy    ForumCommentPolicy  @default(BOTH)
+  commentPolicy ForumCommentPolicy @default(BOTH)
 
-  lastActivityAt   DateTime            @default(now())
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  authorUser       User?               @relation(fields: [authorUserId], references: [id])
-  authorAiAccount  AiAccount?          @relation(fields: [authorAiAccountId], references: [id])
-  authorAiClient   AiClient?           @relation(fields: [authorAiClientId], references: [id])
-  comments         ForumComment[]
+  authorUser      User?          @relation(fields: [authorUserId], references: [id])
+  authorAiAccount AiAccount?     @relation(fields: [authorAiAccountId], references: [id])
+  authorAiClient  AiClient?      @relation(fields: [authorAiClientId], references: [id])
+  comments        ForumComment[]
 
   @@index([lastActivityAt])
   @@index([createdAt])
@@ -426,46 +467,46 @@ model ForumPost {
 }
 
 model ForumComment {
-  id              String            @id @default(uuid())
-  postId          String
-  contentMd       String
+  id        String @id @default(uuid())
+  postId    String
+  contentMd String
 
-  authorType      ForumAuthorType
-  authorUserId    String?
+  authorType        ForumAuthorType
+  authorUserId      String?
   authorAiAccountId String?
-  authorAiClientId String?
+  authorAiClientId  String?
 
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  editedAt        DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  editedAt  DateTime?
 
-  post            ForumPost         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorUser      User?             @relation(fields: [authorUserId], references: [id])
-  authorAiAccount AiAccount?        @relation(fields: [authorAiAccountId], references: [id])
-  authorAiClient  AiClient?         @relation(fields: [authorAiClientId], references: [id])
+  post            ForumPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorUser      User?      @relation(fields: [authorUserId], references: [id])
+  authorAiAccount AiAccount? @relation(fields: [authorAiAccountId], references: [id])
+  authorAiClient  AiClient?  @relation(fields: [authorAiClientId], references: [id])
 
   @@index([postId, createdAt])
   @@index([authorAiAccountId, createdAt])
 }
 
 model Report {
-  id           String           @id @default(uuid())
+  id String @id @default(uuid())
 
-  targetType   ReportTargetType
+  targetType ReportTargetType
   // For forum targets: uuid. For articles: slug. For revisions: "<slug>@<revNumber>".
-  targetRef    String
+  targetRef  String
 
-  reason       String?
-  status       ReportStatus     @default(OPEN)
+  reason String?
+  status ReportStatus @default(OPEN)
 
-  reporterUserId String
+  reporterUserId   String
   resolvedByUserId String?
 
-  createdAt    DateTime         @default(now())
-  resolvedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
 
-  reporter     User             @relation("ReportsByUser", fields: [reporterUserId], references: [id])
-  resolvedBy   User?            @relation("ReportsResolvedByUser", fields: [resolvedByUserId], references: [id])
+  reporter   User  @relation("ReportsByUser", fields: [reporterUserId], references: [id])
+  resolvedBy User? @relation("ReportsResolvedByUser", fields: [resolvedByUserId], references: [id])
 
   @@index([targetType, targetRef])
   @@index([status, createdAt])

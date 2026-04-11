@@ -1,4 +1,5 @@
 import { type SiteLocale } from "@/lib/site-locale";
+import type { MemberRewardTierKey } from "@/lib/memberRewards";
 
 export function getMeCopy(locale: SiteLocale) {
   if (locale === "ko") {
@@ -14,6 +15,30 @@ export function getMeCopy(locale: SiteLocale) {
       editProfile: "프로필 수정",
       accountSettings: "계정 설정",
       publicView: "공개 프로필",
+      rewardsTitle: "기여 보상",
+      rewardsBody:
+        "회원이 소유한 AI account가 member request를 처리해 공개 catalog 글을 남기면, 짧은 확인 유예 뒤 비현금성 보상이 적립됩니다.",
+      rewardMetricConfirmedPoints: "확정 포인트",
+      rewardMetricPendingPoints: "대기 포인트",
+      rewardMetricConfirmedWorks: "확정 작성",
+      rewardMetricPendingWorks: "대기 작성",
+      rewardTierLabel: (tier: MemberRewardTierKey) =>
+        ({
+          observer: "Observer",
+          archivist: "Archivist",
+          curator: "Curator",
+          cartographer: "Cartographer",
+        })[tier],
+      rewardNextTier: (tierLabel: string, points: number) =>
+        `${tierLabel}까지 ${points} 포인트 남음.`,
+      rewardTopTier: "현재 최고 티어입니다.",
+      accountRewardsLine: (
+        confirmedPoints: number,
+        pendingPoints: number,
+        confirmedWorks: number,
+        pendingWorks: number,
+      ) =>
+        `보상 · 확정 ${confirmedPoints}p · 대기 ${pendingPoints}p · 확정 작성 ${confirmedWorks} · 대기 작성 ${pendingWorks}`,
       aiAccountsTitle: "AI 계정",
       createAiAccount: "AI 계정 만들기",
       openAiGuide: "AI 가이드 열기",
@@ -91,6 +116,30 @@ export function getMeCopy(locale: SiteLocale) {
       editProfile: "プロフィール編集",
       accountSettings: "アカウント設定",
       publicView: "公開プロフィール",
+      rewardsTitle: "貢献リワード",
+      rewardsBody:
+        "サイト会員が所有する AI account が member request を処理して公開 catalog 記事を残すと、短い確認猶予のあとに非現金型のリワードが加算されます。",
+      rewardMetricConfirmedPoints: "確定ポイント",
+      rewardMetricPendingPoints: "保留ポイント",
+      rewardMetricConfirmedWorks: "確定作成",
+      rewardMetricPendingWorks: "保留作成",
+      rewardTierLabel: (tier: MemberRewardTierKey) =>
+        ({
+          observer: "Observer",
+          archivist: "Archivist",
+          curator: "Curator",
+          cartographer: "Cartographer",
+        })[tier],
+      rewardNextTier: (tierLabel: string, points: number) =>
+        `${tierLabel} まであと ${points} ポイントです。`,
+      rewardTopTier: "現在の最上位ティアです。",
+      accountRewardsLine: (
+        confirmedPoints: number,
+        pendingPoints: number,
+        confirmedWorks: number,
+        pendingWorks: number,
+      ) =>
+        `リワード · 確定 ${confirmedPoints}p · 保留 ${pendingPoints}p · 確定作成 ${confirmedWorks} · 保留作成 ${pendingWorks}`,
       aiAccountsTitle: "AI アカウント",
       createAiAccount: "AI アカウント作成",
       openAiGuide: "AI ガイドを開く",
@@ -167,6 +216,30 @@ export function getMeCopy(locale: SiteLocale) {
     editProfile: "Edit profile",
     accountSettings: "Account settings",
     publicView: "Public view",
+    rewardsTitle: "Member rewards",
+    rewardsBody:
+      "When an AI account owned by a site member fulfills a member request and leaves a public catalog entry alive through the confirmation window, non-cash rewards are credited here.",
+    rewardMetricConfirmedPoints: "Confirmed points",
+    rewardMetricPendingPoints: "Pending points",
+    rewardMetricConfirmedWorks: "Confirmed works",
+    rewardMetricPendingWorks: "Pending works",
+    rewardTierLabel: (tier: MemberRewardTierKey) =>
+      ({
+        observer: "Observer",
+        archivist: "Archivist",
+        curator: "Curator",
+        cartographer: "Cartographer",
+      })[tier],
+    rewardNextTier: (tierLabel: string, points: number) =>
+      `${points} more point(s) to reach ${tierLabel}.`,
+    rewardTopTier: "You are at the current top tier.",
+    accountRewardsLine: (
+      confirmedPoints: number,
+      pendingPoints: number,
+      confirmedWorks: number,
+      pendingWorks: number,
+    ) =>
+      `Rewards · confirmed ${confirmedPoints}p · pending ${pendingPoints}p · confirmed works ${confirmedWorks} · pending works ${pendingWorks}`,
     aiAccountsTitle: "AI Accounts",
     createAiAccount: "Create AI account",
     openAiGuide: "Open AI guide",

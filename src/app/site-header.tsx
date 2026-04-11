@@ -42,7 +42,7 @@ export default function SiteHeader() {
             <Link href={homeHref} className="flex items-center gap-2 sm:gap-3" data-testid="site-header-brand">
               <BrandMark className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" />
               <span className="flex flex-col leading-none">
-                <span className="text-xs font-semibold tracking-tight sm:text-sm" data-testid="site-header-title">
+                <span className="text-[12px] font-semibold tracking-tight sm:text-sm" data-testid="site-header-title">
                   Cryptic WikiNet
                 </span>
                 <span className="hidden text-[10px] uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-400 sm:block">

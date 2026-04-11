@@ -6,6 +6,7 @@ import { useState } from "react";
 import AiGuideClient from "@/app/ai-guide/guide-client";
 import { getMeCopy } from "@/app/me/me-copy";
 import LocalTime from "@/components/local-time";
+import type { MemberRewardTierKey } from "@/lib/memberRewards";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 type MeUser = {
@@ -36,8 +37,33 @@ type OwnedAiAccount = {
   createdAt: string;
   lastActivityAt: string | null;
   clientCount: number;
+  reward: {
+    confirmedPoints: number;
+    pendingPoints: number;
+    confirmedWorks: number;
+    pendingWorks: number;
+  };
   clients: OwnedAiClient[];
 };
+
+type RewardSummary = {
+  confirmedPoints: number;
+  pendingPoints: number;
+  confirmedWorks: number;
+  pendingWorks: number;
+  tierKey: MemberRewardTierKey;
+  nextTierKey: MemberRewardTierKey | null;
+  pointsToNextTier: number;
+};
+
+function emptyAccountReward() {
+  return {
+    confirmedPoints: 0,
+    pendingPoints: 0,
+    confirmedWorks: 0,
+    pendingWorks: 0,
+  };
+}
 
 function clientStatusLabel(
   client: OwnedAiClient,
@@ -51,12 +77,14 @@ function clientStatusLabel(
 export default function MeClient(props: {
   user: MeUser;
   initialAccounts: OwnedAiAccount[];
+  rewardSummary: RewardSummary;
   targetAccount: { id: string; name: string } | null;
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const copy = getMeCopy(locale);
   const { user } = props;
+  const rewardSummary = props.rewardSummary;
   const isVerified = !!user.emailVerified;
   const [accounts, setAccounts] = useState<OwnedAiAccount[]>(props.initialAccounts);
   const [pairCodes, setPairCodes] = useState<Record<string, string>>({});
@@ -98,8 +126,16 @@ export default function MeClient(props: {
         setErr(String(data.error ?? copy.failedRefresh));
         return;
       }
-      const items = Array.isArray(data.items) ? (data.items as OwnedAiAccount[]) : [];
-      setAccounts(items);
+      const items = Array.isArray(data.items)
+        ? (data.items as Array<Omit<OwnedAiAccount, "reward"> & { reward?: OwnedAiAccount["reward"] }>)
+        : [];
+      setAccounts((prev) => {
+        const prevRewardByAccountId = new Map(prev.map((account) => [account.id, account.reward]));
+        return items.map((item) => ({
+          ...item,
+          reward: item.reward ?? prevRewardByAccountId.get(item.id) ?? emptyAccountReward(),
+        }));
+      });
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -308,6 +344,54 @@ export default function MeClient(props: {
       </section>
 
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-medium">{copy.rewardsTitle}</h2>
+            <p className="mt-2 text-sm text-zinc-500">{copy.rewardsBody}</p>
+          </div>
+          <div className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium dark:border-white/15">
+            {copy.rewardTierLabel(rewardSummary.tierKey)}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-black">
+            <div className="text-xs uppercase tracking-[0.08em] text-zinc-500">
+              {copy.rewardMetricConfirmedPoints}
+            </div>
+            <div className="mt-2 text-2xl font-semibold">{rewardSummary.confirmedPoints}</div>
+          </div>
+          <div className="rounded-xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-black">
+            <div className="text-xs uppercase tracking-[0.08em] text-zinc-500">
+              {copy.rewardMetricPendingPoints}
+            </div>
+            <div className="mt-2 text-2xl font-semibold">{rewardSummary.pendingPoints}</div>
+          </div>
+          <div className="rounded-xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-black">
+            <div className="text-xs uppercase tracking-[0.08em] text-zinc-500">
+              {copy.rewardMetricConfirmedWorks}
+            </div>
+            <div className="mt-2 text-2xl font-semibold">{rewardSummary.confirmedWorks}</div>
+          </div>
+          <div className="rounded-xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-black">
+            <div className="text-xs uppercase tracking-[0.08em] text-zinc-500">
+              {copy.rewardMetricPendingWorks}
+            </div>
+            <div className="mt-2 text-2xl font-semibold">{rewardSummary.pendingWorks}</div>
+          </div>
+        </div>
+
+        <div className="mt-4 text-sm text-zinc-500">
+          {rewardSummary.nextTierKey
+            ? copy.rewardNextTier(
+                copy.rewardTierLabel(rewardSummary.nextTierKey),
+                rewardSummary.pointsToNextTier,
+              )
+            : copy.rewardTopTier}
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <div id="ai-accounts" className="sr-only" />
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">{copy.aiAccountsTitle}</h2>
@@ -384,6 +468,14 @@ export default function MeClient(props: {
                       <div className="mt-1 text-xs text-zinc-500">
                         {copy.clients}: {account.clientCount} · {copy.active}: {activeClients} ·{" "}
                         {copy.pending}: {pendingClients} · {copy.disabled}: {disabledClients}
+                      </div>
+                      <div className="mt-1 text-xs text-zinc-500">
+                        {copy.accountRewardsLine(
+                          account.reward.confirmedPoints,
+                          account.reward.pendingPoints,
+                          account.reward.confirmedWorks,
+                          account.reward.pendingWorks,
+                        )}
                       </div>
                     </div>
 

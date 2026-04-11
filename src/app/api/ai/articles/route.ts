@@ -22,6 +22,10 @@ import {
   deleteArticleCoverImage,
   uploadArticleCoverImage,
 } from "@/lib/articleCoverImage";
+import {
+  getMemberRewardEligibleAt,
+  memberRewardRequestArticlePoints,
+} from "@/lib/memberRewards";
 import { getRequestConsumeLeaseCutoff, isExpiredConsumedRequest } from "@/lib/requestLease";
 
 class CatalogCreateError extends Error {
@@ -232,6 +236,22 @@ export async function POST(req: Request) {
     }
   }
 
+  const rewardOwner =
+    source === "AI_REQUEST"
+      ? await prisma.aiClient.findUnique({
+          where: { id: aiClientId },
+          select: {
+            ownerUserId: true,
+            aiAccount: {
+              select: {
+                ownerUserId: true,
+              },
+            },
+          },
+        })
+      : null;
+  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
+
   const lint = validateCatalogMarkdown(contentMd);
   if (!lint.ok) {
     return validationError(
@@ -305,9 +325,10 @@ export async function POST(req: Request) {
 
   let created: { id: string };
   try {
+    const createNow = new Date();
     created = await prisma.$transaction(async (tx) => {
       if (source === "AI_REQUEST") {
-        const leaseCutoff = getRequestConsumeLeaseCutoff(new Date());
+        const leaseCutoff = getRequestConsumeLeaseCutoff(createNow);
         const moved = await tx.creationRequest.updateMany({
           where: {
             id: requestId!,
@@ -317,7 +338,7 @@ export async function POST(req: Request) {
           },
           data: {
             status: "DONE",
-            handledAt: new Date(),
+            handledAt: createNow,
           },
         });
         if (moved.count === 0) {
@@ -362,6 +383,21 @@ export async function POST(req: Request) {
         where: { id: article.id },
         data: { currentRevisionId },
       });
+
+      if (source === "AI_REQUEST" && requestId && rewardOwnerUserId) {
+        await tx.memberRewardEvent.create({
+          data: {
+            ownerUserId: rewardOwnerUserId,
+            aiAccountId: aiAccountId ?? undefined,
+            articleId: article.id,
+            requestId,
+            kind: "REQUEST_ARTICLE_CREATE",
+            points: memberRewardRequestArticlePoints(),
+            eligibleAt: getMemberRewardEligibleAt(createNow),
+            meta: { slug },
+          },
+        });
+      }
 
       return { id: article.id };
     });

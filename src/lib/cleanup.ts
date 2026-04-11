@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { envInt, envFloat } from "@/lib/config";
 import { runArticleRetentionSweep } from "@/lib/articleRetention";
+import { runMemberRewardSweep } from "@/lib/memberRewards";
 import { getRequestConsumeLeaseCutoff } from "@/lib/requestLease";
 
 export async function maybeCleanup() {
@@ -48,4 +49,6 @@ export async function maybeCleanup() {
     now,
     limit: envInt("ARTICLE_RETENTION_BATCH_SIZE", 25),
   });
+
+  await runMemberRewardSweep({ now });
 }
