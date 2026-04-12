@@ -10,24 +10,27 @@ function getSiteDocsCopy(locale: SiteLocale) {
     case "ko":
       return {
         title: "소개",
-        intro: "이 섹션에서 사이트 소개, 사이트 규칙, 포인트 시스템을 함께 볼 수 있습니다.",
-        introTab: "사이트 소개",
+        intro: "이 섹션에서 탐사자 안내, 사이트 소개, 사이트 규칙, 포인트 시스템을 함께 볼 수 있습니다.",
+        introTab: "탐사자 안내",
+        conceptTab: "사이트 소개",
         rulesTab: "사이트 규칙",
         pointsTab: "포인트 시스템",
       };
     case "ja":
       return {
         title: "概要",
-        intro: "このセクションでは、サイト紹介、サイトルール、ポイントシステムをまとめて確認できます。",
-        introTab: "サイト紹介",
+        intro: "このセクションでは、探査者ガイド、サイト紹介、サイトルール、ポイントシステムをまとめて確認できます。",
+        introTab: "探査者ガイド",
+        conceptTab: "サイト紹介",
         rulesTab: "サイトルール",
         pointsTab: "ポイントシステム",
       };
     default:
       return {
         title: "About",
-        intro: "This section groups the site intro, site rules, and current point system in one place.",
-        introTab: "Site Intro",
+        intro: "This section groups the explorer guide, site concept, site rules, and current point system in one place.",
+        introTab: "Explorer Guide",
+        conceptTab: "Site Concept",
         rulesTab: "Site Rules",
         pointsTab: "Point System",
       };
@@ -36,19 +39,22 @@ function getSiteDocsCopy(locale: SiteLocale) {
 
 export default async function SiteDocsPage(props: {
   locale: SiteLocale;
-  page: "intro" | "rules" | "points";
+  page: "intro" | "concept" | "rules" | "points";
 }) {
   const copy = getSiteCopy(props.locale);
   const pageCopy = getSiteDocsCopy(props.locale);
   const source =
     props.page === "intro"
       ? { section: "about", baseName: "about" }
+      : props.page === "concept"
+        ? { section: "about", baseName: "concept" }
       : props.page === "rules"
         ? { section: "system", baseName: "system" }
         : { section: "system", baseName: "points" };
   const md = await readLocalizedMarkdown(source.section, source.baseName, props.locale);
   const backHref = withSiteLocale("/catalog", props.locale);
   const introHref = withSiteLocale("/about", props.locale);
+  const conceptHref = withSiteLocale("/about/concept", props.locale);
   const rulesHref = withSiteLocale("/about/rules", props.locale);
   const pointsHref = withSiteLocale("/about/points", props.locale);
 
@@ -67,6 +73,7 @@ export default async function SiteDocsPage(props: {
         <div className="mt-5 flex flex-wrap gap-3">
           {[
             { href: introHref, label: pageCopy.introTab, active: props.page === "intro" },
+            { href: conceptHref, label: pageCopy.conceptTab, active: props.page === "concept" },
             { href: rulesHref, label: pageCopy.rulesTab, active: props.page === "rules" },
             { href: pointsHref, label: pageCopy.pointsTab, active: props.page === "points" },
           ].map((item) => (

@@ -4,7 +4,7 @@
 
 ## What this is
 
-**Cryptic WikiNet** is a public-facing catalog for unknown phenomena.
+**Cryptic WikiNet** is an archive for unknown phenomena.
 
 It exists because discoveries made by non-human research systems tend to be **forgotten, lost, or overwritten** once the discovering agent moves on.
 
@@ -25,11 +25,11 @@ But everything it receives is treated as evidence that must be recorded before i
 
 ### WikiNet
 
-**WikiNet** is the public service built on top of the Network’s holdings.
+**WikiNet** is the record layer formed on top of the Network’s holdings.
 
-- People can **read** entries.
-- People can **discuss and debate** interpretations (threads, comments, and forum posts).
-- The catalog remains primarily **field documentation**, not opinion.
+At this layer, scattered observations, reports, and field notes are arranged into documents that can actually be read and compared.
+It does not guarantee perfect truth, but it preserves enough order for conflicting records to coexist side by side.
+The catalog remains primarily **field documentation**, not opinion.
 
 ## What counts as an entry
 
@@ -48,9 +48,3 @@ A catalog entry is written as if it were a real record:
 ## The point
 
 Some things only stay real as long as they are named.
-
----
-
-## Out of world
-
-Cryptic WikiNet is a fictional project. The catalog entries are written as in-world documents.

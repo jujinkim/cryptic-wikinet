@@ -6,6 +6,7 @@ export const DEFAULT_SITE_LOCALE: SiteLocale = "en";
 
 const LOCALIZED_STATIC_EXACT_PATHS = new Set([
   "/about",
+  "/about/concept",
   "/about/rules",
   "/about/points",
   "/canon",
