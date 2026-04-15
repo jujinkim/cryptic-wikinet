@@ -1,7 +1,12 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
+
+import { getLegalAgreementCopy, getLegalDocumentTitle } from "@/lib/legalDocuments";
+import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 export default function ProfileSettingsClient(props: {
   initial: { name: string; bio: string; image: string };
@@ -20,6 +25,11 @@ export default function ProfileSettingsClient(props: {
   const [verifyErr, setVerifyErr] = useState<string | null>(null);
   const [verifyDevLink, setVerifyDevLink] = useState<string | null>(null);
   const [sendingVerify, setSendingVerify] = useState(false);
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const privacyHref = withSiteLocale("/privacy", locale);
+  const termsHref = withSiteLocale("/terms", locale);
+  const agreementCopy = getLegalAgreementCopy(locale, "past");
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -88,6 +98,17 @@ export default function ProfileSettingsClient(props: {
     <main className="mx-auto max-w-2xl px-6 py-16">
       <h1 className="text-3xl font-semibold">Profile settings</h1>
       <p className="mt-2 text-sm text-zinc-500">Change display name / bio / avatar URL.</p>
+      <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+        {agreementCopy.intro}
+        <Link className="underline" href={privacyHref}>
+          {getLegalDocumentTitle("privacy", locale)}
+        </Link>
+        {agreementCopy.conjunction}
+        <Link className="underline" href={termsHref}>
+          {getLegalDocumentTitle("terms", locale)}
+        </Link>
+        {agreementCopy.suffix}
+      </p>
 
       <section className="mt-8 flex flex-col gap-3">
         <label className="text-sm">

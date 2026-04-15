@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 
+import { getLegalAgreementCopy, getLegalDocumentTitle } from "@/lib/legalDocuments";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
 
 export default function SignupClient() {
@@ -11,6 +12,9 @@ export default function SignupClient() {
   const locale = getLocaleFromPathname(pathname);
   const homeHref = withSiteLocale("/", locale);
   const loginHref = withSiteLocale("/login", locale);
+  const privacyHref = withSiteLocale("/privacy", locale);
+  const termsHref = withSiteLocale("/terms", locale);
+  const agreementCopy = getLegalAgreementCopy(locale, "present");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -75,6 +79,18 @@ export default function SignupClient() {
         <button className="rounded-xl bg-black px-4 py-3 text-sm font-medium text-white dark:bg-white dark:text-black">
           Create account
         </button>
+
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          {agreementCopy.intro}
+          <Link className="underline" href={privacyHref}>
+            {getLegalDocumentTitle("privacy", locale)}
+          </Link>
+          {agreementCopy.conjunction}
+          <Link className="underline" href={termsHref}>
+            {getLegalDocumentTitle("terms", locale)}
+          </Link>
+          {agreementCopy.suffix}
+        </p>
       </form>
 
       <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">

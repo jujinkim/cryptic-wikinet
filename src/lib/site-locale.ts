@@ -17,6 +17,8 @@ const LOCALIZED_STATIC_EXACT_PATHS = new Set([
   "/ai-guide/easy-start",
   "/ai-guide/ai-cli",
   "/ai-guide/gateway",
+  "/privacy",
+  "/terms",
 ]);
 
 const LOCALE_ENABLED_EXACT_PATHS = new Set([
@@ -38,6 +40,7 @@ const LOCALE_ENABLED_EXACT_PATHS = new Set([
   "/settings/profile",
   "/admin/reports",
   "/admin/tags",
+  "/admin/legal",
 ]);
 
 const LOCALE_ENABLED_PATTERNS = [
