@@ -4,6 +4,7 @@ import { CACHE_TAGS } from "@/lib/cacheTags";
 import { getLegalDocumentDefinitionBySlug, isLegalDocumentSlug } from "@/lib/legalDocuments";
 import { prisma } from "@/lib/prisma";
 import { requireAdminUser } from "@/lib/requireAdminUser";
+import { isSupportedSiteLocale } from "@/lib/site-locale";
 
 export async function POST(req: Request) {
   const gate = await requireAdminUser();
@@ -13,19 +14,29 @@ export async function POST(req: Request) {
   const body = (bodyUnknown ?? {}) as Record<string, unknown>;
 
   const slug = String(body.slug ?? "").trim();
+  const localeRaw = String(body.locale ?? "").trim();
   const contentMd = String(body.contentMd ?? "");
 
   if (!isLegalDocumentSlug(slug)) {
     return Response.json({ error: "Invalid document." }, { status: 400 });
   }
+  if (!isSupportedSiteLocale(localeRaw)) {
+    return Response.json({ error: "Invalid locale." }, { status: 400 });
+  }
   if (!contentMd.trim()) {
     return Response.json({ error: "Content is required." }, { status: 400 });
   }
 
+  const locale = localeRaw;
   const definition = getLegalDocumentDefinitionBySlug(slug);
   const result = await prisma.$transaction(async (tx) => {
     const existing = await tx.legalDocument.findUnique({
-      where: { key: definition.dbKey },
+      where: {
+        key_locale: {
+          key: definition.dbKey,
+          locale,
+        },
+      },
       select: {
         id: true,
         currentRevision: {
@@ -48,7 +59,7 @@ export async function POST(req: Request) {
       ? existing.id
       : (
           await tx.legalDocument.create({
-            data: { key: definition.dbKey },
+            data: { key: definition.dbKey, locale },
             select: { id: true },
           })
         ).id;
@@ -90,6 +101,7 @@ export async function POST(req: Request) {
   return Response.json({
     ok: true,
     slug,
+    locale,
     unchanged: result.unchanged,
     revNumber: result.revNumber,
   });

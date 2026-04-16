@@ -12,20 +12,20 @@ function getPageCopy(locale: SiteLocale) {
     case "ko":
       return {
         lastUpdated: "마지막 업데이트:",
-        unpublishedLead: "아직 게시된 문서가 없습니다.",
-        unpublishedBody: "관리자가 첫 번째 버전을 게시하면 여기에 표시됩니다.",
+        unpublishedLead: "이 언어 버전은 아직 게시되지 않았습니다.",
+        unpublishedBody: "관리자가 이 언어의 첫 번째 버전을 게시하면 여기에 표시됩니다.",
       };
     case "ja":
       return {
         lastUpdated: "最終更新:",
-        unpublishedLead: "まだ公開された文書がありません。",
-        unpublishedBody: "管理者が最初の版を公開すると、ここに表示されます。",
+        unpublishedLead: "この言語版はまだ公開されていません。",
+        unpublishedBody: "管理者がこの言語の最初の版を公開すると、ここに表示されます。",
       };
     default:
       return {
         lastUpdated: "Last updated:",
-        unpublishedLead: "This document has not been published yet.",
-        unpublishedBody: "Once an admin publishes the first revision, it will appear here.",
+        unpublishedLead: "This language version has not been published yet.",
+        unpublishedBody: "Once an admin publishes the first revision for this language, it will appear here.",
       };
   }
 }
@@ -37,7 +37,7 @@ export default async function LegalDocumentPage(props: {
   const copy = getSiteCopy(props.locale);
   const pageCopy = getPageCopy(props.locale);
   const title = getLegalDocumentTitle(props.slug, props.locale);
-  const published = await getPublishedLegalDocument(props.slug);
+  const published = await getPublishedLegalDocument(props.slug, props.locale);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">

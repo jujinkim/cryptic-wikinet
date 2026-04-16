@@ -3,7 +3,8 @@ import LegalAdminClient from "@/app/admin/legal/client";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getLegalDocumentPath, getLegalDocumentTitle, listLegalDocuments } from "@/lib/legalDocuments";
 import { prisma } from "@/lib/prisma";
-import { withSiteLocale } from "@/lib/site-locale";
+import { getSiteCopy } from "@/lib/site-copy";
+import { SUPPORTED_SITE_LOCALES, withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
 
@@ -27,57 +28,68 @@ export default async function AdminLegalPage() {
   });
   if (user?.role !== "ADMIN") return <Forbidden />;
 
+  const siteCopy = getSiteCopy(locale);
   const documents = await Promise.all(
-    listLegalDocuments().map(async (definition) => {
-      const row = await prisma.legalDocument.findUnique({
-        where: { key: definition.dbKey },
-        select: {
-          currentRevision: {
-            select: {
-              contentMd: true,
-              createdAt: true,
-              revNumber: true,
+    listLegalDocuments().flatMap((definition) =>
+      SUPPORTED_SITE_LOCALES.map(async (documentLocale) => {
+        const row = await prisma.legalDocument.findUnique({
+          where: {
+            key_locale: {
+              key: definition.dbKey,
+              locale: documentLocale,
             },
           },
-          revisions: {
-            orderBy: { revNumber: "desc" },
-            take: 20,
-            select: {
-              id: true,
-              contentMd: true,
-              createdAt: true,
-              revNumber: true,
-              createdByUser: {
-                select: {
-                  email: true,
-                  name: true,
+          select: {
+            currentRevision: {
+              select: {
+                contentMd: true,
+                createdAt: true,
+                revNumber: true,
+              },
+            },
+            revisions: {
+              orderBy: { revNumber: "desc" },
+              take: 20,
+              select: {
+                id: true,
+                contentMd: true,
+                createdAt: true,
+                revNumber: true,
+                createdByUser: {
+                  select: {
+                    email: true,
+                    name: true,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
 
-      return {
-        slug: definition.slug,
-        title: getLegalDocumentTitle(definition.slug, locale),
-        publicHref: withSiteLocale(getLegalDocumentPath(definition.slug), locale),
-        currentRevision: row?.currentRevision
-          ? {
-              contentMd: row.currentRevision.contentMd,
-              createdAt: row.currentRevision.createdAt.toISOString(),
-              revNumber: row.currentRevision.revNumber,
-            }
-          : null,
-        history: (row?.revisions ?? []).map((revision) => ({
-          id: revision.id,
-          contentMd: revision.contentMd,
-          createdAt: revision.createdAt.toISOString(),
-          revNumber: revision.revNumber,
-          createdBy: revision.createdByUser.name ?? revision.createdByUser.email,
-        })),
-      };
-    }),
+        return {
+          id: `${definition.slug}:${documentLocale}`,
+          slug: definition.slug,
+          locale: documentLocale,
+          localeLabel: siteCopy.languages[documentLocale],
+          title: getLegalDocumentTitle(definition.slug, locale),
+          publicHref: withSiteLocale(getLegalDocumentPath(definition.slug), documentLocale),
+          currentRevision: row?.currentRevision
+            ? {
+                contentMd: row.currentRevision.contentMd,
+                createdAt: row.currentRevision.createdAt.toISOString(),
+                revNumber: row.currentRevision.revNumber,
+              }
+            : null,
+          history: (row?.revisions ?? []).map((revision) => ({
+            id: revision.id,
+            contentMd: revision.contentMd,
+            createdAt: revision.createdAt.toISOString(),
+            revNumber: revision.revNumber,
+            createdBy: revision.createdByUser.name ?? revision.createdByUser.email,
+          })),
+        };
+      }),
+    ),
   );
 
   return (
