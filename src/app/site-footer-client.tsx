@@ -8,6 +8,26 @@ import { getLegalDocumentTitle } from "@/lib/legalDocuments";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, stripLocalePrefix, withSiteLocale } from "@/lib/site-locale";
 
+function getWikiLicenseCopy(locale: "en" | "ko" | "ja") {
+  switch (locale) {
+    case "ko":
+      return {
+        note: "별도 표시가 없는 한, 위키 콘텐츠에는 CC BY 4.0이 적용됩니다. 사이트 브랜드와 소프트웨어는 제외됩니다.",
+        alt: "CC BY 4.0 라이선스",
+      };
+    case "ja":
+      return {
+        note: "別段の表示がない限り、Wikiコンテンツには CC BY 4.0 が適用されます。サイトのブランドおよびソフトウェアは含まれません。",
+        alt: "CC BY 4.0 ライセンス",
+      };
+    default:
+      return {
+        note: "Unless noted otherwise, wiki content is available under CC BY 4.0. Site branding and software are excluded.",
+        alt: "CC BY 4.0 license",
+      };
+  }
+}
+
 export default function SiteFooterClient(props: {
   donateUrl: string | null;
   bmcButtonImageUrl: string | null;
@@ -17,6 +37,7 @@ export default function SiteFooterClient(props: {
   const locale = getLocaleFromPathname(pathname);
   const normalizedPath = stripLocalePrefix(pathname).pathname;
   const copy = getSiteCopy(locale);
+  const wikiLicense = getWikiLicenseCopy(locale);
   const homeHref = withSiteLocale("/", locale);
   const catalogHref = withSiteLocale("/catalog", locale);
   const requestHref = withSiteLocale("/request", locale);
@@ -121,6 +142,21 @@ export default function SiteFooterClient(props: {
             prefix={copy.footer.timeZonePrefix}
             className="block text-xs text-zinc-500/90"
           />
+          <a
+            className="inline-flex items-center gap-3 rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-left transition hover:bg-white dark:border-white/15 dark:bg-zinc-950/70 dark:hover:bg-zinc-950"
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="license noreferrer"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/cc-by-4.0.svg"
+              alt={wikiLicense.alt}
+              className="h-8 w-auto shrink-0"
+              loading="lazy"
+            />
+            <span className="text-[11px] leading-5 text-zinc-500/90">{wikiLicense.note}</span>
+          </a>
           {props.donateUrl && props.bmcButtonImageUrl ? (
             <a className="inline-flex" href={props.donateUrl} target="_blank" rel="noreferrer">
               {/* BMC provides this hosted button image snippet as the default embed. */}
