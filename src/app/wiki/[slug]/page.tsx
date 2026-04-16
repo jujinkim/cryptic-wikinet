@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -14,11 +15,13 @@ import {
 import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
 import { getArticleFeedbackPage, getArticleRatingState } from "@/lib/articleFeedback";
 import { buildRenderedCatalogBody } from "@/lib/catalogBody";
+import { buildWikiArticleNotFoundMetadata, buildWikiArticlePageMetadata } from "@/lib/pageMetadata";
 import { extractCatalogMeta } from "@/lib/catalogMeta";
 import { slugifyHeading } from "@/lib/markdownToc";
 import { prisma } from "@/lib/prisma";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSessionViewer } from "@/lib/sessionViewer";
+import { getPublicWikiSeoRecord } from "@/lib/seoData";
 import { withSiteLocale } from "@/lib/site-locale";
 import { getCachedApprovedTagKeys } from "@/lib/tagData";
 import { renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
@@ -149,6 +152,29 @@ function formatRequestConstraints(constraints: Prisma.JsonValue | null) {
   } catch {
     return String(constraints);
   }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getPublicWikiSeoRecord(slug);
+  if (!article) return buildWikiArticleNotFoundMetadata("en", slug);
+
+  const raw = article.currentRevision?.contentMd ?? "";
+  const meta = extractCatalogMeta(raw);
+  const bodyMd = buildRenderedCatalogBody(raw, meta.discovery);
+  const renderedMd = renderWikiLinksToMarkdown(bodyMd);
+
+  return buildWikiArticlePageMetadata({
+    locale: "en",
+    slug,
+    title: article.title,
+    contentMd: renderedMd,
+    coverImageUrl: article.coverImageUrl,
+  });
 }
 
 export default async function WikiArticlePage({

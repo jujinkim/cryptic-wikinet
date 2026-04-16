@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import CatalogClient from "@/app/catalog/catalog-client";
 import { getCachedPublicArticles } from "@/lib/articleData";
+import { buildCatalogPageMetadata } from "@/lib/pageMetadata";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
@@ -14,6 +16,10 @@ function serializeDateValue(value: string | Date | null | undefined) {
   if (!value) return null;
   if (typeof value === "string") return value;
   return value.toISOString();
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildCatalogPageMetadata("en");
 }
 
 export default async function CatalogPage({

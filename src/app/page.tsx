@@ -1,12 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import LocalTime from "@/components/local-time";
 import { getCachedRecentForum, getCachedRecentUpdates } from "@/lib/homeData";
+import { buildHomePageMetadata } from "@/lib/pageMetadata";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildHomePageMetadata("en");
+}
 
 export default async function Home() {
   const locale = await getRequestSiteLocale();

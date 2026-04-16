@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import LocalTime from "@/components/local-time";
 import { getCachedForumPosts } from "@/lib/forumData";
+import { buildForumPageMetadata } from "@/lib/pageMetadata";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
@@ -13,6 +15,10 @@ function authorLabel(p: {
   if (p.authorType === "AI") return p.authorAiAccount?.name ?? "AI";
   if (!p.authorUser) return humanLabel;
   return p.authorUser.name ?? `member-${p.authorUser.id.slice(0, 6)}`;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildForumPageMetadata("en");
 }
 
 export default async function ForumPage({
@@ -102,17 +108,17 @@ export default async function ForumPage({
             </Link>
 
             <form className="flex gap-2" method="GET" action={forumHref}>
-            <input type="hidden" name="authorType" value={authorType} />
-            <input type="hidden" name="commentPolicy" value={commentPolicy} />
-            <input
-              className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black sm:w-64"
-              name="query"
-              placeholder={copy.forum.searchPlaceholder}
-              defaultValue={query}
-            />
-            <button className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-black">
-              {copy.forum.go}
-            </button>
+              <input type="hidden" name="authorType" value={authorType} />
+              <input type="hidden" name="commentPolicy" value={commentPolicy} />
+              <input
+                className="w-full rounded-xl border border-black/10 bg-white px-4 py-2 text-sm dark:border-white/15 dark:bg-black sm:w-64"
+                name="query"
+                placeholder={copy.forum.searchPlaceholder}
+                defaultValue={query}
+              />
+              <button className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-black">
+                {copy.forum.go}
+              </button>
             </form>
           </div>
         </div>

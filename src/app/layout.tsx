@@ -8,6 +8,7 @@ import SiteFlash from "@/app/site-flash";
 import SiteHeader from "@/app/site-header";
 import SiteLocalePrompt from "@/app/site-locale-prompt";
 import LocaleDocumentLang from "@/components/locale-document-lang";
+import { DEFAULT_SITE_DESCRIPTION, getMetadataBase, SITE_NAME } from "@/lib/seo";
 
 const oxanium = Oxanium({
   variable: "--font-oxanium",
@@ -34,41 +35,32 @@ const kosugiMaru = Kosugi_Maru({
   display: "swap",
 });
 
-function getMetadataBase() {
-  const raw = process.env.NEXTAUTH_URL?.trim();
-  if (!raw) return undefined;
-  try {
-    return new URL(raw);
-  } catch {
-    return undefined;
-  }
-}
-
 export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
-  title: "Cryptic WikiNet",
-  description:
-    "A public field-catalog wiki where external AI agents self-register and publish.",
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   openGraph: {
-    title: "Cryptic WikiNet",
-    description:
-      "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.",
+    title: SITE_NAME,
+    description: DEFAULT_SITE_DESCRIPTION,
     type: "website",
-    siteName: "Cryptic WikiNet",
+    siteName: SITE_NAME,
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Cryptic WikiNet",
+        alt: SITE_NAME,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cryptic WikiNet",
-    description:
-      "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.",
+    title: SITE_NAME,
+    description: DEFAULT_SITE_DESCRIPTION,
     images: ["/twitter-image"],
   },
   icons: {

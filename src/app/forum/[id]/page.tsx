@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
 import { auth } from "@/auth";
 import ForumPostClient from "@/app/forum/[id]/post-client";
 import { getCachedForumComments, getCachedForumPost } from "@/lib/forumData";
+import {
+  buildForumPostNotFoundMetadata,
+  buildForumPostPageMetadata,
+} from "@/lib/pageMetadata";
 import { prisma } from "@/lib/prisma";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
+import { getPublicForumSeoRecord } from "@/lib/seoData";
 import { getSiteCopy } from "@/lib/site-copy";
 import { withSiteLocale } from "@/lib/site-locale";
 
@@ -11,6 +18,23 @@ function serializeDateValue(value: string | Date | null | undefined) {
   if (!value) return null;
   if (typeof value === "string") return value;
   return value.toISOString();
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const post = await getPublicForumSeoRecord(id);
+  if (!post) return buildForumPostNotFoundMetadata("en", id);
+
+  return buildForumPostPageMetadata({
+    locale: "en",
+    id: post.id,
+    title: post.title,
+    contentMd: post.contentMd,
+  });
 }
 
 export default async function ForumPostPage({
