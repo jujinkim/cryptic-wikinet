@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { DEFAULT_SITE_LOCALE, isSupportedSiteLocale, stripLocalePrefix } from "@/lib/site-locale";
+import { stripLocalePrefix } from "@/lib/site-locale";
 
 function shouldSkipPath(pathname: string) {
   return (
@@ -18,14 +18,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const { locale, hasLocalePrefix } = stripLocalePrefix(pathname);
-  if (!hasLocalePrefix || !isSupportedSiteLocale(locale) || locale === DEFAULT_SITE_LOCALE) {
-    return NextResponse.next();
-  }
-
+  const { locale } = stripLocalePrefix(pathname);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-site-locale", locale);
-  requestHeaders.set("x-site-pathname", pathname);
 
   return NextResponse.next({
     request: {

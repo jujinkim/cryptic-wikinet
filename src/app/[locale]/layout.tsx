@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 
-import LocaleDocumentLang from "@/components/locale-document-lang";
 import { SUPPORTED_SITE_LOCALES, isSupportedSiteLocale } from "@/lib/site-locale";
 
 export function generateStaticParams() {
@@ -19,11 +18,5 @@ export default async function LocalizedLayout({
     notFound();
   }
 
-  return (
-    <>
-      <LocaleDocumentLang locale={locale} />
-      {children}
-    </>
-  );
+  return children;
 }
-
