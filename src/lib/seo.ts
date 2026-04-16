@@ -12,7 +12,7 @@ export const SITE_NAME = "Cryptic WikiNet";
 export const DEFAULT_SITE_DESCRIPTION =
   "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.";
 
-const PRODUCTION_SITE_URL = "https://crypticwiki.net";
+const PRODUCTION_SITE_URL = "https://www.crypticwiki.net";
 
 type SeoImage = {
   url: string;

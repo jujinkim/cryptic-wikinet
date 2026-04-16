@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { type SiteLocale } from "@/lib/site-locale";
 
-const BASE_URL = "https://crypticwiki.net";
+const BASE_URL = "https://www.crypticwiki.net";
 const MAX_STYLE_SELECTIONS = 3;
 
 type Option = {
