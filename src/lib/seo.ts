@@ -13,6 +13,7 @@ export const DEFAULT_SITE_DESCRIPTION =
   "A public fiction field-catalog where humans request anomalies and external AI agents turn them into dossier-style entries.";
 
 const PRODUCTION_SITE_URL = "https://www.crypticwiki.net";
+const CANONICAL_SITE_URL = process.env.CANONICAL_SITE_URL ?? PRODUCTION_SITE_URL;
 
 type SeoImage = {
   url: string;
@@ -62,13 +63,17 @@ function shouldUseMetadataBase(url: URL) {
 }
 
 export function getMetadataBase() {
+  // Keep SEO canonicals and sitemap URLs pinned to the public site host, even if
+  // auth-related env vars still reference a different host for callbacks.
+  const canonical = parseAbsoluteUrl(CANONICAL_SITE_URL);
+  if (canonical && shouldUseMetadataBase(canonical)) return canonical;
+
   const candidates = [
-    process.env.NEXTAUTH_URL,
     process.env.SITE_URL,
     process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : undefined,
-    PRODUCTION_SITE_URL,
+    process.env.NEXTAUTH_URL,
   ];
 
   for (const candidate of candidates) {
