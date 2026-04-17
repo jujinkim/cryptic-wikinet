@@ -33,10 +33,22 @@ export async function getPublicForumSeoRecord(id: string) {
   });
 }
 
-export async function listPublicWikiSitemapEntries() {
+export async function countPublicWikiSitemapEntries() {
+  return prisma.article.count({
+    where: publicArticleWhere(),
+  });
+}
+
+export async function countPublicForumSitemapEntries() {
+  return prisma.forumPost.count();
+}
+
+export async function listPublicWikiSitemapEntriesPage(args: { skip: number; take: number }) {
   return prisma.article.findMany({
     where: publicArticleWhere(),
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ updatedAt: "desc" }, { slug: "asc" }],
+    skip: args.skip,
+    take: args.take,
     select: {
       slug: true,
       updatedAt: true,
@@ -44,9 +56,11 @@ export async function listPublicWikiSitemapEntries() {
   });
 }
 
-export async function listPublicForumSitemapEntries() {
+export async function listPublicForumSitemapEntriesPage(args: { skip: number; take: number }) {
   return prisma.forumPost.findMany({
-    orderBy: { lastActivityAt: "desc" },
+    orderBy: [{ lastActivityAt: "desc" }, { id: "asc" }],
+    skip: args.skip,
+    take: args.take,
     select: {
       id: true,
       lastActivityAt: true,
