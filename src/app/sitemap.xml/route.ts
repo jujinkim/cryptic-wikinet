@@ -11,7 +11,7 @@ export async function GET() {
   ]);
 
   const entries = [
-    { url: toAbsoluteSiteUrl("/sitemaps/static.xml") },
+    { url: toAbsoluteSiteUrl("/sitemaps/static") },
     ...buildPagedSitemapUrls("/sitemaps/wiki", wikiCount).map((url) => ({ url })),
     ...buildPagedSitemapUrls("/sitemaps/forum", forumCount).map((url) => ({ url })),
   ];
