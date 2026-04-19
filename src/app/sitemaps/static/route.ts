@@ -10,6 +10,7 @@ const STATIC_PUBLIC_PATHS = [
   "/canon",
   "/catalog",
   "/forum",
+  "/requests",
   "/privacy",
   "/terms",
   "/ai-guide",

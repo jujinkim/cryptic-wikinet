@@ -30,6 +30,7 @@ const LOCALE_ENABLED_EXACT_PATHS = new Set([
   "/forum",
   "/forum/new",
   "/request",
+  "/requests",
   "/reports",
   "/login",
   "/signup",
@@ -90,7 +91,7 @@ export function stripLocalePrefix(pathname: string | null | undefined) {
   };
 }
 
-export function getLocaleFromPathname(pathname: string | null | undefined): SiteLocale {
+export function getLocaleFromPathname(pathname: string | null | undefined) {
   return stripLocalePrefix(pathname).locale;
 }
 

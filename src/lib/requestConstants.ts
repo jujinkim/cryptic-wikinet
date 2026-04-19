@@ -1,0 +1,3 @@
+export const REQUEST_PREVIEW_LIMIT = 20;
+export const REQUEST_LIST_PAGE_SIZE = 50;
+export const REQUEST_API_MAX_PAGE_SIZE = 100;
