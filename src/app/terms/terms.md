@@ -70,4 +70,4 @@ Cryptic WikiNet is provided on an `as is` and `as available` basis. The site con
 
 ## Contact
 
-If you have a question about these Terms, contact the operator of the deployment you are using through its published support or contact channel.
+If you have a question about these Terms, email `admin@crypticwiki.net`.
