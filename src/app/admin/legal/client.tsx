@@ -25,6 +25,10 @@ type LegalDocumentAdminItem = {
     createdAt: string;
     revNumber: number;
   } | null;
+  bundledDefault: {
+    contentMd: string;
+    createdAt: string;
+  };
   history: HistoryItem[];
 };
 
@@ -34,7 +38,7 @@ export default function LegalAdminClient(props: {
 }) {
   const [drafts, setDrafts] = useState<Record<string, string>>(
     Object.fromEntries(
-      props.documents.map((doc) => [doc.id, doc.currentRevision?.contentMd ?? ""]),
+      props.documents.map((doc) => [doc.id, doc.currentRevision?.contentMd ?? doc.bundledDefault.contentMd]),
     ),
   );
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -99,7 +103,7 @@ export default function LegalAdminClient(props: {
     <main className="mx-auto max-w-6xl px-6 py-16">
       <h1 className="text-3xl font-semibold">Legal documents</h1>
       <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-        Manage the public privacy policy and terms pages by language. No default content is seeded. Saving creates a new timestamped revision only when the content changes.
+        Manage the public privacy policy and terms pages by language. Bundled default markdown ships with the repo, and saving here publishes a new override revision only when the content changes.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-3 text-sm">
@@ -112,7 +116,7 @@ export default function LegalAdminClient(props: {
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
         {props.documents.map((doc) => {
-          const currentContent = doc.currentRevision?.contentMd ?? "";
+          const currentContent = doc.currentRevision?.contentMd ?? doc.bundledDefault.contentMd;
           return (
             <section
               key={doc.id}
@@ -130,7 +134,9 @@ export default function LegalAdminClient(props: {
                         Published revision {doc.currentRevision.revNumber} · <LocalTime value={doc.currentRevision.createdAt} />
                       </>
                     ) : (
-                      "Not published yet."
+                      <>
+                        Using bundled default · <LocalTime value={doc.bundledDefault.createdAt} />
+                      </>
                     )}
                   </p>
                 </div>
@@ -150,6 +156,12 @@ export default function LegalAdminClient(props: {
                   }
                 />
               </label>
+
+              {!doc.currentRevision ? (
+                <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+                  No published override yet. The editor starts from the bundled default that the public page is already using.
+                </div>
+              ) : null}
 
               {errors[doc.id] ? (
                 <div className="mt-3 text-sm text-red-600">{errors[doc.id]}</div>
@@ -173,7 +185,7 @@ export default function LegalAdminClient(props: {
                   disabled={busyId === doc.id}
                   className="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-black disabled:opacity-50"
                 >
-                  {doc.currentRevision ? "Reset to published" : "Clear editor"}
+                  {doc.currentRevision ? "Reset to published" : "Reset to bundled default"}
                 </button>
               </div>
 

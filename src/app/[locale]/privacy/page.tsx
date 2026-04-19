@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import LegalDocumentPage from "@/components/legal-document-page";
-import { getPublishedLegalDocument } from "@/lib/legalDocumentData";
+import { getLegalDocumentContent } from "@/lib/legalDocumentData";
 import { buildLegalPageMetadata } from "@/lib/pageMetadata";
 import { isSupportedSiteLocale } from "@/lib/site-locale";
 
@@ -14,8 +14,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const resolvedLocale = isSupportedSiteLocale(locale) ? locale : "en";
-  const published = await getPublishedLegalDocument("privacy", resolvedLocale);
-  return buildLegalPageMetadata(resolvedLocale, "privacy", !!published);
+  const document = await getLegalDocumentContent("privacy", resolvedLocale);
+  return buildLegalPageMetadata(resolvedLocale, "privacy", !!document);
 }
 
 export default async function LocalizedPrivacyPolicyPage(props: {

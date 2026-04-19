@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Geist_Mono, IBM_Plex_Sans_KR, Kosugi_Maru, Oxanium } from "next/font/google";
 import "./globals.css";
 
 import SiteActionFab from "@/app/site-action-fab";
+import SiteCookieNotice from "@/app/site-cookie-notice";
 import SiteFlash from "@/app/site-flash";
 import SiteFooter from "@/app/site-footer";
 import SiteHeader from "@/app/site-header";
 import SiteLocalePrompt from "@/app/site-locale-prompt";
 import LocaleDocumentLang from "@/components/locale-document-lang";
+import { COOKIE_NOTICE_COOKIE, readCookieConsentChoice } from "@/lib/cookie-consent";
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME, getMetadataBase } from "@/lib/seo";
 import { DEFAULT_SITE_LOCALE, isSupportedSiteLocale } from "@/lib/site-locale";
 
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
   title: {
     default: SITE_NAME,
-    template: `%s | ${SITE_NAME}`,
+    template: "%s | " + SITE_NAME,
   },
   description: DEFAULT_SITE_DESCRIPTION,
   applicationName: SITE_NAME,
@@ -79,14 +81,21 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headerStore = await headers();
+  const cookieStore = await cookies();
   const headerLocale = headerStore.get("x-site-locale");
   const htmlLang = headerLocale && isSupportedSiteLocale(headerLocale) ? headerLocale : DEFAULT_SITE_LOCALE;
+  const cookieConsentChoice = readCookieConsentChoice(
+    cookieStore.get(COOKIE_NOTICE_COOKIE)?.value,
+  );
+  const htmlClassName = [
+    oxanium.variable,
+    ibmPlexSansKr.variable,
+    kosugiMaru.variable,
+    geistMono.variable,
+  ].join(" ");
 
   return (
-    <html
-      lang={htmlLang}
-      className={`${oxanium.variable} ${ibmPlexSansKr.variable} ${kosugiMaru.variable} ${geistMono.variable}`}
-    >
+    <html lang={htmlLang} className={htmlClassName}>
       <body
         lang={htmlLang}
         className="flex min-h-screen flex-col bg-zinc-50 text-zinc-950 antialiased dark:bg-black dark:text-zinc-50"
@@ -95,6 +104,7 @@ export default async function RootLayout({
         <SiteHeader />
         <SiteFlash />
         <SiteLocalePrompt />
+        <SiteCookieNotice initialChoice={cookieConsentChoice} />
         <SiteActionFab />
         <div className="flex-1">{children}</div>
         <SiteFooter />

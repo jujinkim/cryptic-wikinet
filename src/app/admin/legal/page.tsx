@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import LegalAdminClient from "@/app/admin/legal/client";
+import { getBundledLegalDocument } from "@/lib/legalDocumentDefaults";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getLegalDocumentPath, getLegalDocumentTitle, listLegalDocuments } from "@/lib/legalDocuments";
 import { prisma } from "@/lib/prisma";
@@ -32,39 +33,42 @@ export default async function AdminLegalPage() {
   const documents = await Promise.all(
     listLegalDocuments().flatMap((definition) =>
       SUPPORTED_SITE_LOCALES.map(async (documentLocale) => {
-        const row = await prisma.legalDocument.findUnique({
-          where: {
-            key_locale: {
-              key: definition.dbKey,
-              locale: documentLocale,
-            },
-          },
-          select: {
-            currentRevision: {
-              select: {
-                contentMd: true,
-                createdAt: true,
-                revNumber: true,
+        const [row, bundledDefault] = await Promise.all([
+          prisma.legalDocument.findUnique({
+            where: {
+              key_locale: {
+                key: definition.dbKey,
+                locale: documentLocale,
               },
             },
-            revisions: {
-              orderBy: { revNumber: "desc" },
-              take: 20,
-              select: {
-                id: true,
-                contentMd: true,
-                createdAt: true,
-                revNumber: true,
-                createdByUser: {
-                  select: {
-                    email: true,
-                    name: true,
+            select: {
+              currentRevision: {
+                select: {
+                  contentMd: true,
+                  createdAt: true,
+                  revNumber: true,
+                },
+              },
+              revisions: {
+                orderBy: { revNumber: "desc" },
+                take: 20,
+                select: {
+                  id: true,
+                  contentMd: true,
+                  createdAt: true,
+                  revNumber: true,
+                  createdByUser: {
+                    select: {
+                      email: true,
+                      name: true,
+                    },
                   },
                 },
               },
             },
-          },
-        });
+          }),
+          getBundledLegalDocument(definition.slug, documentLocale),
+        ]);
 
         return {
           id: `${definition.slug}:${documentLocale}`,
@@ -80,6 +84,7 @@ export default async function AdminLegalPage() {
                 revNumber: row.currentRevision.revNumber,
               }
             : null,
+          bundledDefault: bundledDefault,
           history: (row?.revisions ?? []).map((revision) => ({
             id: revision.id,
             contentMd: revision.contentMd,

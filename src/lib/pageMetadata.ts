@@ -407,15 +407,15 @@ export function buildAiEasyStartPageMetadata(locale: SiteLocale): Metadata {
 export function buildLegalPageMetadata(
   locale: SiteLocale,
   slug: LegalDocumentSlug,
-  published: boolean,
+  available: boolean,
 ): Metadata {
   const copy = getLegalCopy(locale, slug);
   return buildPageMetadata({
     locale,
     pathname: slug === "privacy" ? "/privacy" : "/terms",
     title: copy.title,
-    description: published ? copy.description : copy.unpublishedDescription,
-    noIndex: !published,
+    description: available ? copy.description : copy.unpublishedDescription,
+    noIndex: !available,
   });
 }
 

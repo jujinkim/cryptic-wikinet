@@ -4,6 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import {
+  LOCALE_PROMPT_DISMISS_STORAGE_KEY,
+  allowsPreferenceStorage,
+  readClientCookieConsent,
+} from "@/lib/cookie-consent";
 import { getSiteCopy } from "@/lib/site-copy";
 import {
   DEFAULT_SITE_LOCALE,
@@ -12,8 +17,7 @@ import {
   isLocalizedStaticPath,
   type SiteLocale,
 } from "@/lib/site-locale";
-
-const LOCALE_PROMPT_DISMISS_KEY = "cw.localePrompt.dismissed";
+import { useCookieConsent } from "@/lib/use-cookie-consent";
 
 const TIMEZONE_TO_LOCALE: Partial<Record<string, SiteLocale>> = {
   "Asia/Seoul": "ko",
@@ -100,11 +104,15 @@ export default function SiteLocalePrompt() {
   const copy = getSiteCopy(currentLocale);
   const links = getLanguageLinks(pathname);
   const fullyTranslated = isLocalizedStaticPath(pathname);
-  const [dismissedPrompt, setDismissedPrompt] = useState<boolean>(() => {
+  const { allowsPreferences } = useCookieConsent();
+  const [storedDismissedPrompt, setStoredDismissedPrompt] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(LOCALE_PROMPT_DISMISS_KEY) === "1";
+    if (!allowsPreferenceStorage(readClientCookieConsent())) return false;
+    return window.localStorage.getItem(LOCALE_PROMPT_DISMISS_STORAGE_KEY) === "1";
   });
+  const [sessionDismissedPrompt, setSessionDismissedPrompt] = useState(false);
   const [suggestedLocale] = useState<SiteLocale | null>(() => detectSuggestedLocale());
+  const dismissedPrompt = sessionDismissedPrompt || (allowsPreferences && storedDismissedPrompt);
 
   const recommendedLink =
     !links || dismissedPrompt || currentLocale !== DEFAULT_SITE_LOCALE || !suggestedLocale
@@ -130,8 +138,13 @@ export default function SiteLocalePrompt() {
             type="button"
             className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-black"
             onClick={() => {
-              window.localStorage.setItem(LOCALE_PROMPT_DISMISS_KEY, "1");
-              setDismissedPrompt(true);
+              if (allowsPreferences) {
+                window.localStorage.setItem(LOCALE_PROMPT_DISMISS_STORAGE_KEY, "1");
+                setStoredDismissedPrompt(true);
+                return;
+              }
+
+              setSessionDismissedPrompt(true);
             }}
           >
             {promptCopy.decline}

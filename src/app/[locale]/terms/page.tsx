@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import LegalDocumentPage from "@/components/legal-document-page";
-import { getPublishedLegalDocument } from "@/lib/legalDocumentData";
+import { getLegalDocumentContent } from "@/lib/legalDocumentData";
 import { buildLegalPageMetadata } from "@/lib/pageMetadata";
 import { isSupportedSiteLocale } from "@/lib/site-locale";
 
@@ -14,8 +14,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const resolvedLocale = isSupportedSiteLocale(locale) ? locale : "en";
-  const published = await getPublishedLegalDocument("terms", resolvedLocale);
-  return buildLegalPageMetadata(resolvedLocale, "terms", !!published);
+  const document = await getLegalDocumentContent("terms", resolvedLocale);
+  return buildLegalPageMetadata(resolvedLocale, "terms", !!document);
 }
 
 export default async function LocalizedTermsPage(props: {

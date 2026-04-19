@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import SiteHeaderTimeZone from "@/app/site-header-time-zone";
+import { openCookieConsentSettings } from "@/lib/cookie-consent";
 import { getLegalDocumentTitle } from "@/lib/legalDocuments";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, stripLocalePrefix, withSiteLocale } from "@/lib/site-locale";
@@ -106,6 +107,11 @@ export default function SiteFooterClient(props: {
               <Link className="hover:underline" href={termsHref}>
                 {getLegalDocumentTitle("terms", locale)}
               </Link>
+            </li>
+            <li>
+              <button type="button" className="hover:underline" onClick={openCookieConsentSettings}>
+                {copy.cookieNotice.settings}
+              </button>
             </li>
             <li>
               <details className="group">

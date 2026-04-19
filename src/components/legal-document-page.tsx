@@ -2,7 +2,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
 import LocalTime from "@/components/local-time";
-import { getPublishedLegalDocument } from "@/lib/legalDocumentData";
+import { getLegalDocumentContent } from "@/lib/legalDocumentData";
 import { getLegalDocumentTitle, type LegalDocumentSlug } from "@/lib/legalDocuments";
 import { getSiteCopy } from "@/lib/site-copy";
 import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
@@ -37,7 +37,7 @@ export default async function LegalDocumentPage(props: {
   const copy = getSiteCopy(props.locale);
   const pageCopy = getPageCopy(props.locale);
   const title = getLegalDocumentTitle(props.slug, props.locale);
-  const published = await getPublishedLegalDocument(props.slug, props.locale);
+  const document = await getLegalDocumentContent(props.slug, props.locale);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -50,9 +50,9 @@ export default async function LegalDocumentPage(props: {
       <section className="rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
         <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-          {published ? (
+          {document ? (
             <>
-              {pageCopy.lastUpdated} <LocalTime value={published.createdAt} />
+              {pageCopy.lastUpdated} <LocalTime value={document.createdAt} />
             </>
           ) : (
             pageCopy.unpublishedLead
@@ -60,9 +60,9 @@ export default async function LegalDocumentPage(props: {
         </p>
       </section>
 
-      {published ? (
+      {document ? (
         <article className="prose prose-zinc mt-6 max-w-none rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950 dark:prose-invert">
-          <ReactMarkdown>{published.contentMd}</ReactMarkdown>
+          <ReactMarkdown>{document.contentMd}</ReactMarkdown>
         </article>
       ) : (
         <section className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white p-6 text-sm text-zinc-500 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-400">

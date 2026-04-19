@@ -36,6 +36,25 @@ type SiteCopy = {
     language: string;
     home: string;
   };
+  cookieNotice: {
+    title: string;
+    body: string;
+    essentialTitle: string;
+    essentialBody: string;
+    preferencesTitle: string;
+    preferencesBody: string;
+    alwaysOn: string;
+    preferencesOn: string;
+    preferencesOff: string;
+    essentialOnly: string;
+    allowPreferences: string;
+    learnMore: string;
+    close: string;
+    currentSettingLabel: string;
+    essentialSetting: string;
+    preferencesSetting: string;
+    settings: string;
+  };
   fab: {
     requestEntry: string;
     writeForum: string;
@@ -188,6 +207,27 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       timeZonePrefix: "Timezone: ",
       language: "Language",
       home: "Home",
+    },
+    cookieNotice: {
+      title: "Cookie settings",
+      body:
+        "We always use essential cookies for sign-in and session security. You can also allow preference storage so the site remembers UI choices such as dismissing the language prompt or moving the wiki sidebar.",
+      essentialTitle: "Essential",
+      essentialBody: "Required for login, session protection, and basic request flow.",
+      preferencesTitle: "Preferences",
+      preferencesBody:
+        "Remembers optional UI choices on this device, such as the locale prompt dismissal and wiki sidebar position.",
+      alwaysOn: "Always on",
+      preferencesOn: "Allowed",
+      preferencesOff: "Off",
+      essentialOnly: "Essential only",
+      allowPreferences: "Allow preferences",
+      learnMore: "Privacy policy",
+      close: "Close",
+      currentSettingLabel: "Current setting:",
+      essentialSetting: "Essential only",
+      preferencesSetting: "Preferences allowed",
+      settings: "Cookie settings",
     },
     fab: {
       requestEntry: "Request entry",
@@ -367,6 +407,27 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       language: "언어",
       home: "홈",
     },
+    cookieNotice: {
+      title: "쿠키 설정",
+      body:
+        "로그인과 세션 보안을 위한 필수 쿠키는 항상 사용됩니다. 여기에 더해, 언어 안내 닫기나 위키 사이드바 위치 같은 UI 선택을 이 기기에서 기억하도록 선호 설정 저장을 허용할 수 있습니다.",
+      essentialTitle: "필수",
+      essentialBody: "로그인, 세션 보호, 기본 요청 흐름에 필요합니다.",
+      preferencesTitle: "선호 설정",
+      preferencesBody:
+        "이 기기에서 언어 안내 닫기, 위키 사이드바 위치 같은 선택적 UI 설정을 기억합니다.",
+      alwaysOn: "항상 사용",
+      preferencesOn: "허용됨",
+      preferencesOff: "꺼짐",
+      essentialOnly: "필수만",
+      allowPreferences: "선호 설정 허용",
+      learnMore: "개인정보 처리방침",
+      close: "닫기",
+      currentSettingLabel: "현재 설정:",
+      essentialSetting: "필수만 사용",
+      preferencesSetting: "선호 설정 허용",
+      settings: "쿠키 설정",
+    },
     fab: {
       requestEntry: "엔트리 요청",
       writeForum: "포럼 글쓰기",
@@ -544,6 +605,27 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       timeZonePrefix: "タイムゾーン: ",
       language: "言語",
       home: "ホーム",
+    },
+    cookieNotice: {
+      title: "Cookie 設定",
+      body:
+        "ログインとセッション保護のための必須 Cookie は常に使用されます。これに加えて、言語案内の非表示や Wiki サイドバー位置などの UI 設定をこの端末で記憶するために、設定保存を許可できます。",
+      essentialTitle: "必須",
+      essentialBody: "ログイン、セッション保護、基本的な操作のために必要です。",
+      preferencesTitle: "設定保存",
+      preferencesBody:
+        "この端末で、言語案内の非表示や Wiki サイドバー位置などの任意の UI 設定を記憶します。",
+      alwaysOn: "常に有効",
+      preferencesOn: "許可中",
+      preferencesOff: "オフ",
+      essentialOnly: "必須のみ",
+      allowPreferences: "設定保存を許可",
+      learnMore: "プライバシーポリシー",
+      close: "閉じる",
+      currentSettingLabel: "現在の設定:",
+      essentialSetting: "必須のみ",
+      preferencesSetting: "設定保存を許可",
+      settings: "Cookie 設定",
     },
     fab: {
       requestEntry: "エントリを依頼",
