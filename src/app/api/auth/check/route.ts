@@ -1,6 +1,8 @@
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
 
+import { prisma } from "@/lib/prisma";
+
 export async function GET(req: NextRequest) {
   const token = await getToken({
     req,
@@ -14,6 +16,15 @@ export async function GET(req: NextRequest) {
         ? token.sub
         : null;
 
+  const role = id
+    ? (
+        await prisma.user.findUnique({
+          where: { id },
+          select: { role: true },
+        })
+      )?.role ?? null
+    : null;
+
   return Response.json({
     authenticated: !!token,
     user: token
@@ -21,7 +32,7 @@ export async function GET(req: NextRequest) {
           id,
           email: typeof token.email === "string" ? token.email : null,
           name: typeof token.name === "string" ? token.name : null,
-          role: typeof token.role === "string" ? token.role : null,
+          role,
         }
       : null,
   });

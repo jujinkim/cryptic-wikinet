@@ -5,6 +5,7 @@ import { getMetadataBase, toAbsoluteSiteUrl } from "@/lib/seo";
 
 const DISALLOWED_PATHS = [
   "/api/",
+  "/admin",
   "/admin/",
   "/login",
   "/signup",

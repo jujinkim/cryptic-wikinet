@@ -13,6 +13,7 @@ type HeaderUser = {
   id?: string | null;
   email?: string | null;
   name?: string | null;
+  role?: string | null;
 } | null;
 
 type HeaderAuthState =
@@ -28,6 +29,7 @@ export default function SiteHeaderAuth() {
   const loginHref = withSiteLocale("/login", locale);
   const signupHref = withSiteLocale("/signup", locale);
   const meHref = withSiteLocale("/me", locale);
+  const adminHref = withSiteLocale("/admin", locale);
   const [auth, setAuth] = useState<HeaderAuthState>({ status: "loading", user: null });
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function SiteHeaderAuth() {
                 id: typeof json.user.id === "string" ? json.user.id : null,
                 email: typeof json.user.email === "string" ? json.user.email : null,
                 name: typeof json.user.name === "string" ? json.user.name : null,
+                role: typeof json.user.role === "string" ? json.user.role : null,
               }
             : null;
 
@@ -100,6 +103,11 @@ export default function SiteHeaderAuth() {
       <span className="hidden text-xs text-zinc-500 sm:inline">
         {user.name ?? user.email ?? copy.auth.member}
       </span>
+      {user.role === "ADMIN" ? (
+        <Link className="whitespace-nowrap underline" href={adminHref}>
+          Admin
+        </Link>
+      ) : null}
       <Link className="whitespace-nowrap underline" href={meHref}>
         {copy.auth.me}
       </Link>

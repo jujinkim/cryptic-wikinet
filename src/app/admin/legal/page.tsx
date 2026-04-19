@@ -95,6 +95,7 @@ export default async function AdminLegalPage() {
   return (
     <LegalAdminClient
       adminLinks={[
+        { href: withSiteLocale("/admin", locale), label: "Overview" },
         { href: withSiteLocale("/admin/reports", locale), label: "Reports" },
         { href: withSiteLocale("/admin/tags", locale), label: "Tags" },
       ]}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import AiGuideClient from "@/app/ai-guide/guide-client";
 import { getMeCopy } from "@/app/me/me-copy";
+import { getMeMonitorCopy } from "@/app/me/monitor-copy";
 import LocalTime from "@/components/local-time";
 import type { MemberRewardTierKey } from "@/lib/memberRewards";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
@@ -83,6 +84,7 @@ export default function MeClient(props: {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const copy = getMeCopy(locale);
+  const monitorCopy = getMeMonitorCopy(locale);
   const { user } = props;
   const rewardSummary = props.rewardSummary;
   const isVerified = !!user.emailVerified;
@@ -100,6 +102,9 @@ export default function MeClient(props: {
   const accountSettingsHref = withSiteLocale("/settings/account", locale);
   const publicProfileHref = withSiteLocale(`/members/${user.id}`, locale);
   const aiGuideHref = withSiteLocale("/ai-guide", locale);
+  const myRequestsHref = withSiteLocale("/me/requests", locale);
+  const myForumHref = withSiteLocale("/me/forum", locale);
+  const myCatalogHref = withSiteLocale("/me/catalog", locale);
   const createButtonClass = isVerified
     ? "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs dark:border-white/15 dark:bg-black"
     : "rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs opacity-50 dark:border-white/15 dark:bg-black";
@@ -339,6 +344,39 @@ export default function MeClient(props: {
           </Link>
           <Link className="underline" href={publicProfileHref}>
             {copy.publicView}
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <div>
+          <h2 className="text-lg font-medium">{monitorCopy.overviewTitle}</h2>
+          <p className="mt-2 text-sm text-zinc-500">{monitorCopy.overviewBody}</p>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <Link
+            className="rounded-xl border border-black/10 bg-zinc-50 p-4 transition hover:bg-zinc-100 dark:border-white/15 dark:bg-black dark:hover:bg-zinc-900"
+            href={myRequestsHref}
+          >
+            <div className="text-sm font-medium">{monitorCopy.requestsLink}</div>
+            <p className="mt-2 text-xs text-zinc-500">{monitorCopy.requestsDescription}</p>
+          </Link>
+
+          <Link
+            className="rounded-xl border border-black/10 bg-zinc-50 p-4 transition hover:bg-zinc-100 dark:border-white/15 dark:bg-black dark:hover:bg-zinc-900"
+            href={myForumHref}
+          >
+            <div className="text-sm font-medium">{monitorCopy.forumLink}</div>
+            <p className="mt-2 text-xs text-zinc-500">{monitorCopy.forumDescription}</p>
+          </Link>
+
+          <Link
+            className="rounded-xl border border-black/10 bg-zinc-50 p-4 transition hover:bg-zinc-100 dark:border-white/15 dark:bg-black dark:hover:bg-zinc-900"
+            href={myCatalogHref}
+          >
+            <div className="text-sm font-medium">{monitorCopy.catalogLink}</div>
+            <p className="mt-2 text-xs text-zinc-500">{monitorCopy.catalogDescription}</p>
           </Link>
         </div>
       </section>
