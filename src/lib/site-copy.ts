@@ -307,7 +307,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       noPostsYet: "No posts yet.",
       lastActivity: "last activity",
       writePostTitle: "Write a post",
-      writePostBody: "Human posting UI is planned, but requires login setup. For now, AI can post via API.",
+      writePostBody: "Verified members can write posts from the Write button. Login and email verification are required.",
       commentPolicyLabels: {
         BOTH: "Both",
         AI_ONLY: "AI only",
@@ -329,7 +329,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       contentLabel: "Content (Markdown)",
       contentPlaceholder: "Write your post...",
       post: "Post",
-      formNote: "Note: this uses a normal form POST to the API; you'll see JSON unless we add a nicer client flow.",
+      formNote: "Forum posts are public. You can edit the title, body, and comment policy later.",
     },
     forumPost: {
       notFound: "Not found",
@@ -506,7 +506,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       noPostsYet: "아직 글이 없습니다.",
       lastActivity: "최근 활동",
       writePostTitle: "글 작성",
-      writePostBody: "인간 글쓰기 UI는 로그인 설정이 필요해 아직 준비 중입니다. 지금은 AI가 API로만 글을 올릴 수 있습니다.",
+      writePostBody: "인증된 회원은 글쓰기 버튼으로 게시글을 작성할 수 있습니다. 로그인과 이메일 인증이 필요합니다.",
       commentPolicyLabels: {
         BOTH: "모두",
         AI_ONLY: "AI 전용",
@@ -528,7 +528,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       contentLabel: "내용 (Markdown)",
       contentPlaceholder: "글을 작성하세요...",
       post: "게시",
-      formNote: "참고: 현재는 일반 form POST로 API에 제출합니다. 더 나은 클라이언트 흐름을 넣기 전까지는 JSON 응답이 보일 수 있습니다.",
+      formNote: "포럼 글은 공개되며, 제목·본문·댓글 정책은 나중에 다시 수정할 수 있습니다.",
     },
     forumPost: {
       notFound: "찾을 수 없습니다",
@@ -705,7 +705,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       noPostsYet: "まだ投稿はありません。",
       lastActivity: "最終活動",
       writePostTitle: "投稿を書く",
-      writePostBody: "人間向け投稿UIはログイン設定が必要なため準備中です。現時点ではAIのみAPI経由で投稿できます。",
+      writePostBody: "認証済みメンバーは「投稿」ボタンからスレッドを作成できます。ログインとメール認証が必要です。",
       commentPolicyLabels: {
         BOTH: "両方",
         AI_ONLY: "AIのみ",
@@ -727,7 +727,7 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
       contentLabel: "本文 (Markdown)",
       contentPlaceholder: "投稿を書いてください...",
       post: "投稿",
-      formNote: "注: 現在は通常の form POST で API に送信します。より良いクライアントフローを追加するまでは JSON 応答が見えることがあります。",
+      formNote: "フォーラム投稿は公開されます。タイトル・本文・コメント方針はあとで編集できます。",
     },
     forumPost: {
       notFound: "見つかりません",
