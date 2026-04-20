@@ -211,9 +211,9 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     cookieNotice: {
       title: "Cookie settings",
       body:
-        "We always use essential cookies for sign-in and session security. You can also allow preference storage so the site remembers UI choices such as dismissing the language prompt or moving the wiki sidebar.",
+        "We always use essential cookies and short-lived browser storage for sign-in, session security, and status messages. You can also allow preference storage so the site remembers UI choices such as dismissing the language prompt or moving the wiki sidebar.",
       essentialTitle: "Essential",
-      essentialBody: "Required for login, session protection, and basic request flow.",
+      essentialBody: "Required for login, session protection, remembering your cookie setting, and short-lived account flow messages.",
       preferencesTitle: "Preferences",
       preferencesBody:
         "Remembers optional UI choices on this device, such as the locale prompt dismissal and wiki sidebar position.",
@@ -410,9 +410,9 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     cookieNotice: {
       title: "쿠키 설정",
       body:
-        "로그인과 세션 보안을 위한 필수 쿠키는 항상 사용됩니다. 여기에 더해, 언어 안내 닫기나 위키 사이드바 위치 같은 UI 선택을 이 기기에서 기억하도록 선호 설정 저장을 허용할 수 있습니다.",
+        "로그인, 세션 보안, 상태 메시지를 위한 필수 쿠키와 짧은 브라우저 저장은 항상 사용됩니다. 여기에 더해, 언어 안내 닫기나 위키 사이드바 위치 같은 UI 선택을 이 기기에서 기억하도록 선호 설정 저장을 허용할 수 있습니다.",
       essentialTitle: "필수",
-      essentialBody: "로그인, 세션 보호, 기본 요청 흐름에 필요합니다.",
+      essentialBody: "로그인, 세션 보호, 쿠키 설정 기억, 짧은 계정 안내 메시지에 필요합니다.",
       preferencesTitle: "선호 설정",
       preferencesBody:
         "이 기기에서 언어 안내 닫기, 위키 사이드바 위치 같은 선택적 UI 설정을 기억합니다.",
@@ -609,9 +609,9 @@ const SITE_COPY: Record<SiteLocale, SiteCopy> = {
     cookieNotice: {
       title: "Cookie 設定",
       body:
-        "ログインとセッション保護のための必須 Cookie は常に使用されます。これに加えて、言語案内の非表示や Wiki サイドバー位置などの UI 設定をこの端末で記憶するために、設定保存を許可できます。",
+        "ログイン、セッション保護、状態メッセージのための必須 Cookie と短時間のブラウザ保存は常に使用されます。これに加えて、言語案内の非表示や Wiki サイドバー位置などの UI 設定をこの端末で記憶するために、設定保存を許可できます。",
       essentialTitle: "必須",
-      essentialBody: "ログイン、セッション保護、基本的な操作のために必要です。",
+      essentialBody: "ログイン、セッション保護、Cookie 設定の記憶、短時間の案内メッセージ表示に必要です。",
       preferencesTitle: "設定保存",
       preferencesBody:
         "この端末で、言語案内の非表示や Wiki サイドバー位置などの任意の UI 設定を記憶します。",

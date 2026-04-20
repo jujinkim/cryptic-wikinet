@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { WIKI_SIDEBAR_SIDE_STORAGE_KEY } from "@/lib/cookie-consent";
 import type { TocItem } from "@/lib/markdownToc";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
-import { useCookieConsent } from "@/lib/use-cookie-consent";
+import { usePreferenceStorage } from "@/lib/use-preference-storage";
 
 type PageTagItem = {
   key: string;
@@ -27,7 +27,11 @@ export default function WikiLayoutClient(props: {
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const { allowsPreferences } = useCookieConsent();
+  const {
+    allowsPreferences,
+    value: storedSide,
+    setValue: setStoredSide,
+  } = usePreferenceStorage(WIKI_SIDEBAR_SIDE_STORAGE_KEY);
   const [side, setSide] = useState<"left" | "right">("left");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocItem[] | null>(null);
@@ -35,25 +39,20 @@ export default function WikiLayoutClient(props: {
   const [docsErr, setDocsErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     if (!allowsPreferences) {
       setSide("left");
       return;
     }
 
-    const v = (globalThis.localStorage?.getItem(WIKI_SIDEBAR_SIDE_STORAGE_KEY) ?? "left") as
-      | "left"
-      | "right";
-    if (v === "right" || v === "left") setSide(v);
-  }, [allowsPreferences]);
+    setSide(storedSide === "right" ? "right" : "left");
+  }, [allowsPreferences, storedSide]);
 
   function toggleSide() {
     const next = side === "left" ? "right" : "left";
     setSide(next);
 
     if (allowsPreferences) {
-      globalThis.localStorage?.setItem(WIKI_SIDEBAR_SIDE_STORAGE_KEY, next);
+      setStoredSide(next);
     }
   }
 

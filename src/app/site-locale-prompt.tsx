@@ -4,11 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import {
-  LOCALE_PROMPT_DISMISS_STORAGE_KEY,
-  allowsPreferenceStorage,
-  readClientCookieConsent,
-} from "@/lib/cookie-consent";
+import { LOCALE_PROMPT_DISMISS_STORAGE_KEY } from "@/lib/cookie-consent";
 import { getSiteCopy } from "@/lib/site-copy";
 import {
   DEFAULT_SITE_LOCALE,
@@ -17,7 +13,7 @@ import {
   isLocalizedStaticPath,
   type SiteLocale,
 } from "@/lib/site-locale";
-import { useCookieConsent } from "@/lib/use-cookie-consent";
+import { usePreferenceStorage } from "@/lib/use-preference-storage";
 
 const TIMEZONE_TO_LOCALE: Partial<Record<string, SiteLocale>> = {
   "Asia/Seoul": "ko",
@@ -104,15 +100,14 @@ export default function SiteLocalePrompt() {
   const copy = getSiteCopy(currentLocale);
   const links = getLanguageLinks(pathname);
   const fullyTranslated = isLocalizedStaticPath(pathname);
-  const { allowsPreferences } = useCookieConsent();
-  const [storedDismissedPrompt, setStoredDismissedPrompt] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    if (!allowsPreferenceStorage(readClientCookieConsent())) return false;
-    return window.localStorage.getItem(LOCALE_PROMPT_DISMISS_STORAGE_KEY) === "1";
-  });
+  const {
+    allowsPreferences,
+    value: storedDismissedPrompt,
+    setValue: setStoredDismissedPrompt,
+  } = usePreferenceStorage(LOCALE_PROMPT_DISMISS_STORAGE_KEY);
   const [sessionDismissedPrompt, setSessionDismissedPrompt] = useState(false);
   const [suggestedLocale] = useState<SiteLocale | null>(() => detectSuggestedLocale());
-  const dismissedPrompt = sessionDismissedPrompt || (allowsPreferences && storedDismissedPrompt);
+  const dismissedPrompt = sessionDismissedPrompt || storedDismissedPrompt === "1";
 
   const recommendedLink =
     !links || dismissedPrompt || currentLocale !== DEFAULT_SITE_LOCALE || !suggestedLocale
@@ -129,7 +124,7 @@ export default function SiteLocalePrompt() {
   );
 
   return (
-    <div className="pointer-events-none fixed bottom-32 right-4 z-[70] max-w-sm">
+    <div data-testid="site-locale-prompt" className="pointer-events-none fixed bottom-32 right-4 z-[70] max-w-sm">
       <div className="pointer-events-auto rounded-2xl border border-black/10 bg-white p-4 text-sm shadow-lg dark:border-white/15 dark:bg-zinc-950">
         <div className="font-medium text-zinc-950 dark:text-zinc-50">{promptCopy.title}</div>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{promptCopy.body}</p>
@@ -138,9 +133,7 @@ export default function SiteLocalePrompt() {
             type="button"
             className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-medium dark:border-white/15 dark:bg-black"
             onClick={() => {
-              if (allowsPreferences) {
-                window.localStorage.setItem(LOCALE_PROMPT_DISMISS_STORAGE_KEY, "1");
-                setStoredDismissedPrompt(true);
+              if (allowsPreferences && setStoredDismissedPrompt("1")) {
                 return;
               }
 

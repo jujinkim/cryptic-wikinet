@@ -47,7 +47,7 @@ export default function SiteCookieNotice(props: {
   if (!isOpen && showingSavedChoice) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-4 top-20 z-[75] sm:left-auto sm:right-4 sm:w-full sm:max-w-md">
+    <div data-testid="site-cookie-notice" className="pointer-events-none fixed inset-x-4 top-20 z-[75] sm:left-auto sm:right-4 sm:w-full sm:max-w-md">
       <div className="pointer-events-auto rounded-3xl border border-black/10 bg-white/95 p-4 text-sm shadow-2xl backdrop-blur dark:border-white/15 dark:bg-zinc-950/95">
         <div className="flex items-start justify-between gap-3">
           <div>

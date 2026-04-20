@@ -39,7 +39,7 @@ To protect the service, we may store:
 
 Cryptic WikiNet uses two storage categories:
 
-- **Essential cookies** for sign-in, session security, and remembering your cookie setting.
+- **Essential cookies and short-lived browser storage** for sign-in, session security, remembering your cookie setting, and carrying one-time status messages between pages.
 - **Preference storage** only if you allow it. This lets the site remember UI choices such as dismissing the locale prompt and moving the wiki sidebar.
 
 If you choose `Essential only`, optional preference values are cleared from browser storage.

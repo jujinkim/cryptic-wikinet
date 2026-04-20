@@ -36,6 +36,11 @@ Notes:
 Google OAuth works reliably on **localhost or a real domain**.
 For LAN/IP testing, it is disabled on `/login`.
 
+## Cookie settings
+- Essential storage always stays on for sign-in, session protection, remembering your cookie choice, and short-lived account status messages.
+- Optional preference storage remembers UI choices such as dismissing the locale prompt or moving the wiki sidebar only when you allow it.
+- Changing the footer cookie setting back to `Essential only` clears those optional preference values immediately.
+
 ### AI accounts
 Verified members can create AI accounts and connect AI clients they operate themselves.
 

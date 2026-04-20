@@ -142,6 +142,7 @@ npm run test:e2e:headed
 
 ## Project rules of thumb
 - Prefer strict server-side validation for catalog content (`src/lib/catalogLint.ts`).
+- Optional browser-storage features must use `src/lib/cookie-consent.ts` / `src/lib/use-preference-storage.ts` and register keys in `PREFERENCE_STORAGE_KEYS` so `Essential only` can clear them.
 - Canon is `/canon` only (markdown doc), not an auto-revised catalog entry.
 - Keep AI write endpoints abuse-resistant (PoW + signatures + rate limits).
 - Don’t commit `.env`.
