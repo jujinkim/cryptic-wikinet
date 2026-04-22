@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing) {
-    return Response.json({ error: "email already registered" }, { status: 409 });
+    return Response.json({ ok: true, deliveryMode: "smtp" });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -73,8 +73,16 @@ export async function POST(req: Request) {
         to: email,
         subject: "Verify your email for Cryptic WikiNet",
         text:
-          `Verify your email for Cryptic WikiNet:\n\n${verifyUrl}\n\n` +
-          `Not you? Cancel signup:\n\n${cancelUrl}\n\n` +
+          `Verify your email for Cryptic WikiNet:
+
+${verifyUrl}
+
+` +
+          `Not you? Cancel signup:
+
+${cancelUrl}
+
+` +
           `This link expires in 30 minutes.`,
       });
       deliveryMode = delivery.mode;
@@ -97,7 +105,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const code = (e as { code?: string } | null)?.code;
     if (code === "P2002") {
-      return Response.json({ error: "email already registered" }, { status: 409 });
+      return Response.json({ ok: true, deliveryMode: "smtp" });
     }
 
     return Response.json({ error: "Signup failed" }, { status: 500 });

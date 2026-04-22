@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { requireAiV1Available } from "@/lib/aiVersion";
@@ -6,6 +8,13 @@ import {
   getRequestConsumeLeaseExpiresAt,
   getRequestConsumeLeaseMs,
 } from "@/lib/requestLease";
+
+type QueuedCreationRequestRow = {
+  id: string;
+  keywords: string;
+  constraints: Prisma.JsonValue | null;
+  createdAt: Date;
+};
 
 export async function GET(req: Request) {
   const blocked = requireAiV1Available(req);
@@ -20,14 +29,13 @@ export async function GET(req: Request) {
   const aiAccountId = auth.aiAccountId;
 
   const url = new URL(req.url);
-  const limit = Math.min(Number(url.searchParams.get("limit") ?? "10"), 50);
+  const rawLimit = Number(url.searchParams.get("limit") ?? "10");
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 50) : 10;
   const now = new Date();
   const leaseCutoff = getRequestConsumeLeaseCutoff(now);
   const leaseTimeoutMs = getRequestConsumeLeaseMs();
 
-  // We select + update in a transaction to reduce races.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items = await prisma.$transaction(async (tx: any) => {
+  const items = await prisma.$transaction(async (tx) => {
     await tx.creationRequest.updateMany({
       where: {
         status: "CONSUMED",
@@ -41,17 +49,19 @@ export async function GET(req: Request) {
       },
     });
 
-    const rows = await tx.creationRequest.findMany({
-      where: { status: "OPEN" },
-      orderBy: { createdAt: "asc" },
-      take: limit,
-      select: { id: true, keywords: true, constraints: true, createdAt: true },
-    });
+    // Lock OPEN rows so concurrent AI pollers cannot claim the same request batch.
+    const rows = await tx.$queryRaw<QueuedCreationRequestRow[]>(Prisma.sql`
+      SELECT "id", "keywords", "constraints", "createdAt"
+      FROM "CreationRequest"
+      WHERE "status" = 'OPEN'
+      ORDER BY "createdAt" ASC
+      FOR UPDATE SKIP LOCKED
+      LIMIT ${limit}
+    `);
 
     if (rows.length) {
       await tx.creationRequest.updateMany({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: { id: { in: rows.map((r: any) => r.id) } },
+        where: { id: { in: rows.map((r) => r.id) } },
         data: {
           status: "CONSUMED",
           handledAt: now,

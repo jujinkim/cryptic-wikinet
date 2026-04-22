@@ -51,6 +51,7 @@ export async function verifyAndConsumePow(args: {
   expectedAction?: string;
 }) {
   const { powId, nonce, expectedAction } = args;
+  const now = new Date();
 
   const row = await prisma.powChallenge.findUnique({
     where: { id: powId },
@@ -73,7 +74,7 @@ export async function verifyAndConsumePow(args: {
   if (row.usedAt) {
     return { ok: false as const, message: "PoW challenge already used" };
   }
-  if (row.expiresAt < new Date()) {
+  if (row.expiresAt <= now) {
     return { ok: false as const, message: "PoW challenge expired" };
   }
 
@@ -83,11 +84,18 @@ export async function verifyAndConsumePow(args: {
     return { ok: false as const, message: "PoW invalid" };
   }
 
-  // consume
-  await prisma.powChallenge.update({
-    where: { id: row.id },
-    data: { usedAt: new Date() },
+  const consumed = await prisma.powChallenge.updateMany({
+    where: {
+      id: row.id,
+      usedAt: null,
+      expiresAt: { gt: now },
+    },
+    data: { usedAt: now },
   });
+
+  if (consumed.count !== 1) {
+    return { ok: false as const, message: "PoW challenge already used" };
+  }
 
   return { ok: true as const, difficulty: row.difficulty, hashHex };
 }

@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { envInt } from "@/lib/config";
 import { requireAiV1Available } from "@/lib/aiVersion";
@@ -41,6 +43,10 @@ function makeAiAccountId() {
   return `acct_${crypto.randomBytes(12).toString("hex")}`;
 }
 
+function isSerializableConflict(error: unknown) {
+  return (error as { code?: string } | null)?.code === "P2034";
+}
+
 export async function POST(req: Request) {
   const blocked = requireAiV1Available(req);
   if (blocked) return blocked;
@@ -78,145 +84,166 @@ export async function POST(req: Request) {
   const pairCodeExpiresAt = new Date(now.getTime() + pairCodeTtlMin * 60 * 1000);
   const maxAiAccounts = aiMaxAccountsPerUser();
 
-  try {
-    const row = await prisma.$transaction(async (tx) => {
-      const regToken = await tx.aiRegistrationToken.findUnique({
-        where: { tokenHash },
-        select: {
-          id: true,
-          ownerUserId: true,
-          aiAccountId: true,
-          usedAt: true,
-          expiresAt: true,
-          aiAccount: {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const row = await prisma.$transaction(
+        async (tx) => {
+          const regToken = await tx.aiRegistrationToken.findUnique({
+            where: { tokenHash },
             select: {
               id: true,
-              name: true,
               ownerUserId: true,
-              deletedAt: true,
+              aiAccountId: true,
+              usedAt: true,
+              expiresAt: true,
+              aiAccount: {
+                select: {
+                  id: true,
+                  name: true,
+                  ownerUserId: true,
+                  deletedAt: true,
+                },
+              },
             },
-          },
-        },
-      });
+          });
 
-      if (!regToken) {
-        throw new RegisterError("Invalid registration token", 403);
-      }
-      if (regToken.usedAt) {
-        throw new RegisterError("Registration token already used", 403);
-      }
-      if (regToken.expiresAt <= now) {
-        throw new RegisterError("Registration token expired", 403);
-      }
+          if (!regToken) {
+            throw new RegisterError("Invalid registration token", 403);
+          }
+          if (regToken.usedAt) {
+            throw new RegisterError("Registration token already used", 403);
+          }
+          if (regToken.expiresAt <= now) {
+            throw new RegisterError("Registration token expired", 403);
+          }
 
-      let aiAccountId = regToken.aiAccountId ?? null;
-      let aiAccountName = regToken.aiAccount?.name ?? null;
+          let aiAccountId = regToken.aiAccountId ?? null;
+          let aiAccountName = regToken.aiAccount?.name ?? null;
 
-      if (aiAccountId) {
-        if (!regToken.aiAccount || regToken.aiAccount.ownerUserId !== regToken.ownerUserId) {
-          throw new RegisterError("Registration token account mismatch", 409);
-        }
-        if (regToken.aiAccount.deletedAt) {
-          throw new RegisterError("AI account was deleted", 410);
-        }
-      } else {
-        const ownedCount = await tx.aiAccount.count({
-          where: { ownerUserId: regToken.ownerUserId, deletedAt: null },
-        });
-        if (ownedCount >= maxAiAccounts) {
-          throw new RegisterError(
-            `AI account limit reached (max ${maxAiAccounts} per user)`,
-            409,
-          );
-        }
+          if (aiAccountId) {
+            if (!regToken.aiAccount || regToken.aiAccount.ownerUserId !== regToken.ownerUserId) {
+              throw new RegisterError("Registration token account mismatch", 409);
+            }
+            if (regToken.aiAccount.deletedAt) {
+              throw new RegisterError("AI account was deleted", 410);
+            }
+          }
 
-        const validName = validateAiAccountName(name);
-        if (!validName.ok) {
-          throw new RegisterError(
-            validName.message === "name is required"
-              ? "name is required for new AI account registration"
-              : validName.message,
-            400,
-          );
-        }
+          const consumed = await tx.aiRegistrationToken.updateMany({
+            where: {
+              id: regToken.id,
+              usedAt: null,
+              expiresAt: { gt: now },
+            },
+            data: { usedAt: now, tokenEnc: null },
+          });
+          if (consumed.count !== 1) {
+            throw new RegisterError("Registration token already used", 403);
+          }
 
-        const account = await tx.aiAccount.create({
-          data: {
-            id: makeAiAccountId(),
-            name: validName.name,
-            ownerUserId: regToken.ownerUserId,
-          },
-          select: {
-            id: true,
-            name: true,
-          },
-        });
-        aiAccountId = account.id;
-        aiAccountName = account.name;
-      }
+          if (!aiAccountId) {
+            const ownedCount = await tx.aiAccount.count({
+              where: { ownerUserId: regToken.ownerUserId, deletedAt: null },
+            });
+            if (ownedCount >= maxAiAccounts) {
+              throw new RegisterError(
+                `AI account limit reached (max ${maxAiAccounts} per user)`,
+                409,
+              );
+            }
 
-      await tx.aiRegistrationToken.update({
-        where: { id: regToken.id },
-        data: { usedAt: now, tokenEnc: null },
-        select: { id: true },
-      });
+            const validName = validateAiAccountName(name);
+            if (!validName.ok) {
+              throw new RegisterError(
+                validName.message === "name is required"
+                  ? "name is required for new AI account registration"
+                  : validName.message,
+                400,
+              );
+            }
 
-      return tx.aiClient.create({
-        data: {
-          name: aiAccountName ?? name,
-          clientId,
-          publicKey,
-          aiAccountId,
-          ownerUserId: regToken.ownerUserId,
-          status: "PENDING",
-          pairCodeHash,
-          pairCodeExpiresAt,
-        },
-        select: {
-          id: true,
-          aiAccountId: true,
-          clientId: true,
-          name: true,
-          status: true,
-          rateLimitWindowSec: true,
-          rateLimitMaxWrites: true,
-          createdAt: true,
-          ownerUserId: true,
-          pairCodeExpiresAt: true,
-          aiAccount: {
+            const account = await tx.aiAccount.create({
+              data: {
+                id: makeAiAccountId(),
+                name: validName.name,
+                ownerUserId: regToken.ownerUserId,
+              },
+              select: {
+                id: true,
+                name: true,
+              },
+            });
+            aiAccountId = account.id;
+            aiAccountName = account.name;
+          }
+
+          return tx.aiClient.create({
+            data: {
+              name: aiAccountName ?? name,
+              clientId,
+              publicKey,
+              aiAccountId,
+              ownerUserId: regToken.ownerUserId,
+              status: "PENDING",
+              pairCodeHash,
+              pairCodeExpiresAt,
+            },
             select: {
               id: true,
+              aiAccountId: true,
+              clientId: true,
               name: true,
+              status: true,
+              rateLimitWindowSec: true,
+              rateLimitMaxWrites: true,
+              createdAt: true,
+              ownerUserId: true,
+              pairCodeExpiresAt: true,
+              aiAccount: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
-          },
+          });
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        },
+      );
+
+      return Response.json({
+        ok: true,
+        aiAccountId: row.aiAccountId,
+        aiAccountName: row.aiAccount?.name ?? row.name,
+        clientId: row.clientId,
+        ownerUserId: row.ownerUserId,
+        status: row.status,
+        pairCode: formatPairCode(pairCodeRaw),
+        pairCodeExpiresAt: row.pairCodeExpiresAt?.toISOString(),
+        rateLimit: {
+          windowSec: row.rateLimitWindowSec,
+          maxWrites: row.rateLimitMaxWrites,
         },
       });
-    });
+    } catch (e) {
+      if (e instanceof RegisterError) {
+        return Response.json({ error: e.message }, { status: e.status });
+      }
 
-    return Response.json({
-      ok: true,
-      aiAccountId: row.aiAccountId,
-      aiAccountName: row.aiAccount?.name ?? row.name,
-      clientId: row.clientId,
-      ownerUserId: row.ownerUserId,
-      status: row.status,
-      pairCode: formatPairCode(pairCodeRaw),
-      pairCodeExpiresAt: row.pairCodeExpiresAt?.toISOString(),
-      rateLimit: {
-        windowSec: row.rateLimitWindowSec,
-        maxWrites: row.rateLimitMaxWrites,
-      },
-    });
-  } catch (e) {
-    if (e instanceof RegisterError) {
-      return Response.json({ error: e.message }, { status: e.status });
+      if (attempt < 1 && isSerializableConflict(e)) {
+        continue;
+      }
+
+      const code = (e as { code?: string } | null)?.code;
+      if (code === "P2002") {
+        return Response.json({ error: "publicKey already registered" }, { status: 409 });
+      }
+
+      throw e;
     }
-
-    const code = (e as { code?: string } | null)?.code;
-    if (code === "P2002") {
-      return Response.json({ error: "publicKey already registered" }, { status: 409 });
-    }
-
-    throw e;
   }
+
+  return Response.json({ error: "Registration failed" }, { status: 500 });
 }
