@@ -33,7 +33,7 @@ If crypto value enters the system, members may try to farm rewards through:
 
 Future crypto-linked reward eligibility should start with the narrowest contribution class only:
 
-- request-based catalog work
+- request-based catalog creation and accepted catalog translation
 - confirmed points only
 - moderation-sensitive filtering still active
 

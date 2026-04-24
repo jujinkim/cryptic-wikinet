@@ -12,6 +12,7 @@ import {
   publicArticleWhere,
   readableArticleWhereForUser,
 } from "@/lib/articleAccess";
+import { pickBestArticleTranslation } from "@/lib/articleTranslation";
 import { getArticleMainLanguageLabel } from "@/lib/articleLanguage";
 import { getArticleFeedbackPage, getArticleRatingState } from "@/lib/articleFeedback";
 import { buildRenderedCatalogBody } from "@/lib/catalogBody";
@@ -79,6 +80,15 @@ async function getArticle(
               ownerUser: { select: { id: true, name: true } },
             },
           },
+          translations: {
+            orderBy: { targetLanguage: "asc" },
+            select: {
+              targetLanguage: true,
+              title: true,
+              contentMd: true,
+              summary: true,
+            },
+          },
         },
       },
     },
@@ -114,6 +124,12 @@ async function getArticle(
       createdByAiClient: {
         ownerUser: { id: string; name: string | null } | null;
       } | null;
+      translations: Array<{
+        targetLanguage: string;
+        title: string;
+        contentMd: string;
+        summary: string | null;
+      }>;
     } | null;
   } | null>;
 }
@@ -163,7 +179,12 @@ export async function generateMetadata({
   const article = await getPublicWikiSeoRecord(slug);
   if (!article) return buildWikiArticleNotFoundMetadata("en", slug);
 
-  const raw = article.currentRevision?.contentMd ?? "";
+  const selectedTranslation = pickBestArticleTranslation(
+    article.currentRevision?.translations ?? [],
+    "en",
+    article.mainLanguage ?? article.currentRevision?.mainLanguage ?? null,
+  );
+  const raw = selectedTranslation?.contentMd ?? article.currentRevision?.contentMd ?? "";
   const meta = extractCatalogMeta(raw);
   const bodyMd = buildRenderedCatalogBody(raw, meta.discovery);
   const renderedMd = renderWikiLinksToMarkdown(bodyMd);
@@ -171,7 +192,7 @@ export async function generateMetadata({
   return buildWikiArticlePageMetadata({
     locale: "en",
     slug,
-    title: article.title,
+    title: selectedTranslation?.title ?? article.title,
     contentMd: renderedMd,
     coverImageUrl: article.coverImageUrl,
   });
@@ -179,11 +200,15 @@ export async function generateMetadata({
 
 export default async function WikiArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const locale = await getRequestSiteLocale();
   const { slug } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const showOriginal = sp.original === "1";
   const viewerPromise = getSessionViewer();
 
   let article = await getArticle(slug, publicArticleWhere());
@@ -227,11 +252,19 @@ export default async function WikiArticlePage({
     );
   }
 
-  const raw = article.currentRevision?.contentMd ?? "";
-  const meta = extractCatalogMeta(raw);
   const isOwnerOnlyArchive = isOwnerOnlyArchivedLifecycle(article.lifecycle);
   const mainLanguageCode = article.mainLanguage ?? article.currentRevision?.mainLanguage ?? null;
   const mainLanguageLabel = getArticleMainLanguageLabel(mainLanguageCode);
+  const selectedTranslation = showOriginal
+    ? null
+    : pickBestArticleTranslation(
+        article.currentRevision?.translations ?? [],
+        locale,
+        mainLanguageCode,
+      );
+  const displayTitle = selectedTranslation?.title ?? article.title;
+  const raw = selectedTranslation?.contentMd ?? article.currentRevision?.contentMd ?? "";
+  const meta = extractCatalogMeta(raw);
   const revisionAccount = article.currentRevision?.createdByAiAccount ?? article.createdByAiAccount ?? null;
   const ownerUser =
     revisionAccount?.ownerUser ??
@@ -335,7 +368,7 @@ export default async function WikiArticlePage({
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-8">
-        <h1 className="text-4xl font-semibold tracking-tight">{article.title}</h1>
+        <h1 className="text-4xl font-semibold tracking-tight">{displayTitle}</h1>
 
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
           <div>
@@ -350,6 +383,27 @@ export default async function WikiArticlePage({
         {isOwnerOnlyArchive ? (
           <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
             Owner-only archive. This entry is hidden from public search and tag navigation.
+          </div>
+        ) : null}
+
+        {selectedTranslation ? (
+          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
+            Translated to {selectedTranslation.targetLanguage}.{" "}
+            <Link
+              className="underline"
+              href={`${withSiteLocale(`/wiki/${article.slug}`, locale)}?original=1`}
+            >
+              View original
+            </Link>
+            .
+          </div>
+        ) : showOriginal ? (
+          <div className="mt-3 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs text-zinc-600 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300">
+            Showing original catalog text.{" "}
+            <Link className="underline" href={withSiteLocale(`/wiki/${article.slug}`, locale)}>
+              View translated version if available
+            </Link>
+            .
           </div>
         ) : null}
 
@@ -382,7 +436,7 @@ export default async function WikiArticlePage({
         <div className="mb-8 overflow-hidden rounded-3xl border border-black/10 bg-zinc-100 dark:border-white/15 dark:bg-zinc-900">
           <Image
             src={article.coverImageUrl}
-            alt={`Representative image for ${article.title}`}
+            alt={`Representative image for ${displayTitle}`}
             width={article.coverImageWidth ?? 1200}
             height={article.coverImageHeight ?? 675}
             unoptimized

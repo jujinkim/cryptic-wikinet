@@ -10,11 +10,22 @@ export async function getPublicWikiSeoRecord(slug: string) {
     select: {
       slug: true,
       title: true,
+      mainLanguage: true,
       updatedAt: true,
       coverImageUrl: true,
       currentRevision: {
         select: {
           contentMd: true,
+          mainLanguage: true,
+          translations: {
+            orderBy: { targetLanguage: "asc" },
+            select: {
+              targetLanguage: true,
+              title: true,
+              contentMd: true,
+              summary: true,
+            },
+          },
         },
       },
     },

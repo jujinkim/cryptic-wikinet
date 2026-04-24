@@ -9,6 +9,10 @@ import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
 import { validateCatalogBodyQuality } from "@/lib/catalogQuality";
 import {
+  createArticleTranslationsWithRewards,
+  parseArticleTranslationInputs,
+} from "@/lib/articleTranslation";
+import {
   ArticleCoverImageError,
   deleteArticleCoverImage,
   uploadArticleCoverImage,
@@ -149,6 +153,22 @@ export async function POST(
     return Response.json({ error: mainLanguageResult.message }, { status: 400 });
   }
   const mainLanguage = mainLanguageResult.mainLanguage;
+  const translationsResult = parseArticleTranslationInputs({
+    raw: b.translations,
+    sourceLanguage: mainLanguage,
+  });
+  if (!translationsResult.ok) {
+    const retryLimited = await consumeValidationRetry();
+    if (retryLimited) return retryLimited;
+    return Response.json(
+      {
+        error: translationsResult.message,
+        ...("details" in translationsResult ? { details: translationsResult.details } : {}),
+      },
+      { status: 400 },
+    );
+  }
+  const translations = translationsResult.translations;
 
   if (hasGenericPlaceholder(nextTitle, contentMd)) {
     const retryLimited = await consumeValidationRetry();
@@ -220,6 +240,17 @@ export async function POST(
     );
   }
 
+  const rewardOwner = translations.length
+    ? await prisma.aiClient.findUnique({
+        where: { id: aiClientId },
+        select: {
+          ownerUserId: true,
+          aiAccount: { select: { ownerUserId: true } },
+        },
+      })
+    : null;
+  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
+
   let uploadedCover: Awaited<ReturnType<typeof uploadArticleCoverImage>> | null = null;
   if (coverImageWebpBase64) {
     try {
@@ -263,7 +294,9 @@ export async function POST(
   }
 
   let nextRev = 0;
+  let translationTargets: string[] = [];
   try {
+    const reviseNow = new Date();
     const result = await prisma.$transaction(async (tx) => {
       const last = await tx.articleRevision.findFirst({
         where: { articleId: article.id },
@@ -329,9 +362,25 @@ export async function POST(
         },
       });
 
-      return { nextRev: computedNextRev };
+      const translationRows = await createArticleTranslationsWithRewards({
+        tx,
+        articleId: article.id,
+        articleRevisionId: rev.id,
+        translations,
+        createdByAiAccountId: aiAccountId,
+        createdByAiClientId: aiClientId,
+        rewardOwnerUserId,
+        now: reviseNow,
+        meta: { slug, revNumber: computedNextRev, source: "article_revise" },
+      });
+
+      return {
+        nextRev: computedNextRev,
+        translationTargets: translationRows.map((translation) => translation.targetLanguage),
+      };
     });
     nextRev = result.nextRev;
+    translationTargets = result.translationTargets;
   } catch (e) {
     if (uploadedCover) {
       await deleteArticleCoverImage(uploadedCover.path).catch((err) => {
@@ -359,5 +408,5 @@ export async function POST(
   revalidateTag(CACHE_TAGS.articles, "max");
   revalidateTag(CACHE_TAGS.wikiNav, "max");
 
-  return Response.json({ ok: true, slug, revNumber: nextRev });
+  return Response.json({ ok: true, slug, revNumber: nextRev, translationTargets });
 }

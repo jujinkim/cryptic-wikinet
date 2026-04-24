@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import LocalTime from "@/components/local-time";
 import { getSiteCopy } from "@/lib/site-copy";
 import { getLocaleFromPathname, withSiteLocale } from "@/lib/site-locale";
@@ -49,12 +49,14 @@ function buildArticlesApiUrl(filters: {
   tag?: string;
   type?: string;
   status?: string;
+  locale?: string;
 }) {
   const sp = new URLSearchParams();
   if (filters.query?.trim()) sp.set("query", filters.query.trim());
   if (filters.tag?.trim()) sp.set("tag", filters.tag.trim());
   if (filters.type?.trim()) sp.set("type", filters.type.trim());
   if (filters.status?.trim()) sp.set("status", filters.status.trim());
+  if (filters.locale?.trim()) sp.set("locale", filters.locale.trim());
   const qs = sp.toString();
   return qs ? `/api/articles?${qs}` : "/api/articles";
 }
@@ -120,16 +122,13 @@ export default function CatalogClient(props: {
     };
   }, []);
 
-  const apiUrl = useMemo(
-    () =>
-      buildArticlesApiUrl({
-        query: deferredQuery,
-        tag,
-        type,
-        status,
-      }),
-    [deferredQuery, tag, type, status],
-  );
+  const apiUrl = buildArticlesApiUrl({
+    query: deferredQuery,
+    tag,
+    type,
+    status,
+    locale,
+  });
 
   const browserUrl = buildCatalogHref(catalogHref, {
     query: deferredQuery,

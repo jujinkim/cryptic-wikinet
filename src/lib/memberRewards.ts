@@ -14,6 +14,10 @@ export function memberRewardRequestArticlePoints() {
   return Math.max(1, envInt("MEMBER_REWARD_REQUEST_ARTICLE_POINTS", 10));
 }
 
+export function memberRewardArticleTranslationPoints() {
+  return Math.max(1, envInt("MEMBER_REWARD_ARTICLE_TRANSLATION_POINTS", 3));
+}
+
 export function memberRewardConfirmDelayHours() {
   return Math.max(1, envInt("MEMBER_REWARD_CONFIRM_DELAY_HOURS", 72));
 }
@@ -58,7 +62,9 @@ export async function runMemberRewardSweep(args?: { now?: Date; limit?: number }
     take: limit,
     select: {
       id: true,
+      kind: true,
       articleId: true,
+      articleTranslationId: true,
     },
   });
 
@@ -69,24 +75,62 @@ export async function runMemberRewardSweep(args?: { now?: Date; limit?: number }
   const articleIds = pending
     .map((event) => event.articleId)
     .filter((articleId): articleId is string => !!articleId);
+  const articleTranslationIds = pending
+    .map((event) => event.articleTranslationId)
+    .filter((articleTranslationId): articleTranslationId is string => !!articleTranslationId);
 
   const articles = articleIds.length
     ? await prisma.article.findMany({
         where: { id: { in: articleIds } },
-        select: { id: true, isPublic: true, lifecycle: true },
+        select: { id: true, isPublic: true, lifecycle: true, currentRevisionId: true },
       })
     : [];
-  const activeArticleIds = new Set(
+  const activeArticleById = new Map(
     articles
       .filter((article) => article.isPublic && article.lifecycle === "PUBLIC_ACTIVE")
-      .map((article) => article.id),
+      .map((article) => [article.id, article] as const),
   );
+
+  const translations = articleTranslationIds.length
+    ? await prisma.articleTranslation.findMany({
+        where: { id: { in: articleTranslationIds } },
+        select: {
+          id: true,
+          articleId: true,
+          articleRevisionId: true,
+          article: {
+            select: {
+              isPublic: true,
+              lifecycle: true,
+              currentRevisionId: true,
+            },
+          },
+        },
+      })
+    : [];
+  const currentTranslationIds = new Set(
+    translations
+      .filter(
+        (translation) =>
+          translation.article.isPublic &&
+          translation.article.lifecycle === "PUBLIC_ACTIVE" &&
+          translation.article.currentRevisionId === translation.articleRevisionId,
+      )
+      .map((translation) => translation.id),
+  );
+
+  function shouldConfirmEvent(event: (typeof pending)[number]) {
+    if (event.kind === "ARTICLE_TRANSLATION_CREATE") {
+      return !!event.articleTranslationId && currentTranslationIds.has(event.articleTranslationId);
+    }
+    return !!event.articleId && activeArticleById.has(event.articleId);
+  }
 
   let confirmed = 0;
   let canceled = 0;
   const results = await prisma.$transaction(
     pending.map((event) => {
-      const shouldConfirm = !!event.articleId && activeArticleIds.has(event.articleId);
+      const shouldConfirm = shouldConfirmEvent(event);
       return prisma.memberRewardEvent.updateMany({
         where: { id: event.id, status: "PENDING" },
         data: shouldConfirm
@@ -99,7 +143,7 @@ export async function runMemberRewardSweep(args?: { now?: Date; limit?: number }
   results.forEach((result, index) => {
     if (result.count === 0) return;
     const event = pending[index];
-    if (event?.articleId && activeArticleIds.has(event.articleId)) {
+    if (event && shouldConfirmEvent(event)) {
       confirmed += 1;
     } else {
       canceled += 1;

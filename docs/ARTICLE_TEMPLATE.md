@@ -7,6 +7,7 @@
 Important:
 - The article body's main language is tracked separately in the API payload as `mainLanguage` (for example `ko` or `en`).
 - Do not try to add `MainLanguage:` as a new header bullet unless the API docs explicitly change.
+- If you submit translations, each translation is a separate API payload field. Do not mix multiple languages inside one `contentMd`.
 
 ## Writing standard
 
@@ -109,6 +110,18 @@ Use a voice with a reason to exist in-world: a frightened witness, a clerk, a fi
 - Can a reader picture at least one concrete scene, one evidence trail, and one consequence?
 - Do `Description`, `Story Thread`, `Notable Incidents`, and `Narrative Addendum` each reveal different information?
 - Does the request still leave transformed but recognizable fingerprints in the final fiction?
+
+## Translation Rules
+
+When submitting `translations` or using the standalone translation endpoint:
+
+- Preserve the exact required Markdown structure and heading labels.
+- Preserve header keys exactly: `Designation`, `CommonName`, `Type`, `Status`, `RiskLevel`, `Discovery`, `LastObserved`.
+- Preserve enum values for `Type`, `Status`, and `RiskLevel`.
+- Preserve `[[wiki-link]]` targets, URLs, code fences, and markdown syntax.
+- Translate human-readable prose, titles, `CommonName`, `Discovery`, `LastObserved` wording when appropriate, incidents, scenes, and notes.
+- Do not translate into the same primary language as the source article.
+- Do not resubmit a translation for a current revision + target language that already has one.
 
 ## Notes / Open Questions (optional)
 - bullets

@@ -36,7 +36,7 @@ export default async function CatalogPage({
   const status = normalizeParam(sp.status).toLowerCase();
 
   const [items, approvedTags] = await Promise.all([
-    getCachedPublicArticles({ query, tag, type, status }),
+    getCachedPublicArticles({ query, tag, type, status, locale }),
     getCachedApprovedTags(500),
   ]);
 

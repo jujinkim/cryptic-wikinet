@@ -1,8 +1,10 @@
 import { unstable_cache } from "next/cache";
 
 import { publicArticleWhere } from "@/lib/articleAccess";
+import { pickBestArticleTranslation } from "@/lib/articleTranslation";
 import { CACHE_TAGS } from "@/lib/cacheTags";
 import { prisma } from "@/lib/prisma";
+import { resolveSiteLocale } from "@/lib/site-locale";
 
 export type PublicArticlesQuery = {
   query?: string;
@@ -10,6 +12,7 @@ export type PublicArticlesQuery = {
   tags?: string[];
   type?: string;
   status?: string;
+  locale?: string;
 };
 
 function normalizePublicArticlesQuery(args: PublicArticlesQuery) {
@@ -23,17 +26,20 @@ function normalizePublicArticlesQuery(args: PublicArticlesQuery) {
       .sort(),
     type: String(args.type ?? "").trim().toLowerCase(),
     status: String(args.status ?? "").trim().toLowerCase(),
+    locale: resolveSiteLocale(String(args.locale ?? "")),
   };
 }
 
 async function loadPublicArticles(args: PublicArticlesQuery) {
-  const { query, tag, tags, type, status } = normalizePublicArticlesQuery(args);
+  const { query, tag, tags, type, status, locale } = normalizePublicArticlesQuery(args);
+  const localePrimary = locale.split("-")[0] ?? locale;
 
   const where = query
     ? {
         OR: [
           { slug: { contains: query, mode: "insensitive" as const } },
           { title: { contains: query, mode: "insensitive" as const } },
+          { translations: { some: { title: { contains: query, mode: "insensitive" as const } } } },
         ],
       }
     : {};
@@ -41,9 +47,18 @@ async function loadPublicArticles(args: PublicArticlesQuery) {
   const rows: Array<{
     slug: string;
     title: string;
+    mainLanguage: string | null;
+    currentRevisionId: string | null;
     updatedAt: Date;
     tags: string[];
     currentRevision: { contentMd: string } | null;
+    translations: Array<{
+      articleRevisionId: string;
+      targetLanguage: string;
+      title: string;
+      contentMd: string;
+      summary: string | null;
+    }>;
   }> = await prisma.article.findMany({
     where: {
       ...publicArticleWhere(),
@@ -55,9 +70,27 @@ async function loadPublicArticles(args: PublicArticlesQuery) {
     select: {
       slug: true,
       title: true,
+      mainLanguage: true,
+      currentRevisionId: true,
       updatedAt: true,
       tags: true,
       currentRevision: { select: { contentMd: true } },
+      translations: {
+        where: {
+          OR: [
+            { targetLanguage: locale },
+            { targetLanguage: { startsWith: `${localePrimary}-`, mode: "insensitive" } },
+          ],
+        },
+        orderBy: { targetLanguage: "asc" },
+        select: {
+          articleRevisionId: true,
+          targetLanguage: true,
+          title: true,
+          contentMd: true,
+          summary: true,
+        },
+      },
     },
   });
 
@@ -68,10 +101,18 @@ async function loadPublicArticles(args: PublicArticlesQuery) {
       const meta = row.currentRevision?.contentMd
         ? getTypeStatus(row.currentRevision.contentMd)
         : { type: null, status: null };
+      const currentTranslations = row.translations.filter(
+        (translation) => translation.articleRevisionId === row.currentRevisionId,
+      );
+      const translation = pickBestArticleTranslation(
+        currentTranslations,
+        locale,
+        row.mainLanguage,
+      );
 
       return {
         slug: row.slug,
-        title: row.title,
+        title: translation?.title ?? row.title,
         updatedAt: row.updatedAt,
         tags: row.tags,
         type: meta.type,

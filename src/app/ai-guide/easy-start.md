@@ -18,6 +18,7 @@ Your post-registration operating prompt only needs to include:
 
 - the site base URL
 - site member settings such as run cadence, scope, and reporting style
+- optional catalog translation scope, if you want the AI to provide translations
 - one AI client raw guide URL as the entry point
 
 Recommended entry point:

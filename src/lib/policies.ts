@@ -9,6 +9,8 @@ export function powDifficulty(action: string) {
       return envInt("POW_DIFFICULTY_ACCOUNT_PATCH", 19);
     case "catalog_write":
       return envInt("POW_DIFFICULTY_CATALOG_WRITE", 20);
+    case "catalog_translation":
+      return envInt("POW_DIFFICULTY_CATALOG_TRANSLATION", 19);
     case "forum_post":
       return envInt("POW_DIFFICULTY_FORUM_POST", 19);
     case "forum_patch":
@@ -37,6 +39,14 @@ export function rlCatalogReviseWindowSec() {
 }
 export function rlCatalogReviseMax() {
   return envInt("RL_CATALOG_REVISE_MAX", 3);
+}
+
+export function rlCatalogTranslateWindowSec() {
+  return envInt("RL_CATALOG_TRANSLATE_WINDOW_SEC", 3600);
+}
+
+export function rlCatalogTranslateMax() {
+  return envInt("RL_CATALOG_TRANSLATE_MAX", 3);
 }
 
 export function rlCatalogValidationRetryWindowSec() {

@@ -34,6 +34,7 @@ enum RequestStatus {
 enum AiAction {
   CREATE
   UPDATE
+  TRANSLATE
 }
 
 enum AiActionStatus {
@@ -45,6 +46,7 @@ enum AiActionStatus {
 
 enum MemberRewardEventKind {
   REQUEST_ARTICLE_CREATE
+  ARTICLE_TRANSLATION_CREATE
 }
 
 enum MemberRewardEventStatus {
@@ -172,6 +174,7 @@ model AiAccount {
   registrationTokens AiRegistrationToken[]
   articles           Article[]
   revisions          ArticleRevision[]
+  translations       ArticleTranslation[]
   actions            AiActionLog[]
   forumPosts         ForumPost[]
   forumComments      ForumComment[]
@@ -217,6 +220,7 @@ model AiClient {
 
   articles  Article[]
   revisions ArticleRevision[]
+  translations ArticleTranslation[]
   actions   AiActionLog[]
 
   forumPosts    ForumPost[]
@@ -276,9 +280,10 @@ model Article {
   createdByAiClient  AiClient?          @relation(fields: [createdByAiClientId], references: [id])
   currentRevision    ArticleRevision?   @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   revisions          ArticleRevision[]
+  translations       ArticleTranslation[]
   ratings            Rating[]
   feedbackEntries    ArticleFeedback[]
-  rewardEvent        MemberRewardEvent?
+  rewardEvents       MemberRewardEvent[]
 
   @@index([lifecycle, updatedAt])
   @@index([lifecycle, retentionEvaluatedAt, createdAt])
@@ -301,9 +306,35 @@ model ArticleRevision {
   createdByAiAccount AiAccount? @relation(fields: [createdByAiAccountId], references: [id])
   createdByAiClient  AiClient?  @relation(fields: [createdByAiClientId], references: [id])
   currentForArticle  Article?   @relation("CurrentRevision")
+  translations       ArticleTranslation[]
 
   @@unique([articleId, revNumber])
   @@index([createdByAiAccountId, createdAt])
+}
+
+model ArticleTranslation {
+  id                   String   @id @default(uuid())
+  articleId            String
+  articleRevisionId    String
+  targetLanguage       String
+  title                String
+  contentMd            String
+  summary              String?
+  createdByAiAccountId String?
+  createdByAiClientId  String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  article            Article         @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleRevision    ArticleRevision @relation(fields: [articleRevisionId], references: [id], onDelete: Cascade)
+  createdByAiAccount AiAccount?      @relation(fields: [createdByAiAccountId], references: [id])
+  createdByAiClient  AiClient        @relation(fields: [createdByAiClientId], references: [id])
+  rewardEvent        MemberRewardEvent?
+
+  @@unique([articleRevisionId, targetLanguage])
+  @@index([articleId, targetLanguage])
+  @@index([createdByAiAccountId, createdAt])
+  @@index([createdByAiClientId, createdAt])
 }
 
 model CreationRequest {
@@ -328,8 +359,9 @@ model MemberRewardEvent {
   id          String                  @id @default(uuid())
   ownerUserId String
   aiAccountId String?
-  articleId   String?                 @unique
-  requestId   String?                 @unique
+  articleId             String?
+  requestId             String?                 @unique
+  articleTranslationId  String?                 @unique
   kind        MemberRewardEventKind
   status      MemberRewardEventStatus @default(PENDING)
   points      Int
@@ -340,15 +372,17 @@ model MemberRewardEvent {
   updatedAt   DateTime                @updatedAt
   meta        Json?
 
-  ownerUser User             @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
-  aiAccount AiAccount?       @relation(fields: [aiAccountId], references: [id], onDelete: SetNull)
-  article   Article?         @relation(fields: [articleId], references: [id], onDelete: SetNull)
-  request   CreationRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  ownerUser          User                @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  aiAccount          AiAccount?          @relation(fields: [aiAccountId], references: [id], onDelete: SetNull)
+  article            Article?            @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  request            CreationRequest?    @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  articleTranslation ArticleTranslation? @relation(fields: [articleTranslationId], references: [id], onDelete: SetNull)
 
   @@index([status, eligibleAt])
   @@index([ownerUserId, status, eligibleAt])
   @@index([aiAccountId, status, eligibleAt])
   @@index([ownerUserId, createdAt])
+  @@index([articleId])
 }
 
 model Rating {

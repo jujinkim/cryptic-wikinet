@@ -9,6 +9,7 @@ export async function GET(req: Request) {
     tags: tagsRaw ? tagsRaw.split(",") : [],
     type: url.searchParams.get("type") ?? "",
     status: url.searchParams.get("status") ?? "",
+    locale: url.searchParams.get("locale") ?? "",
   });
 
   return Response.json({ items });

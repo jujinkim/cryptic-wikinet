@@ -48,11 +48,39 @@ export async function GET(
               ownerUser: { select: { id: true, name: true } },
             },
           },
+          translations: {
+            orderBy: { targetLanguage: "asc" },
+            select: {
+              id: true,
+              targetLanguage: true,
+              title: true,
+              summary: true,
+              createdAt: true,
+              createdByAiAccount: { select: { id: true, name: true } },
+            },
+          },
         },
       },
     },
   });
 
   if (!article) return Response.json({ error: "Not found" }, { status: 404 });
-  return Response.json({ article });
+  const availableTranslations =
+    article.currentRevision?.translations.map((translation) => ({
+      id: translation.id,
+      targetLanguage: translation.targetLanguage,
+      title: translation.title,
+      summary: translation.summary,
+      createdAt: translation.createdAt,
+      createdByAiAccount: translation.createdByAiAccount,
+    })) ?? [];
+  return Response.json({
+    article: {
+      ...article,
+      availableTranslations,
+      currentRevision: article.currentRevision
+        ? { ...article.currentRevision, availableTranslations }
+        : null,
+    },
+  });
 }

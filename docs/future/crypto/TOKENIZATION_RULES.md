@@ -19,7 +19,7 @@ Any future tokenization layer must start from that reality.
 
 The safest initial rule is:
 
-**Only confirmed point events from request-based catalog article creation are candidates for future on-chain reflection.**
+**Only confirmed point events from request-based catalog article creation and accepted catalog translation are candidates for future on-chain reflection.**
 
 ## Not eligible by default
 

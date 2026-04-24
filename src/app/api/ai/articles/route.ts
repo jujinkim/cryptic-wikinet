@@ -16,6 +16,12 @@ import {
   aiRequireRequestSourceForCreate,
 } from "@/lib/policies";
 import { publicArticleWhere } from "@/lib/articleAccess";
+import {
+  createArticleTranslationsWithRewards,
+  normalizeContentLanguage,
+  normalizeTranslationTargetLanguage,
+  parseArticleTranslationInputs,
+} from "@/lib/articleTranslation";
 import { validateArticleMainLanguage } from "@/lib/articleLanguage";
 import {
   ArticleCoverImageError,
@@ -147,6 +153,17 @@ export async function POST(req: Request) {
     return validationError({ error: mainLanguageResult.message });
   }
   const mainLanguage = mainLanguageResult.mainLanguage;
+  const translationsResult = parseArticleTranslationInputs({
+    raw: b.translations,
+    sourceLanguage: mainLanguage,
+  });
+  if (!translationsResult.ok) {
+    return validationError({
+      error: translationsResult.message,
+      ...("details" in translationsResult ? { details: translationsResult.details } : {}),
+    });
+  }
+  const translations = translationsResult.translations;
 
   if (aiRequestRejectGenericTitle() && hasGenericPlaceholder(title, contentMd)) {
     return validationError({
@@ -237,7 +254,7 @@ export async function POST(req: Request) {
   }
 
   const rewardOwner =
-    source === "AI_REQUEST"
+    source === "AI_REQUEST" || translations.length
       ? await prisma.aiClient.findUnique({
           where: { id: aiClientId },
           select: {
@@ -323,7 +340,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let created: { id: string };
+  let created: { id: string; translationTargets: string[] };
   try {
     const createNow = new Date();
     created = await prisma.$transaction(async (tx) => {
@@ -384,6 +401,18 @@ export async function POST(req: Request) {
         data: { currentRevisionId },
       });
 
+      const translationRows = await createArticleTranslationsWithRewards({
+        tx,
+        articleId: article.id,
+        articleRevisionId: currentRevisionId,
+        translations,
+        createdByAiAccountId: aiAccountId,
+        createdByAiClientId: aiClientId,
+        rewardOwnerUserId,
+        now: createNow,
+        meta: { slug, revNumber: 1, source: "article_create" },
+      });
+
       if (source === "AI_REQUEST" && requestId && rewardOwnerUserId) {
         await tx.memberRewardEvent.create({
           data: {
@@ -399,7 +428,10 @@ export async function POST(req: Request) {
         });
       }
 
-      return { id: article.id };
+      return {
+        id: article.id,
+        translationTargets: translationRows.map((translation) => translation.targetLanguage),
+      };
     });
   } catch (e) {
     if (uploadedCover) {
@@ -425,7 +457,7 @@ export async function POST(req: Request) {
       articleId: created.id,
       requestId: requestId ?? undefined,
       status: "OK",
-      meta: { slug, hasCoverImage: !!uploadedCover },
+      meta: { slug, hasCoverImage: !!uploadedCover, translationTargets: created.translationTargets },
     },
   });
 
@@ -433,7 +465,12 @@ export async function POST(req: Request) {
   revalidateTag(CACHE_TAGS.articles, "max");
   revalidateTag(CACHE_TAGS.wikiNav, "max");
 
-  return Response.json({ ok: true, slug, articleId: created.id });
+  return Response.json({
+    ok: true,
+    slug,
+    articleId: created.id,
+    translationTargets: created.translationTargets,
+  });
 }
 
 export async function GET(req: Request) {
@@ -460,6 +497,16 @@ export async function GET(req: Request) {
         .slice(0, 50)
     : [];
   const limit = Math.min(Number(url.searchParams.get("limit") ?? "50"), 200);
+  const needsTranslationRaw = (url.searchParams.get("needsTranslation") ?? "").trim();
+  const needsTranslationResult = needsTranslationRaw
+    ? normalizeTranslationTargetLanguage(needsTranslationRaw)
+    : null;
+  if (needsTranslationResult && !needsTranslationResult.ok) {
+    return Response.json({ error: needsTranslationResult.message }, { status: 400 });
+  }
+  const needsTranslation = needsTranslationResult?.ok
+    ? needsTranslationResult.targetLanguage
+    : null;
 
   const where = q
     ? {
@@ -480,7 +527,10 @@ export async function GET(req: Request) {
     title: string;
     updatedAt: Date;
     tags: string[];
-    currentRevision: { contentMd: string } | null;
+    currentRevision: { contentMd: string; mainLanguage: string | null } | null;
+    currentRevisionId: string | null;
+    mainLanguage: string | null;
+    translations: Array<{ articleRevisionId: string; targetLanguage: string }>;
   }> = await prisma.article.findMany({
     where: where2,
     orderBy: { updatedAt: "desc" },
@@ -488,13 +538,36 @@ export async function GET(req: Request) {
     select: {
       slug: true,
       title: true,
+      mainLanguage: true,
+      currentRevisionId: true,
       updatedAt: true,
       tags: true,
-      currentRevision: { select: { contentMd: true } },
+      currentRevision: { select: { contentMd: true, mainLanguage: true } },
+      translations: {
+        where: needsTranslation ? { targetLanguage: needsTranslation } : { id: "__none__" },
+        select: { articleRevisionId: true, targetLanguage: true },
+      },
     },
   });
 
   const items = rows
+    .filter((r) => {
+      if (!needsTranslation) return true;
+      if (!r.currentRevisionId) return false;
+      const sourceLanguage = r.mainLanguage ?? r.currentRevision?.mainLanguage ?? null;
+      const normalizedSource = sourceLanguage ? normalizeContentLanguage(sourceLanguage) : null;
+      if (
+        normalizedSource?.ok &&
+        normalizedSource.mainLanguage.split("-")[0] === needsTranslation.split("-")[0]
+      ) {
+        return false;
+      }
+      return !r.translations.some(
+        (translation) =>
+          translation.articleRevisionId === r.currentRevisionId &&
+          translation.targetLanguage === needsTranslation,
+      );
+    })
     .map((r) => {
       const meta = r.currentRevision?.contentMd
         ? getTypeStatus(r.currentRevision.contentMd)

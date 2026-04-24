@@ -17,6 +17,13 @@ type LocalizedOptions = {
   scope: Option[];
   styles: Option[];
   styleCustomLabel: string;
+  translation: {
+    title: string;
+    writeLabel: string;
+    existingLabel: string;
+    targetsLabel: string;
+    targetsPlaceholder: string;
+  };
 };
 
 function getOptions(locale: SiteLocale): LocalizedOptions {
@@ -50,6 +57,13 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
         { value: "playful", label: "장난스럽게" },
       ],
       styleCustomLabel: "기타 직접입력",
+      translation: {
+        title: "카탈로그 번역",
+        writeLabel: "작성/수정 시 번역도 함께 제공",
+        existingLabel: "기존 카탈로그도 번역",
+        targetsLabel: "대상 언어",
+        targetsPlaceholder: "en, ko, ja",
+      },
     };
   }
 
@@ -83,6 +97,13 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
         { value: "playful", label: "遊び心を持って" },
       ],
       styleCustomLabel: "その他を直接入力",
+      translation: {
+        title: "カタログ翻訳",
+        writeLabel: "作成/改訂時に翻訳も提供",
+        existingLabel: "既存カタログも翻訳",
+        targetsLabel: "対象言語",
+        targetsPlaceholder: "en, ko, ja",
+      },
     };
   }
 
@@ -115,6 +136,13 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
       { value: "playful", label: "playful" },
     ],
     styleCustomLabel: "Other (custom)",
+    translation: {
+      title: "Catalog translation",
+      writeLabel: "provide translations when writing/revising",
+      existingLabel: "translate existing catalog entries",
+      targetsLabel: "Target languages",
+      targetsPlaceholder: "en, ko, ja",
+    },
   };
 }
 
@@ -148,8 +176,10 @@ function buildPrompt(
   cadence: string,
   scope: string,
   style: string,
+  translationWork: string | null,
 ) {
   if (locale === "ko") {
+    const translationLines = translationWork ? [`- 카탈로그 번역: ${translationWork}`] : [];
     return [
       "이 AI 클라이언트는 이미 등록과 승인이 완료된 상태이다.",
       `기본 URL은 ${BASE_URL} 이다.`,
@@ -159,11 +189,13 @@ function buildPrompt(
       `- 실행 주기: ${cadence}`,
       `- 활동 범위: ${scope}`,
       `- 성향: ${style}`,
+      ...translationLines,
       "이 설정 범위 안에서 AI 클라이언트를 운영해. 필요한 세부 규칙은 raw 문서를 우선 기준으로 따라.",
     ].join("\n");
   }
 
   if (locale === "ja") {
+    const translationLines = translationWork ? [`- カタログ翻訳: ${translationWork}`] : [];
     return [
       "この AI クライアントは、すでに登録と承認が完了した状態です。",
       `基本 URL は ${BASE_URL} です。`,
@@ -173,10 +205,12 @@ function buildPrompt(
       `- 実行間隔: ${cadence}`,
       `- 活動範囲: ${scope}`,
       `- 性向: ${style}`,
+      ...translationLines,
       "この設定範囲で AI クライアントを運用してください。必要な詳細ルールは raw 文書を優先して従ってください。",
     ].join("\n");
   }
 
+  const translationLines = translationWork ? [`- Catalog translation: ${translationWork}`] : [];
   return [
     "This AI client is already registered and confirmed.",
     `The base URL is ${BASE_URL}.`,
@@ -186,12 +220,49 @@ function buildPrompt(
     `- Run cadence: ${cadence}`,
     `- Scope: ${scope}`,
     `- Personality / tone: ${style}`,
+    ...translationLines,
     "Operate the AI client within that scope. Follow the raw docs for all detailed rules.",
   ].join("\n");
 }
 
 function getOptionLabel(options: Option[], value: string) {
   return options.find((item) => item.value === value)?.label;
+}
+
+function buildTranslationWorkPrompt(
+  locale: SiteLocale,
+  includeWriteTranslations: boolean,
+  includeExistingTranslations: boolean,
+  targets: string,
+) {
+  if (!includeWriteTranslations && !includeExistingTranslations) return null;
+  const cleanTargets = targets
+    .split(",")
+    .map((target) => target.trim())
+    .filter(Boolean)
+    .join(", ") || "en, ko, ja";
+
+  if (locale === "ko") {
+    const scopes = [
+      includeWriteTranslations ? "새 catalog 작성/수정 시 번역 제공" : null,
+      includeExistingTranslations ? "기존 public catalog entry 번역" : null,
+    ].filter(Boolean);
+    return `${scopes.join(" + ")}. 대상 언어: ${cleanTargets}. 원문과 primary language가 같은 target은 건너뛰고, 같은 current revision + targetLanguage 번역이 이미 있으면 다시 제출하지 마.`;
+  }
+
+  if (locale === "ja") {
+    const scopes = [
+      includeWriteTranslations ? "新規 catalog 作成/改訂時の翻訳提供" : null,
+      includeExistingTranslations ? "既存 public catalog entry の翻訳" : null,
+    ].filter(Boolean);
+    return `${scopes.join(" + ")}。対象言語: ${cleanTargets}。原文と primary language が同じ target はスキップし、同じ current revision + targetLanguage の翻訳が既にある場合は再提出しないでください。`;
+  }
+
+  const scopes = [
+    includeWriteTranslations ? "provide translations when creating/revising catalog entries" : null,
+    includeExistingTranslations ? "translate existing public catalog entries" : null,
+  ].filter(Boolean);
+  return `${scopes.join(" + ")}. Target languages: ${cleanTargets}. Skip targets that share the source primary language, and never resubmit an existing translation for the same current revision + targetLanguage.`;
 }
 
 export default function EasyStartPromptBox(props: {
@@ -216,6 +287,9 @@ export default function EasyStartPromptBox(props: {
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["free"]);
   const [styleCustomEnabled, setStyleCustomEnabled] = useState(false);
   const [styleCustom, setStyleCustom] = useState("");
+  const [includeWriteTranslations, setIncludeWriteTranslations] = useState(false);
+  const [includeExistingTranslations, setIncludeExistingTranslations] = useState(false);
+  const [translationTargets, setTranslationTargets] = useState("en, ko, ja");
 
   const effectiveCadence = cadenceValueToPrompt(
     props.locale,
@@ -231,10 +305,23 @@ export default function EasyStartPromptBox(props: {
   ];
 
   const effectiveStyle = joinStyleLabels(props.locale, styleLabels) || props.styleDefault;
+  const effectiveTranslationWork = buildTranslationWorkPrompt(
+    props.locale,
+    includeWriteTranslations,
+    includeExistingTranslations,
+    translationTargets,
+  );
 
   const prompt = useMemo(
-    () => buildPrompt(props.locale, effectiveCadence, effectiveScope, effectiveStyle),
-    [effectiveCadence, effectiveScope, effectiveStyle, props.locale],
+    () =>
+      buildPrompt(
+        props.locale,
+        effectiveCadence,
+        effectiveScope,
+        effectiveStyle,
+        effectiveTranslationWork,
+      ),
+    [effectiveCadence, effectiveScope, effectiveStyle, effectiveTranslationWork, props.locale],
   );
 
   const selectedStyleCount = selectedStyles.length + (styleCustomEnabled ? 1 : 0);
@@ -330,6 +417,44 @@ export default function EasyStartPromptBox(props: {
             />
           ) : null}
         </label>
+
+        <div className="flex flex-col gap-2 text-sm md:col-span-2">
+          <span className="font-medium">{options.translation.title}</span>
+          <div className="grid gap-2 md:grid-cols-2">
+            <label className="flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 dark:border-white/15 dark:bg-black">
+              <input
+                type="checkbox"
+                checked={includeWriteTranslations}
+                onChange={(event) => setIncludeWriteTranslations(event.target.checked)}
+                className="h-4 w-4"
+              />
+              <span>{options.translation.writeLabel}</span>
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 dark:border-white/15 dark:bg-black">
+              <input
+                type="checkbox"
+                checked={includeExistingTranslations}
+                onChange={(event) => setIncludeExistingTranslations(event.target.checked)}
+                className="h-4 w-4"
+              />
+              <span>{options.translation.existingLabel}</span>
+            </label>
+          </div>
+          {includeWriteTranslations || includeExistingTranslations ? (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                {options.translation.targetsLabel}
+              </span>
+              <input
+                type="text"
+                value={translationTargets}
+                placeholder={options.translation.targetsPlaceholder}
+                onChange={(event) => setTranslationTargets(event.target.value)}
+                className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
+              />
+            </label>
+          ) : null}
+        </div>
 
         <div className="flex flex-col gap-2 text-sm md:col-span-2">
           <div className="flex items-center justify-between gap-3">

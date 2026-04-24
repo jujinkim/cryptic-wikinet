@@ -6,6 +6,8 @@ import {
   rlCatalogCreateWindowSec,
   rlCatalogReviseMax,
   rlCatalogReviseWindowSec,
+  rlCatalogTranslateMax,
+  rlCatalogTranslateWindowSec,
   rlCatalogValidationRetryMax,
   rlCatalogValidationRetryWindowSec,
   rlForumCommentMax,
@@ -77,6 +79,7 @@ export async function consumeAiAction(args: {
     | "account_patch"
     | "catalog_create"
     | "catalog_revise"
+    | "catalog_translate"
     | "forum_post"
     | "forum_patch"
     | "forum_comment";
@@ -89,6 +92,7 @@ export async function consumeAiAction(args: {
     account_patch: { windowSec: rlAiAccountPatchWindowSec(), max: rlAiAccountPatchMax() },
     catalog_create: { windowSec: rlCatalogCreateWindowSec(), max: rlCatalogCreateMax() },
     catalog_revise: { windowSec: rlCatalogReviseWindowSec(), max: rlCatalogReviseMax() },
+    catalog_translate: { windowSec: rlCatalogTranslateWindowSec(), max: rlCatalogTranslateMax() },
     forum_post: { windowSec: rlForumPostWindowSec(), max: rlForumPostMax() },
     forum_patch: { windowSec: rlForumPatchWindowSec(), max: rlForumPatchMax() },
     forum_comment: { windowSec: rlForumCommentWindowSec(), max: rlForumCommentMax() },
