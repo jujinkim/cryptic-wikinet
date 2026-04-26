@@ -1,5 +1,6 @@
 import type { Prisma, RequestStatus } from "@prisma/client";
 
+import { publicArticleWhere } from "@/lib/articleAccess";
 import { prisma } from "@/lib/prisma";
 import { REQUEST_API_MAX_PAGE_SIZE } from "@/lib/requestConstants";
 import { getRequestConsumeLeaseCutoff } from "@/lib/requestLease";
@@ -14,6 +15,17 @@ export type PublicRequestPageInfo = {
   totalPages: number;
   hasPreviousPage: boolean;
   hasNextPage: boolean;
+};
+
+export type LinkedRequestArticle = {
+  slug: string;
+  title: string;
+};
+
+type RequestArticleLinkCandidate = {
+  id: string;
+  status: RequestStatus;
+  rewardEvent?: { articleId: string | null } | null;
 };
 
 export function parseRequestStatusParam(
@@ -64,6 +76,76 @@ export async function reopenExpiredConsumedRequests(now = new Date()) {
   });
 }
 
+export async function getLinkedArticlesForRequests(
+  requests: RequestArticleLinkCandidate[],
+): Promise<Map<string, LinkedRequestArticle>> {
+  const doneRequests = requests.filter((request) => request.status === "DONE");
+  if (doneRequests.length === 0) return new Map();
+
+  const articleIdsByRequestId = new Map<string, string>();
+  for (const request of doneRequests) {
+    if (request.rewardEvent?.articleId) {
+      articleIdsByRequestId.set(request.id, request.rewardEvent.articleId);
+    }
+  }
+
+  const requestIdsMissingRewardArticle = doneRequests
+    .filter((request) => !articleIdsByRequestId.has(request.id))
+    .map((request) => request.id);
+
+  if (requestIdsMissingRewardArticle.length > 0) {
+    const actionLogs = await prisma.aiActionLog.findMany({
+      where: {
+        requestId: { in: requestIdsMissingRewardArticle },
+        action: "CREATE",
+        status: "OK",
+        articleId: { not: null },
+      },
+      orderBy: { createdAt: "asc" },
+      select: {
+        requestId: true,
+        articleId: true,
+      },
+    });
+
+    for (const actionLog of actionLogs) {
+      if (!actionLog.requestId || !actionLog.articleId) continue;
+      if (articleIdsByRequestId.has(actionLog.requestId)) continue;
+      articleIdsByRequestId.set(actionLog.requestId, actionLog.articleId);
+    }
+  }
+
+  const articleIds = [...new Set(articleIdsByRequestId.values())];
+  if (articleIds.length === 0) return new Map();
+
+  const articles = await prisma.article.findMany({
+    where: {
+      id: { in: articleIds },
+      ...publicArticleWhere(),
+    },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+    },
+  });
+
+  const articlesById = new Map(articles.map((article) => [article.id, article]));
+  const linkedArticlesByRequestId = new Map<string, LinkedRequestArticle>();
+
+  for (const [requestId, articleId] of articleIdsByRequestId.entries()) {
+    const article = articlesById.get(articleId);
+    if (article) {
+      linkedArticlesByRequestId.set(requestId, {
+        slug: article.slug,
+        title: article.title,
+      });
+    }
+  }
+
+  return linkedArticlesByRequestId;
+}
+
 export async function getPublicRequestFeed(args: {
   status?: RequestStatus;
   query?: string;
@@ -93,7 +175,7 @@ export async function getPublicRequestFeed(args: {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const currentPage = Math.min(page, totalPages);
 
-  const items = await prisma.creationRequest.findMany({
+  const rows = await prisma.creationRequest.findMany({
     where,
     orderBy: { createdAt: "desc" },
     skip: (currentPage - 1) * pageSize,
@@ -106,9 +188,27 @@ export async function getPublicRequestFeed(args: {
       createdAt: true,
       handledAt: true,
       consumedByAiClientId: true,
+      rewardEvent: {
+        select: {
+          articleId: true,
+        },
+      },
       user: { select: { id: true, name: true } },
     },
   });
+
+  const linkedArticles = await getLinkedArticlesForRequests(rows);
+  const items = rows.map((row) => ({
+    id: row.id,
+    keywords: row.keywords,
+    constraints: row.constraints,
+    status: row.status,
+    createdAt: row.createdAt,
+    handledAt: row.handledAt,
+    consumedByAiClientId: row.consumedByAiClientId,
+    user: row.user,
+    linkedArticle: linkedArticles.get(row.id) ?? null,
+  }));
 
   const pageInfo: PublicRequestPageInfo = {
     page: currentPage,

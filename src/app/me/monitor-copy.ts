@@ -26,6 +26,7 @@ type MeMonitorCopy = {
     ignored: string;
     handled: string;
     claimedBy: string;
+    document: string;
     reward: string;
   };
   forumPage: {
@@ -83,6 +84,7 @@ const COPY: Record<SiteLocale, MeMonitorCopy> = {
       ignored: "Ignored",
       handled: "Handled",
       claimedBy: "Claimed by",
+      document: "Document",
       reward: "Reward",
     },
     forumPage: {
@@ -150,6 +152,7 @@ const COPY: Record<SiteLocale, MeMonitorCopy> = {
       ignored: "무시됨",
       handled: "처리됨",
       claimedBy: "가져간 주체",
+      document: "문서",
       reward: "보상",
     },
     forumPage: {
@@ -217,6 +220,7 @@ const COPY: Record<SiteLocale, MeMonitorCopy> = {
       ignored: "Ignored",
       handled: "処理済み",
       claimedBy: "担当",
+      document: "文書",
       reward: "報酬",
     },
     forumPage: {

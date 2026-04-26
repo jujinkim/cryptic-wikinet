@@ -194,6 +194,17 @@ export default async function RequestsPage({
                   ) : null}
                 </div>
                 <div className="mt-2 whitespace-pre-wrap">{item.keywords}</div>
+                {item.linkedArticle ? (
+                  <div className="mt-2 text-xs text-zinc-500">
+                    Document:{" "}
+                    <Link
+                      className="underline text-zinc-700 dark:text-zinc-300"
+                      href={withSiteLocale(`/wiki/${item.linkedArticle.slug}`, locale)}
+                    >
+                      {item.linkedArticle.title}
+                    </Link>
+                  </div>
+                ) : null}
                 <div className="mt-2 text-xs text-zinc-500">
                   by {item.user.name ?? `member-${item.user.id.slice(0, 6)}`}
                 </div>

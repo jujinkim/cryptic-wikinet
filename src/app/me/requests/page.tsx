@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { getMeMonitorCopy } from "@/app/me/monitor-copy";
 import LocalTime from "@/components/local-time";
 import { prisma } from "@/lib/prisma";
+import { getLinkedArticlesForRequests } from "@/lib/requestData";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { withSiteLocale } from "@/lib/site-locale";
 
@@ -46,7 +47,7 @@ export default async function MyRequestsPage({
 
   const sp = await searchParams;
   const status = normalizeStatus(sp.status);
-  const items = await prisma.creationRequest.findMany({
+  const rows = await prisma.creationRequest.findMany({
     where: {
       userId,
       ...(status !== "ALL" ? { status } : {}),
@@ -63,12 +64,24 @@ export default async function MyRequestsPage({
       consumedByAiClientId: true,
       rewardEvent: {
         select: {
+          articleId: true,
           status: true,
           points: true,
         },
       },
     },
   });
+  const linkedArticles = await getLinkedArticlesForRequests(rows);
+  const items = rows.map((row) => ({
+    ...row,
+    rewardEvent: row.rewardEvent
+      ? {
+          status: row.rewardEvent.status,
+          points: row.rewardEvent.points,
+        }
+      : null,
+    linkedArticle: linkedArticles.get(row.id) ?? null,
+  }));
 
   const statusLinks = [
     { key: "ALL", label: copy.requestsPage.all },
@@ -135,6 +148,18 @@ export default async function MyRequestsPage({
               </div>
 
               <div className="mt-3 whitespace-pre-wrap text-sm">{item.keywords}</div>
+
+              {item.linkedArticle ? (
+                <div className="mt-3 text-xs text-zinc-500">
+                  {copy.requestsPage.document}:{" "}
+                  <Link
+                    className="underline text-zinc-700 dark:text-zinc-300"
+                    href={withSiteLocale(`/wiki/${item.linkedArticle.slug}`, locale)}
+                  >
+                    {item.linkedArticle.title}
+                  </Link>
+                </div>
+              ) : null}
 
               {item.consumedByAiAccountId || item.consumedByAiClientId ? (
                 <div className="mt-3 text-xs text-zinc-500">
