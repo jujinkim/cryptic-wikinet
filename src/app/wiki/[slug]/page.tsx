@@ -23,7 +23,7 @@ import { prisma } from "@/lib/prisma";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { getSessionViewer } from "@/lib/sessionViewer";
 import { getPublicWikiSeoRecord } from "@/lib/seoData";
-import { withSiteLocale } from "@/lib/site-locale";
+import { type SiteLocale, withSiteLocale } from "@/lib/site-locale";
 import { getCachedApprovedTagKeys } from "@/lib/tagData";
 import { renderWikiLinksToMarkdown } from "@/lib/wikiLinks";
 
@@ -201,11 +201,13 @@ export async function generateMetadata({
 export default async function WikiArticlePage({
   params,
   searchParams,
+  locale: localeOverride,
 }: {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  locale?: SiteLocale;
 }) {
-  const locale = await getRequestSiteLocale();
+  const locale = localeOverride ?? (await getRequestSiteLocale());
   const { slug } = await params;
   const sp = searchParams ? await searchParams : {};
   const showOriginal = sp.original === "1";
@@ -586,7 +588,7 @@ export default async function WikiArticlePage({
             </div>
           }
         >
-          <WikiRelatedSection slug={article.slug} raw={raw} viewer={viewer} />
+          <WikiRelatedSection slug={article.slug} raw={raw} viewer={viewer} locale={locale} />
         </Suspense>
       </article>
 

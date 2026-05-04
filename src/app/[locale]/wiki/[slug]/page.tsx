@@ -40,6 +40,14 @@ export default async function LocalizedWikiArticlePage({
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { slug } = await params;
-  return <WikiArticlePage params={Promise.resolve({ slug })} searchParams={searchParams} />;
+  const { locale, slug } = await params;
+  const resolvedLocale = isSupportedSiteLocale(locale) ? locale : "en";
+
+  return (
+    <WikiArticlePage
+      params={Promise.resolve({ slug })}
+      searchParams={searchParams}
+      locale={resolvedLocale}
+    />
+  );
 }
