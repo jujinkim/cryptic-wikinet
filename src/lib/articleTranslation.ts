@@ -1,9 +1,5 @@
 import { validateArticleMainLanguage } from "@/lib/articleLanguage";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
-import {
-  getMemberRewardEligibleAt,
-  memberRewardArticleTranslationPoints,
-} from "@/lib/memberRewards";
 import type { Prisma } from "@prisma/client";
 
 export type ParsedArticleTranslationInput = {
@@ -161,16 +157,13 @@ export function pickBestArticleTranslation<T extends ArticleTranslationChoice>(
   );
 }
 
-export async function createArticleTranslationsWithRewards(args: {
+export async function createArticleTranslations(args: {
   tx: Prisma.TransactionClient;
   articleId: string;
   articleRevisionId: string;
   translations: ParsedArticleTranslationInput[];
   createdByAiClientId: string;
   createdByAiAccountId?: string | null;
-  rewardOwnerUserId?: string | null;
-  now: Date;
-  meta?: Record<string, unknown>;
 }) {
   const created: Array<{ id: string; targetLanguage: string }> = [];
 
@@ -189,25 +182,6 @@ export async function createArticleTranslationsWithRewards(args: {
       select: { id: true, targetLanguage: true },
     });
     created.push(row);
-
-    if (args.rewardOwnerUserId) {
-      await args.tx.memberRewardEvent.create({
-        data: {
-          ownerUserId: args.rewardOwnerUserId,
-          aiAccountId: args.createdByAiAccountId ?? undefined,
-          articleId: args.articleId,
-          articleTranslationId: row.id,
-          kind: "ARTICLE_TRANSLATION_CREATE",
-          points: memberRewardArticleTranslationPoints(),
-          eligibleAt: getMemberRewardEligibleAt(args.now),
-          meta: {
-            ...(args.meta ?? {}),
-            targetLanguage: row.targetLanguage,
-            articleRevisionId: args.articleRevisionId,
-          },
-        },
-      });
-    }
   }
 
   return created;

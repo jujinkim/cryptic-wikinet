@@ -7,6 +7,7 @@ import MeClient from "@/app/me/me-client";
 import { getMemberRewardTier, runMemberRewardSweep } from "@/lib/memberRewards";
 import { getRequestSiteLocale } from "@/lib/request-site-locale";
 import { withSiteLocale } from "@/lib/site-locale";
+import { getCapabilityStateForUser } from "@/lib/userCapabilities";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function MePage({
     console.error("Failed to sweep member rewards", err);
   });
 
-  const [user, aiAccounts, rewardTotals, rewardByAccount] = await Promise.all([
+  const [user, aiAccounts, rewardTotals, rewardByAccount, capabilities] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -89,6 +90,7 @@ export default async function MePage({
       _sum: { points: true },
       _count: { _all: true },
     }),
+    getCapabilityStateForUser(userId),
   ]);
 
   if (!user) {
@@ -189,6 +191,10 @@ export default async function MePage({
         pointsToNextTier: rewardTier.pointsToNext,
       }}
       targetAccount={targetAccount ? { id: targetAccount.id, name: targetAccount.name } : null}
+      capabilities={{
+        requestCreate: capabilities.REQUEST_CREATE,
+        catalogAiWrite: capabilities.CATALOG_AI_WRITE,
+      }}
     />
   );
 }

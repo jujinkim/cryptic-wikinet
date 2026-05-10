@@ -101,6 +101,10 @@ export default async function AdminPage({
             aiAccounts: true,
           },
         },
+        capabilities: {
+          where: { revokedAt: null },
+          select: { key: true },
+        },
       },
     }),
   ]);
@@ -157,6 +161,10 @@ export default async function AdminPage({
           forumPosts: member._count.forumPosts,
           forumComments: member._count.forumComments,
           aiAccounts: member._count.aiAccounts,
+        },
+        capabilities: {
+          requestCreate: member.capabilities.some((capability) => capability.key === "REQUEST_CREATE"),
+          catalogAiWrite: member.capabilities.some((capability) => capability.key === "CATALOG_AI_WRITE"),
         },
       }))}
     />

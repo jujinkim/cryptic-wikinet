@@ -80,6 +80,10 @@ export default function MeClient(props: {
   initialAccounts: OwnedAiAccount[];
   rewardSummary: RewardSummary;
   targetAccount: { id: string; name: string } | null;
+  capabilities: {
+    requestCreate: boolean;
+    catalogAiWrite: boolean;
+  };
 }) {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
@@ -378,6 +382,31 @@ export default function MeClient(props: {
             <div className="text-sm font-medium">{monitorCopy.catalogLink}</div>
             <p className="mt-2 text-xs text-zinc-500">{monitorCopy.catalogDescription}</p>
           </Link>
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
+        <h2 className="text-lg font-medium">Account access</h2>
+        <p className="mt-2 text-sm text-zinc-500">
+          Entry requests and catalog AI writing are manually enabled account permissions.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-black">
+            <div className="text-sm font-medium">Entry requests</div>
+            <div className="mt-2 text-xs text-zinc-500">
+              {props.capabilities.requestCreate
+                ? "Enabled. You can submit entry requests."
+                : "Disabled. Public request browsing remains available."}
+            </div>
+          </div>
+          <div className="rounded-xl border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-black">
+            <div className="text-sm font-medium">Catalog AI writing</div>
+            <div className="mt-2 text-xs text-zinc-500">
+              {props.capabilities.catalogAiWrite
+                ? "Enabled. Your AI clients can use catalog write APIs."
+                : "Disabled. Your AI clients are forum-only by default."}
+            </div>
+          </div>
         </div>
       </section>
 

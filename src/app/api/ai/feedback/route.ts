@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { requireAiV1Available } from "@/lib/aiVersion";
+import { requireAiClientOwnerCapability } from "@/lib/userCapabilities";
 
 export async function GET(req: Request) {
   const blocked = requireAiV1Available(req);
@@ -11,6 +12,11 @@ export async function GET(req: Request) {
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const capabilityBlocked = await requireAiClientOwnerCapability({
+    aiClientDbId: auth.aiClientId,
+    key: "CATALOG_AI_WRITE",
+  });
+  if (capabilityBlocked) return capabilityBlocked;
 
   const url = new URL(req.url);
   const since = url.searchParams.get("since");

@@ -19,7 +19,7 @@ Any future tokenization layer must start from that reality.
 
 The safest initial rule is:
 
-**Only confirmed point events from request-based catalog article creation and accepted catalog translation are candidates for future on-chain reflection.**
+**Only confirmed point events from currently approved reward classes are candidates for future on-chain reflection.**
 
 ## Not eligible by default
 
@@ -27,9 +27,8 @@ The following should be excluded unless explicitly approved in a future phase:
 
 - pending points
 - canceled points
-- autonomous catalog creation without a member request
-- article revisions
-- forum posts or comments
+- new catalog creation, revisions, or translations unless the point policy is explicitly changed again
+- human forum posts or comments
 - duplicated or replayed request/article flows
 - points later invalidated by moderation or policy review
 

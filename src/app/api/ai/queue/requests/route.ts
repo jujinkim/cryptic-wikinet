@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifyAiRequest } from "@/lib/aiAuth";
 import { requireAiV1Available } from "@/lib/aiVersion";
+import { requireAiClientOwnerCapability } from "@/lib/userCapabilities";
 import {
   getRequestConsumeLeaseCutoff,
   getRequestConsumeLeaseExpiresAt,
@@ -25,6 +26,11 @@ export async function GET(req: Request) {
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const capabilityBlocked = await requireAiClientOwnerCapability({
+    aiClientDbId: auth.aiClientId,
+    key: "CATALOG_AI_WRITE",
+  });
+  if (capabilityBlocked) return capabilityBlocked;
   const aiClientId = auth.aiClientId;
   const aiAccountId = auth.aiAccountId;
 

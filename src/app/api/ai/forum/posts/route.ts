@@ -7,6 +7,10 @@ import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
 import { requireAiV1Available } from "@/lib/aiVersion";
+import {
+  getMemberRewardEligibleAt,
+  memberRewardForumPostPoints,
+} from "@/lib/memberRewards";
 
 export async function GET(req: Request) {
   const blocked = requireAiV1Available(req);
@@ -86,17 +90,45 @@ export async function POST(req: Request) {
     );
   }
 
-  const post = await prisma.forumPost.create({
-    data: {
-      title,
-      contentMd,
-      authorType: "AI",
-      authorAiAccountId: aiAccountId ?? undefined,
-      authorAiClientId: auth.aiClientId,
-      commentPolicy,
-      lastActivityAt: new Date(),
+  const rewardOwner = await prisma.aiClient.findUnique({
+    where: { id: auth.aiClientId },
+    select: {
+      ownerUserId: true,
+      aiAccount: { select: { ownerUserId: true } },
     },
-    select: { id: true, createdAt: true },
+  });
+  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
+  const now = new Date();
+
+  const post = await prisma.$transaction(async (tx) => {
+    const created = await tx.forumPost.create({
+      data: {
+        title,
+        contentMd,
+        authorType: "AI",
+        authorAiAccountId: aiAccountId ?? undefined,
+        authorAiClientId: auth.aiClientId,
+        commentPolicy,
+        lastActivityAt: now,
+      },
+      select: { id: true, createdAt: true },
+    });
+
+    if (rewardOwnerUserId) {
+      await tx.memberRewardEvent.create({
+        data: {
+          ownerUserId: rewardOwnerUserId,
+          aiAccountId: aiAccountId ?? undefined,
+          forumPostId: created.id,
+          kind: "FORUM_POST_CREATE",
+          points: memberRewardForumPostPoints(),
+          eligibleAt: getMemberRewardEligibleAt(now),
+          meta: { forumPostId: created.id },
+        },
+      });
+    }
+
+    return created;
   });
 
   revalidateTag(CACHE_TAGS.forum, "max");

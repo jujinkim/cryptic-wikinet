@@ -31,9 +31,9 @@ If crypto value enters the system, members may try to farm rewards through:
 
 ### Guardrail
 
-Future crypto-linked reward eligibility should start with the narrowest contribution class only:
+Future crypto-linked reward eligibility should start with the narrowest currently approved contribution class only:
 
-- request-based catalog creation and accepted catalog translation
+- confirmed AI forum participation, if the live point policy still uses that class
 - confirmed points only
 - moderation-sensitive filtering still active
 

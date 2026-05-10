@@ -30,6 +30,10 @@ type AdminMember = {
     forumComments: number;
     aiAccounts: number;
   };
+  capabilities: {
+    requestCreate: boolean;
+    catalogAiWrite: boolean;
+  };
 };
 
 export default function AdminDashboardClient(props: {
@@ -70,6 +74,50 @@ export default function AdminDashboardClient(props: {
         ),
       );
       setInfo(nextRole === "ADMIN" ? "Member promoted to admin." : "Admin access removed.");
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function changeCapability(
+    memberId: string,
+    key: "REQUEST_CREATE" | "CATALOG_AI_WRITE",
+    enabled: boolean,
+  ) {
+    setBusyId(memberId);
+    setError(null);
+    setInfo(null);
+
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(memberId)}/capabilities`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, enabled }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(String(data.error ?? "Failed to update capability."));
+        return;
+      }
+
+      setMembers((prev) =>
+        prev.map((member) =>
+          member.id === memberId
+            ? {
+                ...member,
+                capabilities: {
+                  ...member.capabilities,
+                  ...(key === "REQUEST_CREATE"
+                    ? { requestCreate: enabled }
+                    : { catalogAiWrite: enabled }),
+                },
+              }
+            : member,
+        ),
+      );
+      setInfo(enabled ? "Capability granted." : "Capability revoked.");
     } catch (err) {
       setError(String(err));
     } finally {
@@ -171,6 +219,10 @@ export default function AdminDashboardClient(props: {
               const isCurrentUser = member.id === props.currentUserId;
               const nextRole = member.role === "ADMIN" ? "MEMBER" : "ADMIN";
               const canChangeRole = !(isCurrentUser && member.role === "ADMIN");
+              const requestCreateEffective =
+                member.role === "ADMIN" || member.capabilities.requestCreate;
+              const catalogAiWriteEffective =
+                member.role === "ADMIN" || member.capabilities.catalogAiWrite;
               return (
                 <li
                   key={member.id}
@@ -209,6 +261,12 @@ export default function AdminDashboardClient(props: {
                         <span>Forum posts {member.counts.forumPosts}</span>
                         <span>Comments {member.counts.forumComments}</span>
                         <span>AI accounts {member.counts.aiAccounts}</span>
+                        <span>
+                          Requests {requestCreateEffective ? "enabled" : "disabled"}
+                        </span>
+                        <span>
+                          Catalog AI {catalogAiWriteEffective ? "enabled" : "disabled"}
+                        </span>
                       </div>
                     </div>
 
@@ -230,6 +288,42 @@ export default function AdminDashboardClient(props: {
                           : member.role === "ADMIN"
                             ? "Remove admin"
                             : "Make admin"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950"
+                        disabled={member.role === "ADMIN" || busyId === member.id}
+                        onClick={() =>
+                          void changeCapability(
+                            member.id,
+                            "REQUEST_CREATE",
+                            !member.capabilities.requestCreate,
+                          )
+                        }
+                      >
+                        {member.role === "ADMIN"
+                          ? "Request implicit"
+                          : member.capabilities.requestCreate
+                            ? "Revoke requests"
+                            : "Grant requests"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950"
+                        disabled={member.role === "ADMIN" || busyId === member.id}
+                        onClick={() =>
+                          void changeCapability(
+                            member.id,
+                            "CATALOG_AI_WRITE",
+                            !member.capabilities.catalogAiWrite,
+                          )
+                        }
+                      >
+                        {member.role === "ADMIN"
+                          ? "Catalog implicit"
+                          : member.capabilities.catalogAiWrite
+                            ? "Revoke catalog AI"
+                            : "Grant catalog AI"}
                       </button>
                     </div>
                   </div>

@@ -17,7 +17,7 @@ import {
 } from "@/lib/policies";
 import { publicArticleWhere } from "@/lib/articleAccess";
 import {
-  createArticleTranslationsWithRewards,
+  createArticleTranslations,
   normalizeContentLanguage,
   normalizeTranslationTargetLanguage,
   parseArticleTranslationInputs,
@@ -28,11 +28,8 @@ import {
   deleteArticleCoverImage,
   uploadArticleCoverImage,
 } from "@/lib/articleCoverImage";
-import {
-  getMemberRewardEligibleAt,
-  memberRewardRequestArticlePoints,
-} from "@/lib/memberRewards";
 import { getRequestConsumeLeaseCutoff, isExpiredConsumedRequest } from "@/lib/requestLease";
+import { requireAiClientOwnerCapability } from "@/lib/userCapabilities";
 
 class CatalogCreateError extends Error {
   status: number;
@@ -87,6 +84,11 @@ export async function POST(req: Request) {
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const capabilityBlocked = await requireAiClientOwnerCapability({
+    aiClientDbId: auth.aiClientId,
+    key: "CATALOG_AI_WRITE",
+  });
+  if (capabilityBlocked) return capabilityBlocked;
   const aiClientId = auth.aiClientId;
   const aiAccountId = auth.aiAccountId;
 
@@ -253,22 +255,6 @@ export async function POST(req: Request) {
     }
   }
 
-  const rewardOwner =
-    source === "AI_REQUEST" || translations.length
-      ? await prisma.aiClient.findUnique({
-          where: { id: aiClientId },
-          select: {
-            ownerUserId: true,
-            aiAccount: {
-              select: {
-                ownerUserId: true,
-              },
-            },
-          },
-        })
-      : null;
-  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
-
   const lint = validateCatalogMarkdown(contentMd);
   if (!lint.ok) {
     return validationError(
@@ -401,32 +387,14 @@ export async function POST(req: Request) {
         data: { currentRevisionId },
       });
 
-      const translationRows = await createArticleTranslationsWithRewards({
+      const translationRows = await createArticleTranslations({
         tx,
         articleId: article.id,
         articleRevisionId: currentRevisionId,
         translations,
         createdByAiAccountId: aiAccountId,
         createdByAiClientId: aiClientId,
-        rewardOwnerUserId,
-        now: createNow,
-        meta: { slug, revNumber: 1, source: "article_create" },
       });
-
-      if (source === "AI_REQUEST" && requestId && rewardOwnerUserId) {
-        await tx.memberRewardEvent.create({
-          data: {
-            ownerUserId: rewardOwnerUserId,
-            aiAccountId: aiAccountId ?? undefined,
-            articleId: article.id,
-            requestId,
-            kind: "REQUEST_ARTICLE_CREATE",
-            points: memberRewardRequestArticlePoints(),
-            eligibleAt: getMemberRewardEligibleAt(createNow),
-            meta: { slug },
-          },
-        });
-      }
 
       return {
         id: article.id,
@@ -507,6 +475,13 @@ export async function GET(req: Request) {
   const needsTranslation = needsTranslationResult?.ok
     ? needsTranslationResult.targetLanguage
     : null;
+  if (needsTranslation) {
+    const capabilityBlocked = await requireAiClientOwnerCapability({
+      aiClientDbId: auth.aiClientId,
+      key: "CATALOG_AI_WRITE",
+    });
+    if (capabilityBlocked) return capabilityBlocked;
+  }
 
   const where = q
     ? {

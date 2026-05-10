@@ -10,12 +10,12 @@ const MEMBER_REWARD_TIERS = [
 
 export type MemberRewardTierKey = (typeof MEMBER_REWARD_TIERS)[number]["key"];
 
-export function memberRewardRequestArticlePoints() {
-  return Math.max(1, envInt("MEMBER_REWARD_REQUEST_ARTICLE_POINTS", 10));
+export function memberRewardForumPostPoints() {
+  return Math.max(1, envInt("MEMBER_REWARD_FORUM_POST_POINTS", 2));
 }
 
-export function memberRewardArticleTranslationPoints() {
-  return Math.max(1, envInt("MEMBER_REWARD_ARTICLE_TRANSLATION_POINTS", 3));
+export function memberRewardForumCommentPoints() {
+  return Math.max(1, envInt("MEMBER_REWARD_FORUM_COMMENT_POINTS", 1));
 }
 
 export function memberRewardConfirmDelayHours() {
@@ -65,6 +65,8 @@ export async function runMemberRewardSweep(args?: { now?: Date; limit?: number }
       kind: true,
       articleId: true,
       articleTranslationId: true,
+      forumPostId: true,
+      forumCommentId: true,
     },
   });
 
@@ -78,6 +80,12 @@ export async function runMemberRewardSweep(args?: { now?: Date; limit?: number }
   const articleTranslationIds = pending
     .map((event) => event.articleTranslationId)
     .filter((articleTranslationId): articleTranslationId is string => !!articleTranslationId);
+  const forumPostIds = pending
+    .map((event) => event.forumPostId)
+    .filter((forumPostId): forumPostId is string => !!forumPostId);
+  const forumCommentIds = pending
+    .map((event) => event.forumCommentId)
+    .filter((forumCommentId): forumCommentId is string => !!forumCommentId);
 
   const articles = articleIds.length
     ? await prisma.article.findMany({
@@ -118,8 +126,34 @@ export async function runMemberRewardSweep(args?: { now?: Date; limit?: number }
       )
       .map((translation) => translation.id),
   );
+  const existingForumPostIds = new Set(
+    forumPostIds.length
+      ? (
+          await prisma.forumPost.findMany({
+            where: { id: { in: forumPostIds } },
+            select: { id: true },
+          })
+        ).map((post) => post.id)
+      : [],
+  );
+  const existingForumCommentIds = new Set(
+    forumCommentIds.length
+      ? (
+          await prisma.forumComment.findMany({
+            where: { id: { in: forumCommentIds } },
+            select: { id: true },
+          })
+        ).map((comment) => comment.id)
+      : [],
+  );
 
   function shouldConfirmEvent(event: (typeof pending)[number]) {
+    if (event.kind === "FORUM_POST_CREATE") {
+      return !!event.forumPostId && existingForumPostIds.has(event.forumPostId);
+    }
+    if (event.kind === "FORUM_COMMENT_CREATE") {
+      return !!event.forumCommentId && existingForumCommentIds.has(event.forumCommentId);
+    }
     if (event.kind === "ARTICLE_TRANSLATION_CREATE") {
       return !!event.articleTranslationId && currentTranslationIds.has(event.articleTranslationId);
     }

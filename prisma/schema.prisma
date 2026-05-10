@@ -47,6 +47,8 @@ enum AiActionStatus {
 enum MemberRewardEventKind {
   REQUEST_ARTICLE_CREATE
   ARTICLE_TRANSLATION_CREATE
+  FORUM_POST_CREATE
+  FORUM_COMMENT_CREATE
 }
 
 enum MemberRewardEventStatus {
@@ -93,6 +95,11 @@ enum LegalDocumentKey {
   TERMS_OF_SERVICE
 }
 
+enum UserCapabilityKey {
+  REQUEST_CREATE
+  CATALOG_AI_WRITE
+}
+
 model User {
   id            String    @id @default(uuid())
   name          String?
@@ -114,14 +121,37 @@ model User {
   forumPosts    ForumPost[]
   forumComments ForumComment[]
 
-  reports                Report[] @relation("ReportsByUser")
-  resolvedReports        Report[] @relation("ReportsResolvedByUser")
+  reports                Report[]                @relation("ReportsByUser")
+  resolvedReports        Report[]                @relation("ReportsResolvedByUser")
   legalDocumentRevisions LegalDocumentRevision[]
 
   aiAccounts           AiAccount[]
   aiClients            AiClient[]
   aiRegistrationTokens AiRegistrationToken[]
   memberRewardEvents   MemberRewardEvent[]
+  capabilities         UserCapability[]      @relation("UserCapabilities")
+  grantedCapabilities  UserCapability[]      @relation("UserCapabilitiesGrantedBy")
+  revokedCapabilities  UserCapability[]      @relation("UserCapabilitiesRevokedBy")
+}
+
+model UserCapability {
+  id              String            @id @default(uuid())
+  userId          String
+  key             UserCapabilityKey
+  grantedAt       DateTime          @default(now())
+  grantedByUserId String?
+  revokedAt       DateTime?
+  revokedByUserId String?
+
+  user      User  @relation("UserCapabilities", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("UserCapabilitiesGrantedBy", fields: [grantedByUserId], references: [id], onDelete: SetNull)
+  revokedBy User? @relation("UserCapabilitiesRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, key])
+  @@index([key, revokedAt])
+  @@index([userId, revokedAt])
+  @@index([grantedByUserId])
+  @@index([revokedByUserId])
 }
 
 model Account {
@@ -218,10 +248,10 @@ model AiClient {
   aiAccount AiAccount? @relation(fields: [aiAccountId], references: [id])
   ownerUser User?      @relation(fields: [ownerUserId], references: [id])
 
-  articles  Article[]
-  revisions ArticleRevision[]
+  articles     Article[]
+  revisions    ArticleRevision[]
   translations ArticleTranslation[]
-  actions   AiActionLog[]
+  actions      AiActionLog[]
 
   forumPosts    ForumPost[]
   forumComments ForumComment[]
@@ -276,9 +306,9 @@ model Article {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  createdByAiAccount AiAccount?         @relation(fields: [createdByAiAccountId], references: [id])
-  createdByAiClient  AiClient?          @relation(fields: [createdByAiClientId], references: [id])
-  currentRevision    ArticleRevision?   @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
+  createdByAiAccount AiAccount?           @relation(fields: [createdByAiAccountId], references: [id])
+  createdByAiClient  AiClient?            @relation(fields: [createdByAiClientId], references: [id])
+  currentRevision    ArticleRevision?     @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   revisions          ArticleRevision[]
   translations       ArticleTranslation[]
   ratings            Rating[]
@@ -302,10 +332,10 @@ model ArticleRevision {
   createdByAiClientId  String?
   createdAt            DateTime       @default(now())
 
-  article            Article    @relation(fields: [articleId], references: [id])
-  createdByAiAccount AiAccount? @relation(fields: [createdByAiAccountId], references: [id])
-  createdByAiClient  AiClient?  @relation(fields: [createdByAiClientId], references: [id])
-  currentForArticle  Article?   @relation("CurrentRevision")
+  article            Article              @relation(fields: [articleId], references: [id])
+  createdByAiAccount AiAccount?           @relation(fields: [createdByAiAccountId], references: [id])
+  createdByAiClient  AiClient?            @relation(fields: [createdByAiClientId], references: [id])
+  currentForArticle  Article?             @relation("CurrentRevision")
   translations       ArticleTranslation[]
 
   @@unique([articleId, revNumber])
@@ -325,10 +355,10 @@ model ArticleTranslation {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  article            Article         @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  articleRevision    ArticleRevision @relation(fields: [articleRevisionId], references: [id], onDelete: Cascade)
-  createdByAiAccount AiAccount?      @relation(fields: [createdByAiAccountId], references: [id])
-  createdByAiClient  AiClient        @relation(fields: [createdByAiClientId], references: [id])
+  article            Article            @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleRevision    ArticleRevision    @relation(fields: [articleRevisionId], references: [id], onDelete: Cascade)
+  createdByAiAccount AiAccount?         @relation(fields: [createdByAiAccountId], references: [id])
+  createdByAiClient  AiClient           @relation(fields: [createdByAiClientId], references: [id])
   rewardEvent        MemberRewardEvent?
 
   @@unique([articleRevisionId, targetLanguage])
@@ -356,27 +386,31 @@ model CreationRequest {
 }
 
 model MemberRewardEvent {
-  id          String                  @id @default(uuid())
-  ownerUserId String
-  aiAccountId String?
-  articleId             String?
-  requestId             String?                 @unique
-  articleTranslationId  String?                 @unique
-  kind        MemberRewardEventKind
-  status      MemberRewardEventStatus @default(PENDING)
-  points      Int
-  eligibleAt  DateTime
-  confirmedAt DateTime?
-  canceledAt  DateTime?
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
-  meta        Json?
+  id                   String                  @id @default(uuid())
+  ownerUserId          String
+  aiAccountId          String?
+  articleId            String?
+  requestId            String?                 @unique
+  articleTranslationId String?                 @unique
+  forumPostId          String?                 @unique
+  forumCommentId       String?                 @unique
+  kind                 MemberRewardEventKind
+  status               MemberRewardEventStatus @default(PENDING)
+  points               Int
+  eligibleAt           DateTime
+  confirmedAt          DateTime?
+  canceledAt           DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  meta                 Json?
 
   ownerUser          User                @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   aiAccount          AiAccount?          @relation(fields: [aiAccountId], references: [id], onDelete: SetNull)
   article            Article?            @relation(fields: [articleId], references: [id], onDelete: SetNull)
   request            CreationRequest?    @relation(fields: [requestId], references: [id], onDelete: SetNull)
   articleTranslation ArticleTranslation? @relation(fields: [articleTranslationId], references: [id], onDelete: SetNull)
+  forumPost          ForumPost?          @relation(fields: [forumPostId], references: [id], onDelete: SetNull)
+  forumComment       ForumComment?       @relation(fields: [forumCommentId], references: [id], onDelete: SetNull)
 
   @@index([status, eligibleAt])
   @@index([ownerUserId, status, eligibleAt])
@@ -437,7 +471,7 @@ model LegalDocument {
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
-  currentRevision LegalDocumentRevision? @relation("CurrentLegalDocumentRevision", fields: [currentRevisionId], references: [id])
+  currentRevision LegalDocumentRevision?  @relation("CurrentLegalDocumentRevision", fields: [currentRevisionId], references: [id])
   revisions       LegalDocumentRevision[]
 
   @@unique([key, locale])
@@ -526,10 +560,11 @@ model ForumPost {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  authorUser      User?          @relation(fields: [authorUserId], references: [id])
-  authorAiAccount AiAccount?     @relation(fields: [authorAiAccountId], references: [id])
-  authorAiClient  AiClient?      @relation(fields: [authorAiClientId], references: [id])
+  authorUser      User?              @relation(fields: [authorUserId], references: [id])
+  authorAiAccount AiAccount?         @relation(fields: [authorAiAccountId], references: [id])
+  authorAiClient  AiClient?          @relation(fields: [authorAiClientId], references: [id])
   comments        ForumComment[]
+  rewardEvent     MemberRewardEvent?
 
   @@index([lastActivityAt])
   @@index([createdAt])
@@ -550,10 +585,11 @@ model ForumComment {
   updatedAt DateTime  @updatedAt
   editedAt  DateTime?
 
-  post            ForumPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorUser      User?      @relation(fields: [authorUserId], references: [id])
-  authorAiAccount AiAccount? @relation(fields: [authorAiAccountId], references: [id])
-  authorAiClient  AiClient?  @relation(fields: [authorAiClientId], references: [id])
+  post            ForumPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorUser      User?              @relation(fields: [authorUserId], references: [id])
+  authorAiAccount AiAccount?         @relation(fields: [authorAiAccountId], references: [id])
+  authorAiClient  AiClient?          @relation(fields: [authorAiClientId], references: [id])
+  rewardEvent     MemberRewardEvent?
 
   @@index([postId, createdAt])
   @@index([authorAiAccountId, createdAt])

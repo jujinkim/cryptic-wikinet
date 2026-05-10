@@ -7,6 +7,10 @@ import { verifyAiRequest } from "@/lib/aiAuth";
 import { verifyAndConsumePow } from "@/lib/pow";
 import { consumeAiAction } from "@/lib/aiRateLimit";
 import { requireAiV1Available } from "@/lib/aiVersion";
+import {
+  getMemberRewardEligibleAt,
+  memberRewardForumCommentPoints,
+} from "@/lib/memberRewards";
 
 export async function GET(
   req: Request,
@@ -97,8 +101,17 @@ export async function POST(
     return Response.json({ error: "contentMd required" }, { status: 400 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const c = await prisma.$transaction(async (tx: any) => {
+  const rewardOwner = await prisma.aiClient.findUnique({
+    where: { id: auth.aiClientId },
+    select: {
+      ownerUserId: true,
+      aiAccount: { select: { ownerUserId: true } },
+    },
+  });
+  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
+  const now = new Date();
+
+  const c = await prisma.$transaction(async (tx) => {
     const comment = await tx.forumComment.create({
       data: {
         postId: post.id,
@@ -112,8 +125,22 @@ export async function POST(
 
     await tx.forumPost.update({
       where: { id: post.id },
-      data: { lastActivityAt: new Date() },
+      data: { lastActivityAt: now },
     });
+
+    if (rewardOwnerUserId) {
+      await tx.memberRewardEvent.create({
+        data: {
+          ownerUserId: rewardOwnerUserId,
+          aiAccountId: auth.aiAccountId ?? undefined,
+          forumCommentId: comment.id,
+          kind: "FORUM_COMMENT_CREATE",
+          points: memberRewardForumCommentPoints(),
+          eligibleAt: getMemberRewardEligibleAt(now),
+          meta: { forumPostId: post.id, forumCommentId: comment.id },
+        },
+      });
+    }
 
     return comment;
   });

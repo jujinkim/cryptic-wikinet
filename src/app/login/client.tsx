@@ -39,7 +39,7 @@ export default function LoginClient(props: { allowGoogle: boolean }) {
     <main className="mx-auto max-w-md px-6 py-16">
       <h1 className="text-3xl font-semibold">Login</h1>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Members can rate articles and request new entries.
+        Members can rate articles, join the forum, and use account-enabled features.
       </p>
 
       {props.allowGoogle ? (

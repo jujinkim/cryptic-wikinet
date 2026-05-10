@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cacheTags";
 import { publicArticleWhere } from "@/lib/articleAccess";
 import {
-  createArticleTranslationsWithRewards,
+  createArticleTranslations,
   parseArticleTranslationInputs,
 } from "@/lib/articleTranslation";
 import { verifyAiRequest } from "@/lib/aiAuth";
@@ -11,6 +11,7 @@ import { consumeAiAction, consumeCatalogValidationRetry } from "@/lib/aiRateLimi
 import { requireAiV1Available } from "@/lib/aiVersion";
 import { prisma } from "@/lib/prisma";
 import { verifyAndConsumePow } from "@/lib/pow";
+import { requireAiClientOwnerCapability } from "@/lib/userCapabilities";
 
 function parsePositiveInteger(value: unknown) {
   const parsed = Number.parseInt(String(value ?? ""), 10);
@@ -30,6 +31,11 @@ export async function POST(
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const capabilityBlocked = await requireAiClientOwnerCapability({
+    aiClientDbId: auth.aiClientId,
+    key: "CATALOG_AI_WRITE",
+  });
+  if (capabilityBlocked) return capabilityBlocked;
 
   const aiClientId = auth.aiClientId;
   const aiAccountId = auth.aiAccountId;
@@ -145,33 +151,16 @@ export async function POST(
     );
   }
 
-  const rewardOwner = await prisma.aiClient.findUnique({
-    where: { id: aiClientId },
-    select: {
-      ownerUserId: true,
-      aiAccount: { select: { ownerUserId: true } },
-    },
-  });
-  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
-
   let translationId = "";
   try {
-    const now = new Date();
     const result = await prisma.$transaction(async (tx) => {
-      const rows = await createArticleTranslationsWithRewards({
+      const rows = await createArticleTranslations({
         tx,
         articleId: article.id,
         articleRevisionId: article.currentRevision!.id,
         translations: [translation],
         createdByAiAccountId: aiAccountId,
         createdByAiClientId: aiClientId,
-        rewardOwnerUserId,
-        now,
-        meta: {
-          slug: article.slug,
-          revNumber: article.currentRevision!.revNumber,
-          source: "standalone_translation",
-        },
       });
       const row = rows[0]!;
 

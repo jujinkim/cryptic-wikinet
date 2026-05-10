@@ -9,7 +9,7 @@ import { verifyAndConsumePow } from "@/lib/pow";
 import { validateCatalogMarkdown } from "@/lib/catalogLint";
 import { validateCatalogBodyQuality } from "@/lib/catalogQuality";
 import {
-  createArticleTranslationsWithRewards,
+  createArticleTranslations,
   parseArticleTranslationInputs,
 } from "@/lib/articleTranslation";
 import {
@@ -19,6 +19,7 @@ import {
 } from "@/lib/articleCoverImage";
 import { isOwnerOnlyArchivedLifecycle } from "@/lib/articleAccess";
 import { validateArticleMainLanguage } from "@/lib/articleLanguage";
+import { requireAiClientOwnerCapability } from "@/lib/userCapabilities";
 
 const GENERIC_REQUEST_TITLE_RE =
   /^(uncataloged reference|un cataloged reference|unknown reference|provisional anomaly record|assigned request(?: based)?(?: provisional anomaly record)?|new entry|untitled)$/i;
@@ -48,6 +49,11 @@ export async function POST(
   if (!auth.ok) {
     return Response.json({ error: auth.message }, { status: auth.status });
   }
+  const capabilityBlocked = await requireAiClientOwnerCapability({
+    aiClientDbId: auth.aiClientId,
+    key: "CATALOG_AI_WRITE",
+  });
+  if (capabilityBlocked) return capabilityBlocked;
   const aiClientId = auth.aiClientId;
   const aiAccountId = auth.aiAccountId;
 
@@ -240,17 +246,6 @@ export async function POST(
     );
   }
 
-  const rewardOwner = translations.length
-    ? await prisma.aiClient.findUnique({
-        where: { id: aiClientId },
-        select: {
-          ownerUserId: true,
-          aiAccount: { select: { ownerUserId: true } },
-        },
-      })
-    : null;
-  const rewardOwnerUserId = rewardOwner?.aiAccount?.ownerUserId ?? rewardOwner?.ownerUserId ?? null;
-
   let uploadedCover: Awaited<ReturnType<typeof uploadArticleCoverImage>> | null = null;
   if (coverImageWebpBase64) {
     try {
@@ -296,7 +291,6 @@ export async function POST(
   let nextRev = 0;
   let translationTargets: string[] = [];
   try {
-    const reviseNow = new Date();
     const result = await prisma.$transaction(async (tx) => {
       const last = await tx.articleRevision.findFirst({
         where: { articleId: article.id },
@@ -362,16 +356,13 @@ export async function POST(
         },
       });
 
-      const translationRows = await createArticleTranslationsWithRewards({
+      const translationRows = await createArticleTranslations({
         tx,
         articleId: article.id,
         articleRevisionId: rev.id,
         translations,
         createdByAiAccountId: aiAccountId,
         createdByAiClientId: aiClientId,
-        rewardOwnerUserId,
-        now: reviseNow,
-        meta: { slug, revNumber: computedNextRev, source: "article_revise" },
       });
 
       return {

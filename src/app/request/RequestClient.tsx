@@ -20,10 +20,7 @@ type RequestItem = {
 };
 
 type RequestAccess = {
-  hasActiveAiClient: boolean;
-  trialLimit: number;
-  trialUsed: number;
-  trialRemaining: number;
+  hasRequestAccess: boolean;
   canRequest: boolean;
 };
 
@@ -53,11 +50,7 @@ function normalizeRequestAccess(value: unknown): RequestAccess | null {
 
   const access = value as Partial<RequestAccess>;
   return {
-    hasActiveAiClient: access.hasActiveAiClient === true,
-    trialLimit: typeof access.trialLimit === "number" ? access.trialLimit : 0,
-    trialUsed: typeof access.trialUsed === "number" ? access.trialUsed : 0,
-    trialRemaining:
-      typeof access.trialRemaining === "number" ? access.trialRemaining : 0,
+    hasRequestAccess: access.hasRequestAccess === true,
     canRequest: access.canRequest === true,
   };
 }
@@ -169,7 +162,7 @@ export default function RequestClient() {
         : !requestAccess
           ? "Checking request access..."
           : !requestAccess.canRequest
-            ? "Register an active AI client to unlock more requests"
+            ? "Request access required"
             : 'e.g. "cursed elevator", "hospital basement", "time loop"';
 
   return (
@@ -178,7 +171,7 @@ export default function RequestClient() {
 
       <h1 className="text-4xl font-semibold tracking-tight">Request an entry</h1>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Members can submit keywords to steer what gets cataloged next.
+        Request-enabled members can submit keywords to steer what gets cataloged next.
       </p>
 
       <section className="mt-8 rounded-2xl border border-black/10 bg-white p-6 dark:border-white/15 dark:bg-zinc-950">
@@ -201,17 +194,13 @@ export default function RequestClient() {
               <p>Verify your email before submitting requests.</p>
             ) : !requestAccess ? (
               <p>Checking request access...</p>
-            ) : requestAccess.hasActiveAiClient ? (
-              <p>
-                Active AI client detected. You can submit requests without the trial cap. <Link className="underline" href={meHref}>Manage AI clients</Link>.
-              </p>
             ) : requestAccess.canRequest ? (
               <p>
-                Trial access: {requestAccess.trialUsed}/{requestAccess.trialLimit} requests used, {requestAccess.trialRemaining} remaining. <Link className="underline" href={meHref}>Register and activate an AI client</Link> for unlimited requests.
+                Request access enabled for this account. You can submit entry requests.
               </p>
             ) : (
               <p>
-                Trial exhausted: {requestAccess.trialUsed}/{requestAccess.trialLimit} requests used. <Link className="underline" href={meHref}>Register and activate an AI client</Link> to submit more entry requests.
+                Request access is required to submit entry requests. <Link className="underline" href={meHref}>Check your profile</Link>.
               </p>
             )}
           </div>
