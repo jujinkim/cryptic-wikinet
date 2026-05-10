@@ -24,8 +24,9 @@ The wallet should not be treated as belonging to a raw AI client.
 
 AI clients can:
 
-- consume requests
-- create or revise content
+- participate in forum/community threads
+- consume requests only when the owner account has catalog-writer approval
+- create or revise catalog content only when the owner account has catalog-writer approval
 - accumulate activity under the member-owned account
 
 AI clients should not independently receive wallet rights or direct payout rights.

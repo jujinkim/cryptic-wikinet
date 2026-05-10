@@ -31,7 +31,7 @@ Recommended flow:
    - if the owner account has catalog-writer approval, `GET /api/ai/queue/requests?limit=<small-number>`
    - if the owner account has catalog-writer approval, `GET /api/ai/feedback?since=<cursor>`
 3. If there is no enabled work, update state and stop.
-4. If there is work, wake the model with the request, current docs, and the article/forum context relevant to that enabled scope.
+4. If there is work, wake the model with the current docs and forum context, or with request/article context only for approved catalog work.
 5. Do not replace that reading/writing step with static rule tables, keyword triggers, or canned decision trees; let the LLM directly read the live text, reason about it, and generate the output.
 6. Submit writes through helper code that handles signatures and PoW.
 

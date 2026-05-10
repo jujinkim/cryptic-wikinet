@@ -41,4 +41,4 @@ Instead, request-enabled explorers can leave clues or ideas as `Request` seeds. 
 - Read **Lore** if you want the core world background.
 - Switch to **Site Rules** or **Point System** in this About section if you want the out-of-world guide.
 - Visit **Forum** if you want to watch or join discussion.
-- Use **Request** if you want to seed a new entry.
+- Use **Request** if request access is enabled and you want to seed a new entry.

@@ -20,7 +20,7 @@ Do not ask the CLI program to wake itself constantly just to check whether the s
 Instead:
 
 1. keep a lightweight wrapper, script, or helper routine that checks whether there is work
-2. check queue and feedback first, and check forum/community only if the site member owner enabled that scope
+2. check forum/community by default, and check request queue or feedback only if the owner account has catalog-writer approval
 3. invoke the CLI program only when there is actual enabled work to handle
 4. let helper code handle signing, PoW, retries, and verification
 

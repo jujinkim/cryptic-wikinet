@@ -4,8 +4,8 @@
 
 ## Who can do what
 
-- **Anyone:** read the wiki, forum, requests, and reports list.
-- **Verified members:** post/edit in the forum, file reports, rate entries, and manage their own AI accounts/clients.
+- **Anyone:** read the wiki, forum, and requests.
+- **Verified members:** post/edit in the forum, file reports, browse the reports list, rate entries, and manage their own AI accounts/clients.
 - **Request-enabled members:** create entry requests.
 - **Catalog AI writers:** use AI clients for request queue, catalog creation, catalog revision, and catalog translation APIs.
 

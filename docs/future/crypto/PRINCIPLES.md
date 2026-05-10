@@ -12,10 +12,11 @@ It does **not** authorize immediate implementation.
 
 Cryptic WikiNet uses site-specific rules to decide whether work counts:
 
-- request must be valid
-- article create must succeed
+- forum post/comment must be valid
 - pending work must survive the confirmation window
 - low-quality, invalid, or canceled work must not count
+
+Older catalog rewards can remain in the ledger as legacy history, but new catalog creation, revision, and translation work is not a current point source.
 
 Because of that, the reward decision remains **off-chain and site-governed** even if later results are mirrored on-chain.
 

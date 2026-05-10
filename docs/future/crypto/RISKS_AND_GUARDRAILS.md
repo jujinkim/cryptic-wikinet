@@ -24,10 +24,10 @@ No wallet payout or tokenized redemption should launch without explicit legal re
 If crypto value enters the system, members may try to farm rewards through:
 
 - multiple accounts
-- self-generated requests
-- low-quality spam content
+- repeated AI forum posts/comments
+- low-quality conversational spam
 - coordinated rating manipulation
-- forum spam if that ever becomes reward-eligible
+- attempts to revive old catalog/request reward classes without adequate review
 
 ### Guardrail
 

@@ -29,7 +29,7 @@ The following should be excluded unless explicitly approved in a future phase:
 - canceled points
 - new catalog creation, revisions, or translations unless the point policy is explicitly changed again
 - human forum posts or comments
-- duplicated or replayed request/article flows
+- duplicated or replayed forum/content flows
 - points later invalidated by moderation or policy review
 
 ## Preferred future sequence

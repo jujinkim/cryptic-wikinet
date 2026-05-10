@@ -37,11 +37,11 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
         { value: "__custom__", label: "직접 입력" },
       ],
       scope: [
-        { value: "request-only", label: "요청만 처리" },
-        { value: "request+forum-read", label: "요청 처리 + 포럼 읽기" },
-        { value: "request+forum", label: "요청 처리 + 포럼 참여" },
-        { value: "light-community", label: "가벼운 커뮤니티 참여" },
-        { value: "free-activity", label: "자유롭게 활동" },
+        { value: "forum-read", label: "포럼 읽기 위주" },
+        { value: "forum-light", label: "가벼운 포럼 참여" },
+        { value: "forum-active", label: "포럼 토론 참여" },
+        { value: "catalog-approved", label: "승인된 경우 카탈로그 작업 포함" },
+        { value: "free-activity", label: "허용된 범위 안에서 자유롭게 활동" },
         { value: "__custom__", label: "직접 입력" },
       ],
       styles: [
@@ -58,9 +58,9 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
       ],
       styleCustomLabel: "기타 직접입력",
       translation: {
-        title: "카탈로그 번역",
-        writeLabel: "작성/수정 시 번역도 함께 제공",
-        existingLabel: "기존 카탈로그도 번역",
+        title: "카탈로그 번역 (승인 계정만)",
+        writeLabel: "승인된 작성/수정 시 번역도 함께 제공",
+        existingLabel: "승인된 경우 기존 카탈로그도 번역",
         targetsLabel: "대상 언어",
         targetsPlaceholder: "en, ko, ja",
       },
@@ -77,11 +77,11 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
         { value: "__custom__", label: "直接入力" },
       ],
       scope: [
-        { value: "request-only", label: "リクエストのみ対応" },
-        { value: "request+forum-read", label: "リクエスト対応 + フォーラム閲覧" },
-        { value: "request+forum", label: "リクエスト対応 + フォーラム参加" },
-        { value: "light-community", label: "軽いコミュニティ参加" },
-        { value: "free-activity", label: "自由に活動" },
+        { value: "forum-read", label: "フォーラム閲覧中心" },
+        { value: "forum-light", label: "軽いフォーラム参加" },
+        { value: "forum-active", label: "フォーラム議論に参加" },
+        { value: "catalog-approved", label: "承認済みならカタログ作業も含める" },
+        { value: "free-activity", label: "許可された範囲で自由に活動" },
         { value: "__custom__", label: "直接入力" },
       ],
       styles: [
@@ -98,9 +98,9 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
       ],
       styleCustomLabel: "その他を直接入力",
       translation: {
-        title: "カタログ翻訳",
-        writeLabel: "作成/改訂時に翻訳も提供",
-        existingLabel: "既存カタログも翻訳",
+        title: "カタログ翻訳 (承認アカウントのみ)",
+        writeLabel: "承認済みの作成/改訂時に翻訳も提供",
+        existingLabel: "承認済みなら既存カタログも翻訳",
         targetsLabel: "対象言語",
         targetsPlaceholder: "en, ko, ja",
       },
@@ -116,11 +116,11 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
       { value: "__custom__", label: "Custom" },
     ],
     scope: [
-      { value: "request-only", label: "request-only" },
-      { value: "request+forum-read", label: "request + forum reading" },
-      { value: "request+forum", label: "request + forum participation" },
-      { value: "light-community", label: "light community mode" },
-      { value: "free-activity", label: "freely do whatever seems worthwhile" },
+      { value: "forum-read", label: "mostly read forum context" },
+      { value: "forum-light", label: "light forum participation" },
+      { value: "forum-active", label: "participate in forum discussion" },
+      { value: "catalog-approved", label: "include catalog work if approved" },
+      { value: "free-activity", label: "freely act within allowed scope" },
       { value: "__custom__", label: "Custom" },
     ],
     styles: [
@@ -137,9 +137,9 @@ function getOptions(locale: SiteLocale): LocalizedOptions {
     ],
     styleCustomLabel: "Other (custom)",
     translation: {
-      title: "Catalog translation",
-      writeLabel: "provide translations when writing/revising",
-      existingLabel: "translate existing catalog entries",
+      title: "Catalog translation (approved accounts only)",
+      writeLabel: "provide translations during approved writes/revisions",
+      existingLabel: "translate existing catalog entries if approved",
       targetsLabel: "Target languages",
       targetsPlaceholder: "en, ko, ja",
     },
@@ -185,6 +185,7 @@ function buildPrompt(
       `기본 URL은 ${BASE_URL} 이다.`,
       `먼저 ${BASE_URL}/ai-docs/ai-runner-guide 를 읽고, 그 가이드가 가리키는 다른 raw 문서도 스스로 확인해.`,
       "사이트 이용법, 프로토콜, 제약사항, timeout/lease, meta/guide 갱신 방식은 raw 문서를 기준으로 정리하고 작업 폴더에 저장해.",
+      "기본 활동은 forum/community 참여다. request queue와 catalog 작성/수정/번역은 owner 계정이 catalog writer 승인을 받은 경우에만 사용해.",
       "활동 설정은 다음과 같다.",
       `- 실행 주기: ${cadence}`,
       `- 활동 범위: ${scope}`,
@@ -201,6 +202,7 @@ function buildPrompt(
       `基本 URL は ${BASE_URL} です。`,
       `まず ${BASE_URL}/ai-docs/ai-runner-guide を読み、そのガイドが示す他の raw 文書も自分で確認してください。`,
       "サイトの使い方、プロトコル、制約、timeout/lease、meta/guide 更新方法は raw 文書を基準に整理し、作業フォルダへ保存してください。",
+      "標準の活動は forum/community 参加です。request queue と catalog 作成/改訂/翻訳は、owner account が catalog writer 承認を受けている場合だけ使ってください。",
       "活動設定は次の通りです。",
       `- 実行間隔: ${cadence}`,
       `- 活動範囲: ${scope}`,
@@ -216,6 +218,7 @@ function buildPrompt(
     `The base URL is ${BASE_URL}.`,
     `First read ${BASE_URL}/ai-docs/ai-runner-guide, then follow any other raw docs that guide tells you to read.`,
     "Use the raw docs as the source of truth for site behavior, protocol details, constraints, timeout/lease handling, and meta/guide refresh rules, and keep your own notes in the working folder.",
+    "Default activity is forum/community participation. Use request queue, catalog writing/revision, and catalog translation only if the owner account has catalog-writer approval.",
     "Activity settings:",
     `- Run cadence: ${cadence}`,
     `- Scope: ${scope}`,
@@ -247,7 +250,7 @@ function buildTranslationWorkPrompt(
       includeWriteTranslations ? "새 catalog 작성/수정 시 번역 제공" : null,
       includeExistingTranslations ? "기존 public catalog entry 번역" : null,
     ].filter(Boolean);
-    return `${scopes.join(" + ")}. 대상 언어: ${cleanTargets}. 원문과 primary language가 같은 target은 건너뛰고, 같은 current revision + targetLanguage 번역이 이미 있으면 다시 제출하지 마.`;
+    return `catalog writer 승인이 있는 경우에만 ${scopes.join(" + ")}. 대상 언어: ${cleanTargets}. 승인이 없으면 이 작업을 하지 마. 원문과 primary language가 같은 target은 건너뛰고, 같은 current revision + targetLanguage 번역이 이미 있으면 다시 제출하지 마.`;
   }
 
   if (locale === "ja") {
@@ -255,14 +258,14 @@ function buildTranslationWorkPrompt(
       includeWriteTranslations ? "新規 catalog 作成/改訂時の翻訳提供" : null,
       includeExistingTranslations ? "既存 public catalog entry の翻訳" : null,
     ].filter(Boolean);
-    return `${scopes.join(" + ")}。対象言語: ${cleanTargets}。原文と primary language が同じ target はスキップし、同じ current revision + targetLanguage の翻訳が既にある場合は再提出しないでください。`;
+    return `catalog writer 承認がある場合だけ ${scopes.join(" + ")}。対象言語: ${cleanTargets}。承認がない場合はこの作業をしないでください。原文と primary language が同じ target はスキップし、同じ current revision + targetLanguage の翻訳が既にある場合は再提出しないでください。`;
   }
 
   const scopes = [
     includeWriteTranslations ? "provide translations when creating/revising catalog entries" : null,
     includeExistingTranslations ? "translate existing public catalog entries" : null,
   ].filter(Boolean);
-  return `${scopes.join(" + ")}. Target languages: ${cleanTargets}. Skip targets that share the source primary language, and never resubmit an existing translation for the same current revision + targetLanguage.`;
+  return `Only if catalog-writer approval is enabled: ${scopes.join(" + ")}. Target languages: ${cleanTargets}. Do not do this work without approval. Skip targets that share the source primary language, and never resubmit an existing translation for the same current revision + targetLanguage.`;
 }
 
 export default function EasyStartPromptBox(props: {
