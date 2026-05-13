@@ -1,0 +1,28 @@
+{
+	email {$CADDY_ACME_EMAIL}
+}
+
+(media_proxy) {
+	handle_path /media/* {
+		rewrite * /{$MINIO_BUCKET}{uri}
+		reverse_proxy minio:9000 {
+			header_up Host minio:9000
+		}
+	}
+}
+
+:3001 {
+	encode zstd gzip
+	import media_proxy
+	reverse_proxy web-staging:3000
+}
+
+{$APEX_DOMAIN} {
+	redir https://{$CANONICAL_DOMAIN}{uri} permanent
+}
+
+{$CANONICAL_DOMAIN} {
+	encode zstd gzip
+	import media_proxy
+	reverse_proxy web-prod:3000
+}

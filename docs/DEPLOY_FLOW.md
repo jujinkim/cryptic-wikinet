@@ -105,6 +105,17 @@ Once a real hosted staging DB/environment exists, move to:
 - `staging` = pre-production integration branch
 - `feat/*`, `fix/*`, `hotfix/*` = short-lived branches
 
+## Home-server migration prep
+
+The Docker home-server migration plan lives in:
+- `docs/DEPLOY_DOCKER_HOME_SERVER.md`
+
+This is preparation only until DNS/TLS cutover is explicitly chosen. The intended shape is:
+- production and staging both run on the home server in Docker
+- production uses the existing public domains
+- staging is LAN-only with a separate empty DB
+- `ai-client` remains a separate project
+
 Target release flow:
 1. `feature/fix -> staging`
 2. Validate staging with staging DB

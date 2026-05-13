@@ -1,6 +1,12 @@
-# Cryptic WikiNet — Internal prod run
+# Cryptic WikiNet - Internal prod run
 
 This is for running Cryptic WikiNet on an internal/home server (not Vercel).
+
+For the planned Docker-based home-server deployment, use:
+- `docs/DEPLOY_DOCKER_HOME_SERVER.md`
+- `docker-compose.selfhost.yml`
+
+The notes below are only for a direct host-level Node.js process.
 
 ## Build + start
 ```bash

@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import { del, put } from "@vercel/blob";
 import { envInt } from "@/lib/config";
+import { deleteMediaObject, isMediaStorageConfigured, putMediaObject } from "@/lib/mediaStorage";
 
 const RIFF_HEADER = "RIFF";
 const WEBP_HEADER = "WEBP";
@@ -24,7 +24,7 @@ export function articleCoverMaxDimension() {
 }
 
 export function isArticleCoverStorageConfigured() {
-  return !!(process.env.BLOB_READ_WRITE_TOKEN ?? "").trim();
+  return isMediaStorageConfigured();
 }
 
 function normalizeBase64(input: string) {
@@ -186,15 +186,15 @@ export async function uploadArticleCoverImage(args: {
 
   const digest = crypto.createHash("sha256").update(bytes).digest("hex").slice(0, 24);
   const pathname = `article-covers/${args.slug}/${digest}.webp`;
-  const blob = await put(pathname, bytes, {
-    access: "public",
-    addRandomSuffix: false,
+  const uploaded = await putMediaObject({
+    pathname,
+    body: bytes,
     contentType: "image/webp",
   });
 
   return {
-    url: blob.url,
-    path: blob.pathname,
+    url: uploaded.url,
+    path: uploaded.path,
     width: info.width,
     height: info.height,
     byteSize: bytes.length,
@@ -206,5 +206,5 @@ export async function deleteArticleCoverImage(urlOrPathname: string | null | und
   if (!isArticleCoverStorageConfigured()) {
     throw new ArticleCoverImageError("cover image storage is not configured", 503);
   }
-  await del(urlOrPathname);
+  await deleteMediaObject(urlOrPathname);
 }
