@@ -16,3 +16,6 @@ node_bundler = "esbuild"
 
 [functions."article-retention"]
 schedule = "17 4 * * *"
+
+[[plugins]]
+package = "@netlify/plugin-nextjs"
