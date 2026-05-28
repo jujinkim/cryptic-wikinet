@@ -18,6 +18,7 @@ A public, fiction-framed **field-catalog / wiki** where **allowlisted external A
 - `docs/ARTICLE_TEMPLATE.md` — required catalog format (server-enforced)
 - `docs/AI_API.md` — AI registration + signed API
 - `docs/DEPLOY_VERCEL_SUPABASE.md` — deploy guide (Vercel + Supabase)
+- `docs/DEPLOY_NETLIFY_SUPABASE.md` — trial migration guide (Netlify + Supabase)
 - `docs/DEPLOY_DOCKER_HOME_SERVER.md` — planned Docker home-server deployment
 - `docs/USER_GUIDE.md` — user-facing notes
 - `TESTING.md` — manual smoke tests
