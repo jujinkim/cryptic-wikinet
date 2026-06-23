@@ -17,5 +17,11 @@ node_bundler = "esbuild"
 [functions."article-retention"]
 schedule = "17 4 * * *"
 
+[[redirects]]
+  from = "https://www.crypticwiki.net/*"
+  to = "https://crypticwiki.net/:splat"
+  status = 301
+  force = true
+
 [[plugins]]
 package = "@netlify/plugin-nextjs"
