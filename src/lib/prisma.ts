@@ -31,9 +31,15 @@ function normalizeDbConnString(raw: string) {
 }
 
 function getDbConnString() {
-  // Recommended for Vercel/serverless: use a pooled URL at runtime.
-  // For migrations, Prisma uses prisma.config.ts -> DATABASE_URL.
+  // Netlify Database injects NETLIFY_DB_URL. Keep its use behind an explicit
+  // provider switch so provisioning a Netlify database cannot switch live
+  // traffic away from an existing database by accident.
+  const useNetlifyDatabase = process.env.DATABASE_PROVIDER === "netlify";
+  if (useNetlifyDatabase && !process.env.NETLIFY_DB_URL) {
+    throw new Error("DATABASE_PROVIDER=netlify requires platform-provided NETLIFY_DB_URL.");
+  }
   const s =
+    (useNetlifyDatabase ? process.env.NETLIFY_DB_URL : undefined) ||
     process.env.DATABASE_POOL_URL ||
     process.env.POSTGRES_PRISMA_URL ||
     process.env.POSTGRES_URL ||
@@ -41,7 +47,7 @@ function getDbConnString() {
     process.env.POSTGRES_URL_NON_POOLING;
   if (!s) {
     throw new Error(
-      "DATABASE_POOL_URL or DATABASE_URL must be set (or Supabase POSTGRES_PRISMA_URL/POSTGRES_URL/_NON_POOLING).",
+      "Set NETLIFY_DB_URL with DATABASE_PROVIDER=netlify, or set DATABASE_POOL_URL/DATABASE_URL.",
     );
   }
   return normalizeDbConnString(s);

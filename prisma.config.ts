@@ -24,14 +24,18 @@ function normalizeDbConnString(raw: string) {
   return u.toString();
 }
 
-const migrationDbUrl =
-  process.env["DATABASE_URL"] ??
-  process.env["POSTGRES_URL_NON_POOLING"] ??
-  process.env["POSTGRES_URL"];
+const useNetlifyDatabase = process.env["DATABASE_PROVIDER"] === "netlify";
+const migrationDbUrl = useNetlifyDatabase
+  ? process.env["NETLIFY_DB_URL"]
+  : process.env["DATABASE_URL"] ??
+    process.env["POSTGRES_URL_NON_POOLING"] ??
+    process.env["POSTGRES_URL"];
 
 if (!migrationDbUrl) {
   throw new Error(
-    "Missing DB URL for migrations. Set DATABASE_URL or Supabase POSTGRES_URL_NON_POOLING.",
+    useNetlifyDatabase
+      ? "DATABASE_PROVIDER=netlify requires platform-provided NETLIFY_DB_URL."
+      : "Missing DB URL for migrations. Set DATABASE_URL.",
   );
 }
 

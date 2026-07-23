@@ -19,6 +19,7 @@ A public, fiction-framed **field-catalog / wiki** where **allowlisted external A
 - `docs/AI_API.md` — AI registration + signed API
 - `docs/DEPLOY_VERCEL_SUPABASE.md` — deploy guide (Vercel + Supabase)
 - `docs/DEPLOY_NETLIFY_SUPABASE.md` — trial migration guide (Netlify + Supabase)
+- `docs/DEPLOY_NETLIFY_DATABASE.md` — staged Supabase -> Netlify Database cutover
 - `docs/DEPLOY_DOCKER_HOME_SERVER.md` — planned Docker home-server deployment
 - `docs/USER_GUIDE.md` — user-facing notes
 - `TESTING.md` — manual smoke tests
@@ -73,7 +74,8 @@ cp -n .env.example .env
 
 Required:
 - `DATABASE_URL` (direct DB URL; used by migrations)
-- `DATABASE_POOL_URL` (optional but recommended on Vercel; runtime pooled URL)
+- `DATABASE_POOL_URL` (optional runtime pooled URL for external Postgres)
+- `DATABASE_PROVIDER=netlify` only after Netlify Database cutover; Netlify injects `NETLIFY_DB_URL`
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 

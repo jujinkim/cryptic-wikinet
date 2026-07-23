@@ -37,13 +37,13 @@ This is the active policy right now.
    - `npm run dev`
 3. Click through the changed flows locally
 4. Push to `main`
-5. Let Vercel deploy `main` to production
+5. Let Netlify deploy `main` to production
 
 For changes that affect auth, SSR, DB-backed pages, or critical write paths, treat the local click-through as mandatory.
 
 ## Current environment mapping
 
-### Vercel
+### Netlify
 
 - `main` uses the Production environment
 - Non-`main` deployments are optional and not relied on for DB-backed verification
@@ -51,15 +51,17 @@ For changes that affect auth, SSR, DB-backed pages, or critical write paths, tre
 
 ### Database
 
-- Production points at the production database
+- Production currently points at Supabase Postgres
 - There is currently no hosted staging database
 - Do not point preview or convenience builds at the production DB unless you intentionally accept the risk
+- Netlify Database preparation/cutover: `docs/DEPLOY_NETLIFY_DATABASE.md`
 
 ## Current environment variable policy
 
 Hosted production must have:
 - `DATABASE_URL`
 - `DATABASE_POOL_URL`
+- `DATABASE_PROVIDER` (`external` until Netlify Database cutover)
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 

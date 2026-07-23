@@ -1,6 +1,8 @@
 # Deploy to Netlify + Supabase
 
-Goal: move Cryptic WikiNet from Vercel Hobby to Netlify Free while keeping the same Next.js app and Supabase Postgres database.
+Goal: run Cryptic WikiNet on Netlify while keeping the same Next.js app and Supabase Postgres database.
+
+For planned Supabase -> Netlify Database cutover, use `docs/DEPLOY_NETLIFY_DATABASE.md`. This guide remains current until that cutover completes.
 
 Use this as a trial path. Keep the Vercel deployment live until the Netlify site has run cleanly for several days.
 
