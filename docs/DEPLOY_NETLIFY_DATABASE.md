@@ -56,7 +56,7 @@ netlify database status --branch <preview-branch> --show-credentials
 DATABASE_PROVIDER=netlify NETLIFY_DB_URL="$PREVIEW_DATABASE_URL" \
   npx prisma migrate deploy
 
-pg_dump -Fc --data-only "$SUPABASE_DATABASE_URL" | \
+pg_dump -Fc --data-only --exclude-table=public._prisma_migrations "$SUPABASE_DATABASE_URL" | \
   pg_restore --no-owner --no-acl --dbname="$PREVIEW_DATABASE_URL"
 ```
 
@@ -83,7 +83,7 @@ netlify database status --show-credentials
 DATABASE_PROVIDER=netlify NETLIFY_DB_URL="$PRODUCTION_DATABASE_URL" \
   npx prisma migrate deploy
 
-pg_dump -Fc --data-only "$SUPABASE_DATABASE_URL" | \
+pg_dump -Fc --data-only --exclude-table=public._prisma_migrations "$SUPABASE_DATABASE_URL" | \
   pg_restore --no-owner --no-acl --dbname="$PRODUCTION_DATABASE_URL"
 ```
 
