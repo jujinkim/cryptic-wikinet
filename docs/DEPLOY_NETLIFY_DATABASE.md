@@ -9,9 +9,19 @@ This repository remains Prisma-first. `prisma/schema.prisma` and `prisma/migrati
 `DATABASE_PROVIDER` controls database selection:
 
 - `external` (default): current `DATABASE_POOL_URL` / `DATABASE_URL` path. Supabase remains live.
-- `netlify`: runtime and Prisma migration commands use Netlify-provided `NETLIFY_DB_URL`.
+- `netlify`: runtime uses Netlify Database's platform-provided connection.
 
-Netlify automatically injects `NETLIFY_DB_URL` into builds and Functions when a Netlify Database is attached. Presence of that variable alone does not switch traffic. This protects production during provisioning and rehearsal.
+Netlify automatically provides the connection to deployed runtime code. The app uses
+the `@netlify/database` helper; its platform-managed `NETLIFY_DB_URL` is never
+user-configured or committed. Presence of that connection alone does not switch
+traffic.
+
+`npm run netlify-build` intentionally runs `prisma generate` and `next build` only.
+It does not run `prisma migrate deploy`: Prisma code generation needs no database,
+and requiring a production connection while Netlify prepares a build makes deploys
+fail before runtime starts. Keep `prisma/schema.prisma` and `prisma/migrations/` as
+the schema source of truth; apply production Prisma migrations as a deliberate,
+verified operation before the deploy that needs them.
 
 ## Preconditions
 

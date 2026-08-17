@@ -51,23 +51,22 @@ For changes that affect auth, SSR, DB-backed pages, or critical write paths, tre
 
 ### Database
 
-- Production currently points at Supabase Postgres
-- There is currently no hosted staging database
-- Do not point preview or convenience builds at the production DB unless you intentionally accept the risk
-- Netlify Database preparation/cutover: `docs/DEPLOY_NETLIFY_DATABASE.md`
+- Production uses Netlify Database
+- There is no separately operated staging database; Netlify Database preview branches are not production
+- Do not point preview or convenience builds at the production database branch
+- Netlify Database operations: `docs/DEPLOY_NETLIFY_DATABASE.md`
 
 ## Current environment variable policy
 
 Hosted production must have:
-- `DATABASE_URL`
-- `DATABASE_POOL_URL`
-- `DATABASE_PROVIDER` (`external` until Netlify Database cutover)
+- `DATABASE_PROVIDER=netlify`
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 
+`NETLIFY_DB_URL` is platform-managed. Do not create, copy, or commit it as a
+site environment variable.
+
 If a future staging environment is added, these must split by environment:
-- `DATABASE_URL`
-- `DATABASE_POOL_URL`
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 - `GOOGLE_CLIENT_ID`
@@ -76,7 +75,10 @@ If a future staging environment is added, these must split by environment:
 
 ## Current migration policy
 
-- Production deploys currently run Prisma migrations from `main`
+- Production deploys run `prisma generate` but do not run `prisma migrate deploy`
+- Apply Prisma migrations deliberately against the verified target database before
+  the deploy that needs them; never make a Netlify build depend on a manually
+  supplied database URL
 - Schema changes must be validated locally before pushing
 - Do not ship a migration you have not run locally
 

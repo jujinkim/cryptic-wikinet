@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { getConnectionString } from "@netlify/database";
 import { Pool } from "pg";
 
 declare global {
@@ -35,11 +36,9 @@ function getDbConnString() {
   // provider switch so provisioning a Netlify database cannot switch live
   // traffic away from an existing database by accident.
   const useNetlifyDatabase = process.env.DATABASE_PROVIDER === "netlify";
-  if (useNetlifyDatabase && !process.env.NETLIFY_DB_URL) {
-    throw new Error("DATABASE_PROVIDER=netlify requires platform-provided NETLIFY_DB_URL.");
-  }
+  const netlifyDatabaseUrl = useNetlifyDatabase ? getConnectionString() : undefined;
   const s =
-    (useNetlifyDatabase ? process.env.NETLIFY_DB_URL : undefined) ||
+    netlifyDatabaseUrl ||
     process.env.DATABASE_POOL_URL ||
     process.env.POSTGRES_PRISMA_URL ||
     process.env.POSTGRES_URL ||

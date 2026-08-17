@@ -31,20 +31,20 @@ const migrationDbUrl = useNetlifyDatabase
     process.env["POSTGRES_URL_NON_POOLING"] ??
     process.env["POSTGRES_URL"];
 
-if (!migrationDbUrl) {
-  throw new Error(
-    useNetlifyDatabase
-      ? "DATABASE_PROVIDER=netlify requires platform-provided NETLIFY_DB_URL."
-      : "Missing DB URL for migrations. Set DATABASE_URL.",
-  );
-}
-
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
-  datasource: {
-    url: normalizeDbConnString(migrationDbUrl),
-  },
+  // `prisma generate` only needs the schema. Netlify Database supplies its
+  // connection string to deployed runtime code, not every build command.
+  // Keep the datasource absent until a migration/introspection command gets a
+  // real URL, so production builds do not fail before Next.js starts.
+  ...(migrationDbUrl
+    ? {
+        datasource: {
+          url: normalizeDbConnString(migrationDbUrl),
+        },
+      }
+    : {}),
 });
